@@ -36,132 +36,111 @@ const FEATURE_TYPES = {
 const HABITAT_CRITERIA = {
   // — BBS —
   'Nesting Cavity/Box': [
+    'Active use signs present',
     'Large-diameter tree or structure',
-    'Entrance diameter ≥3 cm',
-    'No direct human disturbance',
-    'Near water or forest edge'
+    'No direct human disturbance'
   ],
   'Snag': [
-    'Standing dead wood present',
-    'Visible cavities or excavations',
-    'Height >5 m',
-    'Edge or riparian setting'
+    'Fresh excavation sign visible',
+    'Multiple cavities present',
+    'Standing in open or edge position'
   ],
   'Wetland': [
-    'Standing or slow-moving water',
     'Emergent vegetation present',
-    'Potential amphibian breeding habitat',
-    'Adequate buffer from disturbance'
+    'Open water visible',
+    'Upland buffer intact'
   ],
   'Hedgerow/Edge': [
-    'Linear shrub/tree structure',
-    'Adjacent to open habitat',
-    'Dense enough for nesting cover',
-    'Fruit- or mast-producing species present'
+    'Berry or fruit-producing species present',
+    'Adequate height for nesting cover',
+    'Connects to forest or woodlot'
   ],
   'Riparian Buffer': [
-    'Adjacent to watercourse',
-    'Canopy cover ≥50%',
-    'Minimal invasive species',
-    'Buffer width ≥10 m'
+    'Canopy continuous along watercourse',
+    'Invasive species absent',
+    'Understory intact'
   ],
   'Grassland': [
-    'Unimproved or native grass species',
-    'Minimal shrub encroachment',
+    'Native grass or forb dominant',
     'Evidence of ground-nesting activity',
-    'Low disturbance level'
+    'Low shrub encroachment'
   ],
   'Woodland': [
-    'Closed canopy present',
-    'Understory structure present',
-    'Evidence of breeding activity',
-    'Mixed-age tree cohort'
+    'Canopy cover adequate',
+    'Coarse woody debris present',
+    'Multiple tree age classes'
   ],
   'Pond/Water Body': [
-    'Open water surface',
+    'Vegetated shoreline margins',
     'Aquatic vegetation present',
-    'Adjacent marsh or vegetated buffer',
-    'Low turbidity'
+    'Evidence of waterfowl or amphibian use'
   ],
   // — MOOSE —
   'Wallow': [
-    'Muddy or wet depression',
-    'Evidence of digging or rolling',
-    'Hair or scent markers present',
-    'Recent tracks in vicinity'
+    'Mud still moist',
+    'Hair present',
+    'Rubs on nearby trees'
   ],
   'Mineral Lick': [
-    'Exposed soil or clay substrate',
-    'Heavy browsing sign nearby',
-    'Visible trails converging',
-    'Seasonal use evidence'
+    'Soil or clay excavation visible',
+    'Tracks converging on site',
+    'Evidence of repeated use'
   ],
   'Water Crossing': [
-    'Shallow ford or bank entry point',
-    'Worn trail leading to water',
-    'Tracks in soft substrate',
-    'Adequate overhead clearance'
+    'Worn entry/exit trail visible',
+    'Tracks in substrate',
+    'Shallow and accessible'
   ],
   'Bedding Area': [
-    'Flattened or compressed vegetation',
-    'Sheltered microsite',
-    'Pellets or hair present',
-    'Nearby food source'
+    'Depressions or flattened vegetation',
+    'Pellets present',
+    'Sheltered from wind'
   ],
   'Browse Corridor': [
-    'Dense early-successional shrubs',
-    'Evidence of stem clipping',
-    'Multiple converging trails',
-    'Proximity to water'
+    'Preferred species present (fir, birch, willow)',
+    'Stem clipping evident',
+    'Multiple use trails visible'
   ],
   'Riparian Zone': [
-    'Within 50 m of watercourse',
     'Willow or alder present',
-    'Soft bank substrate',
-    'Seasonally flooded'
+    'Seasonally flooded evidence',
+    'Soft bank substrate'
   ],
   'Salt Lick': [
     'Soil excavation visible',
-    'Tracks converging on site',
-    'Chemical or mineral odour',
+    'Tracks converging',
     'Evidence of repeated use'
   ],
   // — TURTLE —
   'Basking Site': [
-    'Downed logs in or near water',
-    'Exposed rocks near/in water',
-    'Sunny open bank',
-    'Low disturbance level'
+    'Logs or rocks at water surface',
+    'South-facing or open aspect',
+    'Unobstructed water access'
   ],
   'Nesting Area': [
     'Sandy or gravelly substrate',
-    'Full sun exposure',
-    'Proximity to water (<250 m)',
-    'Disturbed or open ground'
+    'Open canopy',
+    'Within visible distance of water'
   ],
   'Overwintering Site': [
-    'Flowing water with oxygenation',
-    'Water depth 0.5–1.5 m',
-    'Sandy or gravelly streambed',
-    'Cover: undercut banks, roots, or logs'
+    'Flowing water present',
+    'Sufficient depth',
+    'Undercut banks, roots, or log cover'
   ],
   'Foraging Area': [
-    'Floodplain meadow or wetland',
-    'Alder thickets or shrubby edge',
-    'Open trails or corridors',
-    'Evidence of invertebrate or plant food'
+    'Floodplain or wetland adjacent',
+    'Alder or shrubby edge present',
+    'Open movement corridors'
   ],
   'Riparian Corridor': [
     'Contiguous riparian vegetation',
-    'Potential turtle movement corridor',
     'Low road or barrier fragmentation',
-    'Connects two or more aquatic habitats'
+    'Connects two or more water bodies'
   ],
   'Water Feature': [
-    'Lentic or lotic water body',
-    'Adequate depth for overwintering',
     'Vegetated margins',
-    'Evidence of turtle use'
+    'Evidence of turtle use',
+    'Low disturbance level'
   ]
 };
 

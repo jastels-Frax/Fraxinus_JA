@@ -760,6 +760,7 @@ body {
 }
 
 .habitat-criteria-toggle {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -771,12 +772,15 @@ body {
   user-select: none;
 }
 
-/* Hide the real checkbox */
+/* Hide the real checkbox — clipped inside the label */
 .habitat-criteria-toggle input[type="checkbox"] {
   position: absolute;
   opacity: 0;
-  width: 0;
-  height: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 /* Toggle track */
