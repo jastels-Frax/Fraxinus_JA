@@ -196,17 +196,14 @@ export function exportTurtleCSV() {
   const headers = [
     'PROJECT_ID','SITE_NAME','OBSERVER','SURVEY_DATE','START_TIME','END_TIME',
     'WATER_TEMP_C','AIR_TEMP_C','WATER_LEVEL','WEATHER',
-    'OBS_TYPE','ACTIVITY','HABITAT',
-    'SEX','AGE_CLASS','CARAPACE_LENGTH_MM','CONDITION',
-    'BASKING','SUBSTRATE','PHOTO_ID',
-    'LAT','LNG','NOTE','OBS_TIMESTAMP'
+    'SEX','AGE_CLASS','ACTIVITY','HABITAT',
+    'PHOTO_ID','LAT','LNG','NOTE','OBS_TIMESTAMP'
   ];
   const rows = [headers, ...turtleObservations.map(o => [
     o.projectID, o.siteName, o.observer, o.surveyDate, o.startTime, o.endTime,
     o.waterTemp, o.airTemp, o.waterLevel, o.weather,
-    o.obsType, o.activity, o.habitat,
-    o.sex, o.ageClass, o.carapaceLength, o.condition,
-    o.basking, o.substrate, o.photoID,
+    o.sex, o.ageClass, o.activity, o.habitat,
+    o.photoID,
     o.latlng?.lat ?? '', o.latlng?.lng ?? '',
     o.note, o.timestamp
   ])];
@@ -226,9 +223,7 @@ export function exportTurtleGeoJSON() {
         SURVEY_DATE: o.surveyDate, START_TIME: o.startTime, END_TIME: o.endTime,
         WATER_TEMP_C: o.waterTemp, AIR_TEMP_C: o.airTemp,
         WATER_LEVEL: o.waterLevel, WEATHER: o.weather,
-        OBS_TYPE: o.obsType, ACTIVITY: o.activity, HABITAT: o.habitat,
-        SEX: o.sex, AGE_CLASS: o.ageClass, CARAPACE_LENGTH_MM: o.carapaceLength,
-        CONDITION: o.condition, BASKING: o.basking, SUBSTRATE: o.substrate,
+        SEX: o.sex, AGE_CLASS: o.ageClass, ACTIVITY: o.activity, HABITAT: o.habitat,
         PHOTO_ID: o.photoID, NOTE: o.note, OBS_TIMESTAMP: o.timestamp
       }
     };
@@ -245,24 +240,17 @@ export function exportTurtleKML() {
   const pmarks = marks.map(o => {
     const { lat, lng } = o.marker.getLatLng();
     const sexAbbr = o.sex === 'Male' ? 'M' : o.sex === 'Female' ? 'F' : 'U';
-    const name    = o.obsType === 'Direct Species Observation'
-      ? `${sexAbbr} ${o.carapaceLength || '?'}mm`
-      : (o.activity || o.obsType || 'Turtle');
+    const name    = o.activity ? `${sexAbbr} · ${o.activity}` : sexAbbr;
     return `
   <Placemark>
     <name>${name}</name>
     <description><![CDATA[
 <b>Observer:</b> ${o.observer || ''}<br/>
 <b>Site:</b> ${o.siteName || ''}<br/>
-<b>Obs Type:</b> ${o.obsType || ''}<br/>
-<b>Activity:</b> ${o.activity || ''}<br/>
-<b>Habitat:</b> ${o.habitat || ''}<br/>
 <b>Sex:</b> ${o.sex || ''}<br/>
 <b>Age Class:</b> ${o.ageClass || ''}<br/>
-<b>Carapace:</b> ${o.carapaceLength || ''} mm<br/>
-<b>Condition:</b> ${o.condition || ''}<br/>
-<b>Basking:</b> ${o.basking || ''}<br/>
-<b>Substrate:</b> ${o.substrate || ''}<br/>
+<b>Activity:</b> ${o.activity || ''}<br/>
+<b>Habitat:</b> ${o.habitat || ''}<br/>
 <b>Photo ID:</b> ${o.photoID || ''}<br/>
 <b>Water Temp:</b> ${o.waterTemp || ''}<br/>
 <b>Air Temp:</b> ${o.airTemp || ''}<br/>

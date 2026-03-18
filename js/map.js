@@ -92,6 +92,8 @@ function addMasterButtons() {
     ${survey === 'BBS' ? `<button id="btnOverlay" title="Distance/Bearing Overlay"><i class="fas fa-life-ring fa-2x"></i></button>` : ''}
     <button id="btnSpecies" title="${speciesTitle}" class="btn-survey-icon">${speciesEmoji}</button>
     <button id="btnHabitat" title="Record Habitat / Feature Observation" class="btn-survey-icon">🌿</button>
+    <button id="btnDraft"  title="Save to Drafts"  class="btn-session-action">💾</button>
+    <button id="btnSubmit" title="Save and Submit" class="btn-session-action">✅</button>
   `;
   container.style.cssText = `
     position:absolute; top:100px; left:30px; z-index:2000;
@@ -100,6 +102,8 @@ function addMasterButtons() {
 
   document.getElementById('btnSurvey')?.addEventListener('click', openSurveyModal);
   document.getElementById('btnDrawer')?.addEventListener('click', openDrawer);
+  document.getElementById('btnDraft')?.addEventListener('click',  () => window.saveDraftAndGoHome?.());
+  document.getElementById('btnSubmit')?.addEventListener('click', () => window.submitAndShowExport?.());
   if (survey === 'BBS') {
     document.getElementById('btnOverlay')?.addEventListener('click', toggleOverlay);
   }

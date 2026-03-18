@@ -63,45 +63,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
   margin-bottom: 28px;
 }
 
-.frax-logo-mark {
-  width: 64px;
-  height: 64px;
-  flex-shrink: 0;
-}
-
-.frax-logo-mark svg {
+.frax-logo-full {
+  max-width: 380px;
   width: 100%;
-  height: 100%;
-}
-
-.frax-wordmark {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  line-height: 1.1;
-}
-
-.frax-name {
-  font-family: 'Oswald', sans-serif;
-  font-size: 2rem;
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.frax-tagline {
-  font-family: 'Oswald', sans-serif;
-  font-size: 0.72rem;
-  font-weight: 300;
-  color: var(--frax-green-light);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  margin-top: 2px;
+  height: auto;
+  /* White version works on dark background; invert color version if needed */
+  filter: brightness(1);
 }
 
 /* ── Selection screen title / subtitle ────── */
@@ -168,15 +138,10 @@ body {
   transform: translateY(0);
 }
 
-.survey-card-emoji {
-  font-size: 2.8rem;
-  line-height: 1;
-}
-
-/* kept for legacy FA icon fallback */
 .survey-card-icon {
-  font-size: 2.5rem;
-  color: var(--frax-green);
+  font-size: 2.2rem;
+  color: var(--frax-green-light);
+  opacity: 0.9;
 }
 
 .survey-card-title {
@@ -836,4 +801,208 @@ body {
 
 .btn-photo-capture:hover {
   background-color: var(--frax-green) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SESSION LISTS (home screen)
+═══════════════════════════════════════════════════════════════════════════ */
+.session-section {
+  max-width: 780px;
+  width: 100%;
+  margin: 20px auto 0;
+  text-align: left;
+}
+
+.session-section-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--frax-text-muted);
+  margin: 0 0 10px 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--frax-border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.session-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--frax-surface-2);
+  border: 1px solid var(--frax-border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  gap: 12px;
+}
+
+.session-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.session-emoji {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.session-item-label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--frax-text);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-item-meta {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 300;
+  color: var(--frax-text-muted);
+  margin-top: 2px;
+}
+
+.session-item-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.session-btn-resume,
+.session-btn-export,
+.session-btn-delete {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  border: 1px solid;
+  transition: background 0.2s;
+}
+
+.session-btn-resume {
+  background: var(--frax-green-dark);
+  border-color: var(--frax-green);
+  color: #fff;
+}
+.session-btn-resume:hover { background: var(--frax-green); }
+
+.session-btn-export {
+  background: #2a2a2a;
+  border-color: #555;
+  color: #ccc;
+}
+.session-btn-export:hover { background: #383838; color: #fff; }
+
+.session-btn-delete {
+  background: transparent;
+  border-color: #5a2222;
+  color: #c44;
+}
+.session-btn-delete:hover { background: #3a1212; border-color: #c44; color: #f66; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EXPORT DIALOG (post-submit overlay)
+═══════════════════════════════════════════════════════════════════════════ */
+.export-dialog-box {
+  background: var(--frax-surface-2);
+  border: 1px solid var(--frax-border);
+  border-radius: 12px;
+  padding: 28px 32px;
+  text-align: center;
+  max-width: 360px;
+  width: 90vw;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+  font-family: 'Oswald', sans-serif;
+}
+
+.export-dialog-icon {
+  font-size: 2.4rem;
+  margin-bottom: 10px;
+}
+
+.export-dialog-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 0 0 6px;
+}
+
+.export-dialog-sub {
+  font-size: 0.82rem;
+  font-weight: 300;
+  color: var(--frax-text-muted);
+  margin: 0 0 20px;
+  letter-spacing: 0.04em;
+}
+
+.export-dialog-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.export-dialog-btns button {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  background: var(--frax-green-dark);
+  border: 1px solid var(--frax-green);
+  color: #fff;
+  transition: background 0.2s;
+}
+
+.export-dialog-btns button:hover { background: var(--frax-green); }
+
+.export-dialog-btns button.export-skip {
+  background: transparent;
+  border-color: #555;
+  color: var(--frax-text-muted);
+  margin-top: 4px;
+}
+.export-dialog-btns button.export-skip:hover {
+  background: #2a2a2a;
+  color: var(--frax-text);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SESSION ACTION BUTTONS (💾 draft / ✅ submit in master button bar)
+═══════════════════════════════════════════════════════════════════════════ */
+.btn-session-action {
+  font-size: 1.2rem !important;
+  line-height: 1;
+  width: 44px;
+  height: 44px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px !important;
+  background-color: rgba(17,17,17,0.75) !important;
+  border: 1px solid rgba(45,107,45,0.5) !important;
+  padding: 0 !important;
+}
+
+.btn-session-action:hover {
+  background-color: rgba(45,107,45,0.35) !important;
+  border-color: var(--frax-green) !important;
 }

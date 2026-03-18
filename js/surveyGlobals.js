@@ -8,6 +8,33 @@ export function setActiveSurvey(type) {
   activeSurvey = type;
 }
 
+// ─── Current Session ID ───────────────────────────────────────────────────
+export let currentSessionId = null;
+export function setCurrentSessionId(id) { currentSessionId = id; }
+
+// ─── Metadata snapshot / restore helpers ──────────────────────────────────
+export function getMetadataSnapshot() {
+  if (activeSurvey === 'BBS') return {
+    projectID, pointID, observer, surveyLength, wind, windDir, tempC, precip, siteHabitat
+  };
+  if (activeSurvey === 'MOOSE') return {
+    mooseProjectID, mooseObserver, mooseTransectID, mooseSurveyDate,
+    mooseStartTime, mooseEndTime, mooseVisibility, mooseSnowCover,
+    mooseTempC, mooseWindSpeed, mooseNotes
+  };
+  return {
+    turtleProjectID, turtleObserver, turtleSiteName, turtleSurveyDate,
+    turtleStartTime, turtleEndTime, turtleWaterTemp, turtleAirTemp,
+    turtleWaterLevel, turtleWeather, turtleNotes
+  };
+}
+
+export function restoreMetadata(type, meta) {
+  if (type === 'BBS')   setSurveyMetadata(meta);
+  else if (type === 'MOOSE') setMooseMetadata(meta);
+  else setTurtleMetadata(meta);
+}
+
 // ─── BBS Metadata ─────────────────────────────────────────────────────────
 export let projectID    = localStorage.getItem('projectID')    || '';
 export let pointID      = localStorage.getItem('pointID')      || '';
