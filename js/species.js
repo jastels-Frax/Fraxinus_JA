@@ -213,9 +213,7 @@ function updateCount(index) {
   record.marker.closePopup();
 }
 
-// ─── Exports & Globals ────────────────────────────────────────────────────
-export { updateSpeciesList, adjustCount, saveSpeciesObservation, incrementCount, decrementCount, updateCount };
-
+// ─── Globals (for inline onclick handlers in popup HTML) ──────────────────
 window.adjustCount          = adjustCount;
 window.saveSpeciesObservation= saveSpeciesObservation;
 window.incrementCount       = incrementCount;
