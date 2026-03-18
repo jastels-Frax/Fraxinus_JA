@@ -226,7 +226,7 @@ function _sel(val, cur) { return val === cur ? 'selected' : ''; }
 // Known values for each field (without 'Other' — that's appended automatically)
 const _SPECIES_LIST  = [
   'Moose', 'White-tailed Deer', 'Black Bear', 'Coyote',
-  'Red Fox', 'Canada Lynx',
+  'Red Fox', 'Canada Lynx', 'Bobcat',
   'River Otter', 'Beaver', 'Mink', 'American Marten', 'Fisher',
   'Snowshoe Hare', 'Porcupine', 'Raccoon', 'Striped Skunk',
   'Unknown'

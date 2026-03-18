@@ -295,7 +295,7 @@ export function createHabitatPopupHTML(index, obs) {
   div.innerHTML = `
     <div style="font-weight:600; margin-bottom:6px;">🌿 ${obs.featureType || 'Habitat Feature'}</div>
     <div class="form-row">
-      <label>Feature Type:</label>
+      <label>Habitat Type:</label>
       <select id="habPopFeature-${index}" onchange="handleOtherSelect(this,'habPopFeatureOtherRow-${index}')">
         ${[...known, 'Other'].map(f => `<option value="${f}" ${f === selVal ? 'selected' : ''}>${f}</option>`).join('')}
       </select>
@@ -378,21 +378,21 @@ export function injectHabitatModal(surveyType) {
   const el = document.createElement('div');
   el.id        = 'habitatModal';
   el.className = 'modal';
-  el.style.display = 'none';
+  el.style.cssText = 'display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:2500;';
 
   const features = FEATURE_TYPES[surveyType] || [];
   el.innerHTML = `
     <div class="modal-content">
       <h2>Habitat / Feature Observation</h2>
 
-      <label>Feature Type:</label>
+      <label>Habitat Type:</label>
       <select id="habitatFeatureTypeInput" onchange="habitatFeatureTypeChange()">
         <option value="">-- Select --</option>
         ${features.map(f => `<option value="${f}">${f}</option>`).join('')}
         <option value="Other">Other</option>
       </select>
       <div id="habitatFeatureTypeOtherWrap" style="display:none; margin-top:4px;">
-        <input type="text" id="habitatFeatureTypeOther" placeholder="Specify feature type…" style="width:100%;" />
+        <input type="text" id="habitatFeatureTypeOther" placeholder="Specify habitat type…" style="width:100%;" />
       </div>
 
       <div id="habitatCriteriaSection">
