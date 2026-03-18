@@ -4,7 +4,7 @@
 import './storageData.js';
 import './surveyGlobals.js';
 
-import { setActiveSurvey } from './surveyGlobals.js';
+import { setActiveSurvey, activeSurvey } from './surveyGlobals.js';
 import { initializeMap, destroyMap } from './map.js';
 import { initTimerBindings, updateTable } from './ui.js';
 import { closeModal }      from './modal.js';
@@ -82,14 +82,16 @@ function _showMapUI(type) {
 
 // ─── Tear down map UI, return to home ────────────────────────────────────
 function _returnToHome() {
-  document.getElementById('dataDrawer').style.display       = 'none';
-  document.getElementById('surveyModal').style.display      = 'none';
-  document.getElementById('modalBackdrop').style.display    = 'none';
-  document.getElementById('survey-timer-strip').style.display = 'none';
-  document.getElementById('masterButton').style.display     = 'none';
-  document.getElementById('map').style.display              = 'none';
-  destroyMap();
-  document.getElementById('surveySelection').style.display  = '';
+  const hide = id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; };
+  hide('dataDrawer');
+  hide('surveyModal');
+  hide('modalBackdrop');
+  hide('survey-timer-strip');
+  hide('masterButton');
+  hide('map');
+  try { destroyMap(); } catch (e) { console.error('destroyMap error:', e); }
+  const sel = document.getElementById('surveySelection');
+  if (sel) sel.style.display = '';
   _renderSessionLists();
 }
 
@@ -154,8 +156,6 @@ function _showExportDialog(onDone) {
   document.getElementById('expSkip').addEventListener('click', close);
 }
 
-// Save survey type before submitting so export dialog can use it
-import { activeSurvey } from './surveyGlobals.js';
 function _runExport(fmt) {
   // activeSurvey is still set at this point (cleared after _returnToHome)
   if (activeSurvey === 'BBS') {
