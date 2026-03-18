@@ -2,8 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Wildlife Field Survey App</title>
+  <title>Fraxinus Field Survey</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!-- Google Fonts: Oswald -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <!-- Leaflet CSS -->
@@ -17,15 +21,32 @@
   ════════════════════════════════════════════════════════════════════════ -->
   <div id="surveySelection">
     <div class="selection-content">
-      <h1 class="selection-title">
-        <i class="fas fa-binoculars"></i> Wildlife Field Survey
-      </h1>
+
+      <!-- Fraxinus branding header -->
+      <div class="frax-brand">
+        <div class="frax-logo-mark">
+          <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="40" cy="40" r="38" fill="none" stroke="#2d6b2d" stroke-width="3"/>
+            <ellipse cx="40" cy="38" rx="14" ry="22" fill="#2d6b2d" transform="rotate(-15 40 38)"/>
+            <ellipse cx="40" cy="38" rx="6" ry="18" fill="#111111" transform="rotate(-15 40 38)"/>
+            <line x1="40" y1="58" x2="40" y2="72" stroke="#2d6b2d" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="36" y1="65" x2="40" y2="60" stroke="#2d6b2d" stroke-width="2" stroke-linecap="round"/>
+            <line x1="44" y1="63" x2="40" y2="58" stroke="#2d6b2d" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="frax-wordmark">
+          <span class="frax-name">FRAXINUS</span>
+          <span class="frax-tagline">Environmental &amp; Geomatics</span>
+        </div>
+      </div>
+
+      <h1 class="selection-title">Wildlife Field Survey</h1>
       <p class="selection-subtitle">Select a survey type to begin</p>
 
       <div class="survey-cards">
         <!-- Breeding Bird Survey -->
         <button class="survey-choice-btn" data-survey="BBS">
-          <i class="fas fa-dove survey-card-icon"></i>
+          <span class="survey-card-emoji">🐦</span>
           <span class="survey-card-title">Breeding Bird Survey</span>
           <span class="survey-card-desc">
             Point-count methodology with species search, breeding codes,
@@ -35,7 +56,7 @@
 
         <!-- Mainland Moose Survey -->
         <button class="survey-choice-btn" data-survey="MOOSE">
-          <i class="fas fa-paw survey-card-icon"></i>
+          <span class="survey-card-emoji">🦌</span>
           <span class="survey-card-title">Mainland Moose Survey</span>
           <span class="survey-card-desc">
             Wildlife sign &amp; direct observation recording for pellet-group
@@ -45,7 +66,7 @@
 
         <!-- Wood Turtle Survey -->
         <button class="survey-choice-btn" data-survey="TURTLE">
-          <i class="fas fa-circle survey-card-icon" style="font-size:2rem;"></i>
+          <span class="survey-card-emoji">🐢</span>
           <span class="survey-card-title">Wood Turtle Survey</span>
           <span class="survey-card-desc">
             Individual turtle capture data, habitat observations, and
@@ -53,6 +74,8 @@
           </span>
         </button>
       </div>
+
+      <p class="frax-footer-credit">Fraxinus Environmental &amp; Geomatics</p>
     </div>
   </div>
 

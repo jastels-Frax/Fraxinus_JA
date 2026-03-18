@@ -11,6 +11,7 @@ import { closeModal }      from './modal.js';
 import { updateSpeciesList, saveSpeciesObservation } from './species.js';
 import { injectMooseModal } from './moose.js';
 import { injectTurtleModal } from './turtle.js';
+import { injectHabitatModal } from './habitat.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   // ── Survey selection button handlers ──────────────────────────────────
@@ -58,6 +59,7 @@ function _launchSurvey(type) {
   } else if (type === 'TURTLE') {
     injectTurtleModal();
   }
+  injectHabitatModal(type); // shared across all survey types
 
   // 7. Initialise Leaflet map + load stored observations from IndexedDB
   initializeMap();

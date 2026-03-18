@@ -1,6 +1,6 @@
 // js/export.js — Multi-survey CSV / GeoJSON / KML export
 
-import { speciesMarkers, mooseObservations, turtleObservations } from './storageData.js';
+import { speciesMarkers, mooseObservations, turtleObservations, habitatObservations } from './storageData.js';
 import { activeSurvey } from './surveyGlobals.js';
 
 // ─── Utilities ────────────────────────────────────────────────────────────
@@ -281,4 +281,77 @@ ${pmarks}
   </Document>
 </kml>`;
   triggerDownload(kml, `TURTLE_OBS_${date}_kml.kml`, 'application/vnd.google-earth.kml+xml');
+}
+
+// ─── Habitat / Feature Exports ────────────────────────────────────────────
+export function exportHabitatCSV() {
+  const date    = todayString();
+  const headers = [
+    'SURVEY_TYPE','FEATURE_TYPE','CRITERIA_MET','CONDITION',
+    'SIZE_EXTENT','PHOTO_REF','LAT','LNG','NOTE','TIMESTAMP'
+  ];
+  const rows = [headers, ...habitatObservations.map(o => [
+    o.surveyType, o.featureType,
+    (o.criteria || []).join(' | '),
+    o.condition, o.size, o.photoRef,
+    o.latlng?.lat ?? '', o.latlng?.lng ?? '',
+    o.note, o.timestamp
+  ])];
+  const csv = rows.map(csvRow).join('\n');
+  triggerDownload(csv, `HABITAT_OBS_${date}_csv.csv`, 'text/csv');
+}
+
+export function exportHabitatGeoJSON() {
+  const date     = todayString();
+  const features = habitatObservations.filter(o => o?.marker?.getLatLng).map(o => {
+    const { lat, lng } = o.marker.getLatLng();
+    return {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [lng, lat] },
+      properties: {
+        SURVEY_TYPE:  o.surveyType,
+        FEATURE_TYPE: o.featureType,
+        CRITERIA_MET: (o.criteria || []).join(' | '),
+        CONDITION:    o.condition,
+        SIZE_EXTENT:  o.size,
+        PHOTO_REF:    o.photoRef,
+        NOTE:         o.note,
+        TIMESTAMP:    o.timestamp
+      }
+    };
+  });
+  triggerDownload(
+    JSON.stringify({ type: 'FeatureCollection', features }, null, 2),
+    `HABITAT_OBS_${date}_geojson.geojson`, 'application/json'
+  );
+}
+
+export function exportHabitatKML() {
+  const date  = todayString();
+  const marks = habitatObservations.filter(o => o?.marker?.getLatLng);
+  const pmarks = marks.map(o => {
+    const { lat, lng } = o.marker.getLatLng();
+    return `
+  <Placemark>
+    <name>${o.featureType || 'Habitat Feature'}</name>
+    <description><![CDATA[
+<b>Survey:</b> ${o.surveyType || ''}<br/>
+<b>Feature:</b> ${o.featureType || ''}<br/>
+<b>Criteria Met:</b> ${(o.criteria || []).join(', ') || ''}<br/>
+<b>Condition:</b> ${o.condition || ''}<br/>
+<b>Size/Extent:</b> ${o.size || ''}<br/>
+<b>Photo Ref:</b> ${o.photoRef || ''}<br/>
+<b>Note:</b> ${o.note || ''}<br/>
+<b>Timestamp:</b> ${o.timestamp || ''}
+    ]]></description>
+    <Point><coordinates>${lng},${lat},0</coordinates></Point>
+  </Placemark>`;
+  }).join('\n');
+  const kml = `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document><name>Habitat Feature Observations</name>
+${pmarks}
+  </Document>
+</kml>`;
+  triggerDownload(kml, `HABITAT_OBS_${date}_kml.kml`, 'application/vnd.google-earth.kml+xml');
 }

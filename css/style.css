@@ -1,13 +1,29 @@
 /* ═══════════════════════════════════════════════════════════════════════════
+   FRAXINUS BRAND VARIABLES
+═══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --frax-green:       #2d6b2d;
+  --frax-green-light: #3d8f3d;
+  --frax-green-dark:  #1e4d1e;
+  --frax-black:       #111111;
+  --frax-dark:        #1a1a1a;
+  --frax-surface:     #222222;
+  --frax-surface-2:   #2c2c2c;
+  --frax-border:      #3a3a3a;
+  --frax-text:        #f0f0f0;
+  --frax-text-muted:  #999999;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    BASE / RESET
 ═══════════════════════════════════════════════════════════════════════════ */
 html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
-  background: #1e1e1e;
-  color: #f0f0f0;
+  font-family: 'Oswald', 'Segoe UI', 'Roboto', sans-serif;
+  background: var(--frax-black);
+  color: var(--frax-text);
   font-size: 16px;
 }
 
@@ -26,7 +42,7 @@ body {
 #surveySelection {
   position: fixed;
   inset: 0;
-  background: #1e1e1e;
+  background: var(--frax-black);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -42,24 +58,72 @@ body {
   text-align: center;
 }
 
-.selection-title {
+/* ── Fraxinus brand header ─────────────────── */
+.frax-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.frax-logo-mark {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+}
+
+.frax-logo-mark svg {
+  width: 100%;
+  height: 100%;
+}
+
+.frax-wordmark {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.1;
+}
+
+.frax-name {
+  font-family: 'Oswald', sans-serif;
   font-size: 2rem;
   font-weight: 700;
   color: #ffffff;
-  margin-bottom: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
-.selection-title i {
-  color: steelblue;
-  margin-right: 12px;
+.frax-tagline {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 300;
+  color: var(--frax-green-light);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* ── Selection screen title / subtitle ────── */
+.selection-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--frax-text-muted);
+  margin-bottom: 4px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .selection-subtitle {
-  color: #aaa;
-  font-size: 1rem;
-  margin-bottom: 36px;
+  color: var(--frax-text-muted);
+  font-size: 0.9rem;
+  font-weight: 300;
+  margin-bottom: 32px;
+  letter-spacing: 0.06em;
 }
 
+/* ── Survey cards ─────────────────────────── */
 .survey-cards {
   display: flex;
   flex-direction: column;
@@ -77,10 +141,10 @@ body {
   flex: 1;
   max-width: 240px;
   min-height: 200px;
-  background: #2c2c2c;
-  border: 2px solid #444;
+  background: var(--frax-surface-2);
+  border: 2px solid var(--frax-border);
   border-radius: 12px;
-  color: #f0f0f0;
+  color: var(--frax-text);
   padding: 24px 16px;
   cursor: pointer;
   display: flex;
@@ -89,35 +153,55 @@ body {
   gap: 12px;
   text-align: center;
   transition: border-color 0.2s, background 0.2s, transform 0.15s;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-  font-family: inherit;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  font-family: 'Oswald', sans-serif;
 }
 
 .survey-choice-btn:hover {
-  border-color: steelblue;
-  background: #353535;
+  border-color: var(--frax-green);
+  background: #2a2a2a;
   transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(45,107,45,0.25);
 }
 
 .survey-choice-btn:active {
   transform: translateY(0);
 }
 
+.survey-card-emoji {
+  font-size: 2.8rem;
+  line-height: 1;
+}
+
+/* kept for legacy FA icon fallback */
 .survey-card-icon {
   font-size: 2.5rem;
-  color: steelblue;
+  color: var(--frax-green);
 }
 
 .survey-card-title {
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 1.05rem;
+  font-weight: 600;
   color: #ffffff;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .survey-card-desc {
-  font-size: 0.82rem;
-  color: #aaa;
-  line-height: 1.45;
+  font-size: 0.8rem;
+  font-weight: 300;
+  color: var(--frax-text-muted);
+  line-height: 1.5;
+}
+
+/* ── Footer credit ────────────────────────── */
+.frax-footer-credit {
+  margin-top: 32px;
+  font-size: 0.7rem;
+  font-weight: 300;
+  color: #444;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -148,9 +232,9 @@ body {
 }
 
 .modal-content {
-  background: #2c2c2c;
+  background: var(--frax-surface-2);
   color: #ffffff;
-  border: 1px solid #444;
+  border: 1px solid var(--frax-border);
   border-radius: 8px;
   padding: 16px;
   width: 90vw;
@@ -162,27 +246,34 @@ body {
 }
 
 .modal-content h1 {
-  color: steelblue;
-  font-size: 1.5rem;
-  font-weight: bold;
+  color: var(--frax-green-light);
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   margin-top: 0;
   margin-bottom: 12px;
 }
 
 .modal-content h2 {
-  color: steelblue;
-  font-size: 1.15rem;
-  font-weight: bold;
+  color: var(--frax-green-light);
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   margin-top: 0;
   margin-bottom: 10px;
 }
 
 .modal-content label {
   display: block;
-  font-size: 0.85rem;
-  color: #ccc;
+  font-size: 0.82rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: #bbb;
   margin-bottom: 2px;
   margin-top: 8px;
+  text-transform: uppercase;
 }
 
 .modal-content input[type="text"],
@@ -191,35 +282,53 @@ body {
 .modal-content input[type="time"],
 .modal-content select,
 .modal-content textarea {
-  background: #1e1e1e;
-  border: 1px solid #555;
+  background: var(--frax-dark);
+  border: 1px solid #484848;
   color: #fff;
   padding: 6px 8px;
   border-radius: 4px;
   width: 100%;
   margin: 2px 0 6px 0;
-  font-family: inherit;
+  font-family: 'Oswald', sans-serif;
   font-size: 0.9rem;
   box-sizing: border-box;
 }
 
 .modal-content button {
-  font-size: 0.95rem;
-  font-weight: normal;
-  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  font-family: 'Oswald', sans-serif;
   color: #ffffff;
   background-color: #333;
-  border: 1px solid #d6d6d6;
-  border-radius: 8px;
+  border: 1px solid #555;
+  border-radius: 6px;
   padding: 7px 14px;
   margin: 6px 4px 0 0;
   box-shadow: 0 2px 6px rgba(0,0,0,0.5);
   cursor: pointer;
   transition: background 0.2s;
+  text-transform: uppercase;
 }
 
 .modal-content button:hover {
-  background-color: #555;
+  background-color: #484848;
+}
+
+/* Primary save/action buttons get green accent */
+.modal-content button[id$="SaveButton"],
+.modal-content button[id$="saveBtn"],
+.modal-content button[id$="Save"],
+.modal-content .btn-primary {
+  background-color: var(--frax-green-dark);
+  border-color: var(--frax-green);
+}
+
+.modal-content button[id$="SaveButton"]:hover,
+.modal-content button[id$="saveBtn"]:hover,
+.modal-content button[id$="Save"]:hover,
+.modal-content .btn-primary:hover {
+  background-color: var(--frax-green);
 }
 
 .modal-content::-webkit-scrollbar { width: 6px; }
@@ -264,19 +373,23 @@ body {
   left: 0;
   width: 100%;
   max-height: 55%;
-  background: #2b2b2b;
-  border-top: 2px solid #555;
+  background: var(--frax-surface);
+  border-top: 2px solid var(--frax-green-dark);
   padding: 12px;
   overflow-y: auto;
   z-index: 2001;
   color: #fff;
   display: none;
   box-sizing: border-box;
+  font-family: 'Oswald', sans-serif;
 }
 
 #dataDrawer h2 {
-  color: steelblue;
+  color: var(--frax-green-light);
   font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   margin-top: 0;
 }
 
@@ -289,31 +402,39 @@ body {
 
 #dataDrawer th,
 #dataDrawer td {
-  border: 1px solid #555;
+  border: 1px solid #3a3a3a;
   padding: 5px 8px;
   text-align: left;
 }
 
 #dataDrawer th {
-  background: #3a3a3a;
+  background: var(--frax-surface-2);
   position: sticky;
   top: 0;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  color: var(--frax-text-muted);
 }
 
 #dataDrawer button {
-  font-size: 0.85rem;
-  font-family: inherit;
+  font-size: 0.8rem;
+  font-family: 'Oswald', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: #fff;
-  background: #333;
-  border: 1px solid #d6d6d6;
-  border-radius: 8px;
+  background: #2e2e2e;
+  border: 1px solid #484848;
+  border-radius: 6px;
   padding: 5px 8px;
   margin: 3px;
   cursor: pointer;
   transition: background 0.2s;
 }
 
-#dataDrawer button:hover { background: #555; }
+#dataDrawer button:hover { background: #444; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    MASTER BUTTON BAR (top-left)
@@ -330,18 +451,43 @@ body {
 
 #masterButton button {
   font-size: 14px;
-  font-family: inherit;
+  font-family: 'Oswald', sans-serif;
   color: #ffffff;
-  background-color: rgba(0,0,0,0.55);
-  border: 1px solid rgba(255,255,255,0.6);
+  background-color: rgba(17,17,17,0.7);
+  border: 1px solid rgba(45,107,45,0.6);
   border-radius: 20%;
   padding: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.6);
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, border-color 0.2s;
+  backdrop-filter: blur(4px);
 }
 
-#masterButton button:hover { background-color: #555555; }
+#masterButton button:hover {
+  background-color: rgba(45,107,45,0.4);
+  border-color: var(--frax-green);
+}
+
+/* Survey emoji action buttons (species + habitat) */
+.btn-survey-icon {
+  font-size: 1.5rem !important;
+  line-height: 1;
+  width: 44px;
+  height: 44px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50% !important;
+  background-color: rgba(17,17,17,0.75) !important;
+  border: 2px solid var(--frax-green) !important;
+  padding: 0 !important;
+  transition: background-color 0.2s, transform 0.15s !important;
+}
+
+.btn-survey-icon:hover {
+  background-color: var(--frax-green-dark) !important;
+  transform: scale(1.1);
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SPECIES LIST (autocomplete)
@@ -528,7 +674,7 @@ body {
   padding: 6px 12px;
   gap: 12px;
   color: white;
-  font-family: inherit;
+  font-family: 'Oswald', sans-serif;
   z-index: 3000;
   box-shadow: 0 -2px 6px rgba(0,0,0,0.4);
   box-sizing: border-box;
@@ -570,4 +716,119 @@ body {
   box-shadow: 0 0 6px rgba(255,77,77,0.4);
   min-width: 80px;
   text-align: center;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   POPUP FONT OVERRIDE (Leaflet popup content)
+═══════════════════════════════════════════════════════════════════════════ */
+.popup-content.compact {
+  font-family: 'Oswald', sans-serif;
+}
+
+.popup-content.compact label {
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #aaa;
+  font-weight: 400;
+}
+
+.popup-content.compact select,
+.popup-content.compact input,
+.popup-content.compact textarea {
+  font-family: 'Oswald', sans-serif;
+}
+
+.popup-content.compact .counter-inline button,
+.popup-content.compact button {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HABITAT CRITERIA TOGGLE SWITCHES
+═══════════════════════════════════════════════════════════════════════════ */
+.habitat-criteria-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.habitat-criteria-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 300;
+  color: var(--frax-text);
+  user-select: none;
+}
+
+/* Hide the real checkbox */
+.habitat-criteria-toggle input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Toggle track */
+.habitat-criteria-toggle .toggle-track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background: #3a3a3a;
+  border-radius: 10px;
+  border: 1px solid #555;
+  flex-shrink: 0;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+/* Toggle thumb */
+.habitat-criteria-toggle .toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  background: #888;
+  border-radius: 50%;
+  transition: left 0.2s, background 0.2s;
+}
+
+/* Checked state */
+.habitat-criteria-toggle input:checked + .toggle-track {
+  background: var(--frax-green-dark);
+  border-color: var(--frax-green);
+}
+
+.habitat-criteria-toggle input:checked + .toggle-track::after {
+  left: 18px;
+  background: #fff;
+}
+
+/* Toggle label text */
+.habitat-criteria-toggle .toggle-label {
+  flex: 1;
+  line-height: 1.3;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PHOTO CAPTURE BUTTON (in modals)
+═══════════════════════════════════════════════════════════════════════════ */
+.btn-photo-capture {
+  background-color: var(--frax-green-dark) !important;
+  border-color: var(--frax-green) !important;
+  color: #fff !important;
+}
+
+.btn-photo-capture:hover {
+  background-color: var(--frax-green) !important;
 }

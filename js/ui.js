@@ -3,10 +3,11 @@
 import {
   exportSpeciesCSV, exportSpeciesGeoJSON, exportSpeciesKML,
   exportMooseCSV,   exportMooseGeoJSON,   exportMooseKML,
-  exportTurtleCSV,  exportTurtleGeoJSON,  exportTurtleKML
+  exportTurtleCSV,  exportTurtleGeoJSON,  exportTurtleKML,
+  exportHabitatCSV, exportHabitatGeoJSON, exportHabitatKML
 } from './export.js';
 import { map } from './map.js';
-import { speciesMarkers, mooseObservations, turtleObservations } from './storageData.js';
+import { speciesMarkers, mooseObservations, turtleObservations, habitatObservations } from './storageData.js';
 import { syncToIndexedDB, syncMooseToIndexedDB, syncTurtleToIndexedDB } from './storage.js';
 import {
   activeSurvey,
@@ -330,6 +331,7 @@ function _renderBBSTable(drawer) {
       </td>`;
     tbody.appendChild(tr);
   });
+  _appendHabitatSection(drawer);
 }
 
 function _renderMooseTable(drawer) {
@@ -371,6 +373,7 @@ function _renderMooseTable(drawer) {
       </td>`;
     tbody.appendChild(tr);
   });
+  _appendHabitatSection(drawer);
 }
 
 function _renderTurtleTable(drawer) {
@@ -417,6 +420,51 @@ function _renderTurtleTable(drawer) {
       </td>`;
     tbody.appendChild(tr);
   });
+  _appendHabitatSection(drawer);
+}
+
+// ─── Habitat Observations Section (appended to every survey's drawer) ─────
+function _appendHabitatSection(drawer) {
+  if (!habitatObservations.length) return;
+  const section = document.createElement('div');
+  section.style.marginTop = '24px';
+  section.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+      <h2 style="margin:0;">🌿 Habitat / Feature Observations</h2>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button onclick="exportHabitatCSV()">Habitat CSV</button>
+        <button onclick="exportHabitatGeoJSON()">Habitat GeoJSON</button>
+        <button onclick="exportHabitatKML()">Habitat KML</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead><tr>
+          <th>Feature Type</th><th>Criteria Met</th><th>Condition</th>
+          <th>Size/Extent</th><th>Photo Ref</th><th>Note</th>
+          <th>Timestamp</th><th>Actions</th>
+        </tr></thead>
+        <tbody id="habitatTableBody"></tbody>
+      </table>
+    </div>`;
+  drawer.appendChild(section);
+  const tbody = section.querySelector('#habitatTableBody');
+  habitatObservations.forEach((obs, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${obs.featureType||''}</td>
+      <td>${(obs.criteria||[]).join(', ')||''}</td>
+      <td>${obs.condition||''}</td>
+      <td>${obs.size||''}</td>
+      <td>${obs.photoRef||''}</td>
+      <td>${obs.note||''}</td>
+      <td>${obs.timestamp||''}</td>
+      <td>
+        <button onclick="zoomToHabitatMarker(${i})">🔍</button>
+        <button onclick="deleteHabitatMarker(${i})" style="color:red;">❌</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
 }
 
 // ─── Map Actions ──────────────────────────────────────────────────────────
@@ -434,6 +482,12 @@ export function zoomToTurtleMarker(index) {
   const obs = turtleObservations[index];
   if (obs?.latlng) { map.setView(obs.latlng, 18); obs.marker.openPopup(); }
 }
+
+export function zoomToHabitatMarker(index) {
+  const obs = habitatObservations[index];
+  if (obs?.latlng) { map.setView(obs.latlng, 18); obs.marker.openPopup(); }
+}
+window.zoomToHabitatMarker = zoomToHabitatMarker;
 
 export function deleteMarker(index) {
   const obs = speciesMarkers[index];
@@ -517,3 +571,6 @@ window.exportMooseKML        = exportMooseKML;
 window.exportTurtleCSV       = exportTurtleCSV;
 window.exportTurtleGeoJSON   = exportTurtleGeoJSON;
 window.exportTurtleKML       = exportTurtleKML;
+window.exportHabitatCSV      = exportHabitatCSV;
+window.exportHabitatGeoJSON  = exportHabitatGeoJSON;
+window.exportHabitatKML      = exportHabitatKML;

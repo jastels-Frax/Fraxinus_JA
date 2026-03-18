@@ -1,7 +1,7 @@
 // js/map.js — Leaflet map initialisation, geolocation, overlay
 // initializeMap() is called by main.js AFTER survey type is selected.
 
-import { loadSpeciesMarkers, loadMooseObservations, loadTurtleObservations } from './storage.js';
+import { loadSpeciesMarkers, loadMooseObservations, loadTurtleObservations, loadHabitatObservations } from './storage.js';
 import { speciesMarkers } from './storageData.js';
 import { updateTable, openSurveyModal, openDrawer } from './ui.js';
 import { showSpeciesModal, isPlacingPoint } from './modal.js';
@@ -68,6 +68,7 @@ export function initializeMap() {
   } else if (survey === 'TURTLE') {
     loadTurtleObservations();
   }
+  loadHabitatObservations();
 }
 
 // ─── Master Buttons ───────────────────────────────────────────────────────
@@ -75,42 +76,60 @@ function addMasterButtons() {
   const container = document.getElementById('masterButton');
   if (!container) return;
 
-  const isBBS = activeSurvey === 'BBS';
-  const obsBtn = isBBS
-    ? `<button id="btnOverlay" title="Distance/Bearing Overlay"><i class="fas fa-life-ring fa-2x"></i></button>`
-    : `<button id="btnRecord" title="Record Observation at Current Location"><i class="fas fa-map-pin fa-2x"></i></button>`;
+  const survey = activeSurvey;
+
+  // Per-survey species emoji and label
+  const speciesEmoji = survey === 'BBS' ? '🐦' : survey === 'MOOSE' ? '🦌' : '🐢';
+  const speciesTitle = survey === 'BBS'   ? 'Record Bird Species (or tap map)'
+                     : survey === 'MOOSE' ? 'Record Wildlife Species Observation'
+                     :                      'Record Turtle Observation';
 
   container.innerHTML = `
     <button onclick="showInstructions()" title="Help"><i class="fas fa-circle-question fa-2x"></i></button>
-    <button id="btnSurvey"  title="Survey Metadata"><i class="fas fa-clipboard-list fa-2x"></i></button>
-    <button id="btnDrawer"  title="Observations"><i class="fas fa-rectangle-list fa-2x"></i></button>
-    ${obsBtn}
+    <button id="btnSurvey" title="Survey Metadata"><i class="fas fa-clipboard-list fa-2x"></i></button>
+    <button id="btnDrawer" title="Observations"><i class="fas fa-rectangle-list fa-2x"></i></button>
+    ${survey === 'BBS' ? `<button id="btnOverlay" title="Distance/Bearing Overlay"><i class="fas fa-life-ring fa-2x"></i></button>` : ''}
+    <button id="btnSpecies" title="${speciesTitle}" class="btn-survey-icon">${speciesEmoji}</button>
+    <button id="btnHabitat" title="Record Habitat / Feature Observation" class="btn-survey-icon">🌿</button>
   `;
   container.style.cssText = `
     position:absolute; top:100px; left:30px; z-index:2000;
     display:flex; flex-direction:column; gap:12px;
   `;
+
   document.getElementById('btnSurvey')?.addEventListener('click', openSurveyModal);
   document.getElementById('btnDrawer')?.addEventListener('click', openDrawer);
-  if (isBBS) {
+  if (survey === 'BBS') {
     document.getElementById('btnOverlay')?.addEventListener('click', toggleOverlay);
-  } else {
-    document.getElementById('btnRecord')?.addEventListener('click', () => {
+  }
+
+  // Species button
+  document.getElementById('btnSpecies')?.addEventListener('click', () => {
+    if (survey === 'BBS') {
+      if (!isPlacingPoint()) showSpeciesModal(observerLocation || map.getCenter());
+    } else {
       if (!observerLocation) {
         alert('GPS location not yet available. Please wait for a location fix.');
         return;
       }
-      if (activeSurvey === 'MOOSE') {
-        import('./moose.js').then(m => {
-          if (!m.isMoosePlacingPoint()) m.showMooseModal(observerLocation);
-        });
-      } else if (activeSurvey === 'TURTLE') {
-        import('./turtle.js').then(m => {
-          if (!m.isTurtlePlacingPoint()) m.showTurtleModal(observerLocation);
-        });
+      if (survey === 'MOOSE') {
+        import('./moose.js').then(m => { if (!m.isMoosePlacingPoint()) m.showMooseModal(observerLocation); });
+      } else if (survey === 'TURTLE') {
+        import('./turtle.js').then(m => { if (!m.isTurtlePlacingPoint()) m.showTurtleModal(observerLocation); });
       }
+    }
+  });
+
+  // Habitat button (all surveys — always uses GPS location)
+  document.getElementById('btnHabitat')?.addEventListener('click', () => {
+    if (!observerLocation) {
+      alert('GPS location not yet available. Please wait for a location fix.');
+      return;
+    }
+    import('./habitat.js').then(m => {
+      if (!m.isHabitatPlacingPoint()) m.showHabitatModal(observerLocation);
     });
-  }
+  });
 }
 
 // ─── Distance/Bearing Overlay ─────────────────────────────────────────────

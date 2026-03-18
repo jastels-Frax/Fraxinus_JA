@@ -2,13 +2,14 @@
 
 import { updateTable } from './ui.js';
 import { map } from './map.js';
-import { speciesMarkers, mooseObservations, turtleObservations } from './storageData.js';
+import { speciesMarkers, mooseObservations, turtleObservations, habitatObservations } from './storageData.js';
 import { createSpeciesPopupHTML } from './species.js';
 import { createMoosePopupHTML } from './moose.js';
 import { createTurtlePopupHTML } from './turtle.js';
+import { createHabitatPopupHTML } from './habitat.js';
 
 const DB_NAME    = 'SpeciesSurveyDB';
-const DB_VERSION = 2; // bumped to add new stores
+const DB_VERSION = 3; // bumped to add habitatObservations store
 
 let db;
 
@@ -34,6 +35,9 @@ function openDatabase() {
       }
       if (!db.objectStoreNames.contains('turtleObservations')) {
         db.createObjectStore('turtleObservations', { keyPath: 'id', autoIncrement: true });
+      }
+      if (!db.objectStoreNames.contains('habitatObservations')) {
+        db.createObjectStore('habitatObservations', { keyPath: 'id', autoIncrement: true });
       }
     };
   });
@@ -234,6 +238,53 @@ export async function loadTurtleObservations() {
     updateTable();
   };
   request.onerror = e => console.error('Error loading turtle observations:', e.target.error);
+}
+
+// ─── Habitat Observations ─────────────────────────────────────────────────
+export function syncHabitatToIndexedDB() {
+  if (!db) { openDatabase().then(() => syncHabitatToIndexedDB()); return; }
+  syncStore('habitatObservations', habitatObservations, o => ({
+    surveyType:  o.surveyType,
+    featureType: o.featureType,
+    criteria:    o.criteria     || [],
+    condition:   o.condition    || '',
+    size:        o.size         || '',
+    photoRef:    o.photoRef     || '',
+    note:        o.note         || '',
+    latlng:      { lat: o.latlng.lat, lng: o.latlng.lng },
+    timestamp:   o.timestamp
+  }));
+}
+
+export async function loadHabitatObservations() {
+  if (!db) await openDatabase();
+  const tx    = db.transaction('habitatObservations', 'readonly');
+  const store = tx.objectStore('habitatObservations');
+  const req   = store.getAll();
+  req.onsuccess = () => {
+    const MARKER_COLOUR = { BBS: '#7c3aed', MOOSE: '#b45309', TURTLE: '#0d9488' };
+    req.result.forEach((data, index) => {
+      const latlng = L.latLng(data.latlng.lat, data.latlng.lng);
+      const colour = MARKER_COLOUR[data.surveyType] || '#7c3aed';
+      const marker = L.circleMarker(latlng, {
+        radius: 8, color: colour,
+        fillColor: 'white', fillOpacity: 0.75,
+        weight: 2, dashArray: '6 3'
+      }).addTo(map);
+      const labelMarker = L.marker([latlng.lat, latlng.lng + 0.0001], {
+        icon: L.divIcon({
+          className: 'DBmarker-label',
+          html: `🌿 ${data.featureType}`,
+          iconAnchor: [0, 10]
+        })
+      }).addTo(map);
+      const popup = createHabitatPopupHTML(index, data);
+      marker.bindPopup(popup);
+      habitatObservations.push({ ...data, latlng, marker, label: labelMarker });
+    });
+    updateTable();
+  };
+  req.onerror = e => console.error('Error loading habitat observations:', e.target.error);
 }
 
 export { openDatabase };
