@@ -222,7 +222,8 @@ body {
 #speciesModal,
 #surveyModal,
 #mooseModal,
-#turtleModal {
+#turtleModal,
+#habitatModal {
   display: none;
   position: fixed;
   top: 50%;

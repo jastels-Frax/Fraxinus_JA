@@ -172,16 +172,6 @@ const MARKER_COLOUR = { BBS: '#7c3aed', MOOSE: '#b45309', TURTLE: '#0d9488' };
 
 // ─── Show / Close Modal ───────────────────────────────────────────────────
 export function showHabitatModal(latlng) {
-  const survey = G.activeSurvey;
-  const hasMetadata =
-    survey === 'BBS'    ? (G.observer    && G.pointID)        :
-    survey === 'MOOSE'  ? (G.mooseObserver && G.mooseTransectID) :
-                          (G.turtleObserver && G.turtleSiteName);
-  if (!hasMetadata) {
-    alert('Please complete survey metadata before placing observations.');
-    return;
-  }
-
   habitatPlacingPoint  = true;
   habitatCurrentLatLng = latlng;
 
@@ -225,8 +215,9 @@ window.habitatFeatureTypeChange = function () {
       const lbl = document.createElement('label');
       lbl.className = 'habitat-criteria-toggle';
       lbl.innerHTML = `
-        <span>${item}</span>
         <input type="checkbox" id="${id}" value="${item}" />
+        <span class="toggle-track"></span>
+        <span class="toggle-label">${item}</span>
       `;
       listDiv.appendChild(lbl);
     });

@@ -121,14 +121,11 @@ function addMasterButtons() {
     }
   });
 
-  // Habitat button (all surveys — always uses GPS location)
+  // Habitat button (all surveys — uses GPS if available, map centre as fallback)
   document.getElementById('btnHabitat')?.addEventListener('click', () => {
-    if (!observerLocation) {
-      alert('GPS location not yet available. Please wait for a location fix.');
-      return;
-    }
+    const loc = observerLocation || map.getCenter();
     import('./habitat.js').then(m => {
-      if (!m.isHabitatPlacingPoint()) m.showHabitatModal(observerLocation);
+      if (!m.isHabitatPlacingPoint()) m.showHabitatModal(loc);
     });
   });
 }
