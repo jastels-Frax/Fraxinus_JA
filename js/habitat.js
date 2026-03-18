@@ -184,7 +184,6 @@ export function showHabitatModal(latlng) {
   const otherWrap = modal.querySelector('#habitatFeatureTypeOtherWrap');
   if (otherWrap) { otherWrap.style.display = 'none'; otherWrap.querySelector('input').value = ''; }
   modal.querySelector('#habitatConditionInput').value = '';
-  modal.querySelector('#habitatSizeInput').value      = '';
   modal.querySelector('#habitatPhotoInput').value     = '';
   modal.querySelector('#habitatNoteInput').value      = '';
 
@@ -235,7 +234,6 @@ export function saveHabitatObservation() {
     document.querySelectorAll('#habitatCriteriaList input:checked')
   ).map(cb => cb.value);
   const condition = document.getElementById('habitatConditionInput')?.value.trim() || '';
-  const size      = document.getElementById('habitatSizeInput')?.value.trim()      || '';
   const photoRef  = document.getElementById('habitatPhotoInput')?.value.trim()     || '';
   const note      = document.getElementById('habitatNoteInput')?.value.trim()      || '';
 
@@ -270,7 +268,7 @@ export function saveHabitatObservation() {
 
   const obsRecord = {
     surveyType: survey, featureType, criteria,
-    condition, size, photoRef, note,
+    condition, photoRef, note,
     latlng, timestamp, marker, label
   };
 
@@ -311,11 +309,7 @@ export function createHabitatPopupHTML(index, obs) {
         ${CONDITION_LIST.map(c => `<option value="${c}" ${c === obs.condition ? 'selected' : ''}>${c}</option>`).join('')}
       </select>
     </div>
-    <div class="form-row">
-      <label>Size/Extent:</label>
-      <input type="text" id="habPopSize-${index}" value="${obs.size || ''}" placeholder="e.g. 5 m diameter" style="flex:1;" />
-    </div>
-    <div class="form-row">
+<div class="form-row">
       <label>Photo Ref:</label>
       <input type="text" id="habPopPhoto-${index}" value="${obs.photoRef || ''}" placeholder="Filename or ID" style="flex:1;" />
       <button type="button" onclick="capturePopupPhoto(${obs.latlng?.lat ?? null}, ${obs.latlng?.lng ?? null}, 'habPopPhoto-${index}')" title="Take Photo"><i class="fas fa-camera"></i></button>
@@ -342,8 +336,7 @@ function updateHabitatObservation(index) {
     ? (document.getElementById(`habPopFeatureOther-${index}`)?.value.trim() || 'Other')
     : (selEl?.value || rec.featureType);
   rec.condition = document.getElementById(`habPopCondition-${index}`)?.value || '';
-  rec.size      = document.getElementById(`habPopSize-${index}`)?.value      || '';
-  rec.photoRef  = document.getElementById(`habPopPhoto-${index}`)?.value     || '';
+rec.photoRef  = document.getElementById(`habPopPhoto-${index}`)?.value     || '';
   rec.note      = document.getElementById(`habPopNote-${index}`)?.value      || '';
 
   rec.label.setIcon(L.divIcon({
@@ -408,10 +401,7 @@ export function injectHabitatModal(surveyType) {
         ${CONDITION_LIST.map(c => `<option value="${c}">${c}</option>`).join('')}
       </select>
 
-      <label>Size / Extent:</label>
-      <input type="text" id="habitatSizeInput" placeholder="e.g. 5 m diameter, 200 m stretch" />
-
-      <label>Photo Reference (filename / ID):</label>
+<label>Photo Reference (filename / ID):</label>
       <div style="display:flex; gap:6px; align-items:center;">
         <input type="text" id="habitatPhotoInput" placeholder="e.g. IMG_0042" style="flex:1;" />
         <button type="button" onclick="captureHabitatPhoto()" title="Take Photo"><i class="fas fa-camera"></i></button>
