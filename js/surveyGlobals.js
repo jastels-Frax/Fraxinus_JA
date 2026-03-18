@@ -54,7 +54,6 @@ export let mooseVisibility  = localStorage.getItem('mooseVisibility')  || '';
 export let mooseSnowCover   = localStorage.getItem('mooseSnowCover')   || '';
 export let mooseTempC       = localStorage.getItem('mooseTempC')       || '';
 export let mooseWindSpeed   = localStorage.getItem('mooseWindSpeed')   || '';
-export let mooseAircraftType= localStorage.getItem('mooseAircraftType')|| '';
 export let mooseNotes       = localStorage.getItem('mooseNotes')       || '';
 
 export function setMooseMetadata(data) {
@@ -68,7 +67,6 @@ export function setMooseMetadata(data) {
   mooseSnowCover    = data.mooseSnowCover    || '';
   mooseTempC        = data.mooseTempC        || '';
   mooseWindSpeed    = data.mooseWindSpeed    || '';
-  mooseAircraftType = data.mooseAircraftType || '';
   mooseNotes        = data.mooseNotes        || '';
   localStorage.setItem('mooseProjectID',    mooseProjectID);
   localStorage.setItem('mooseObserver',     mooseObserver);
@@ -80,7 +78,6 @@ export function setMooseMetadata(data) {
   localStorage.setItem('mooseSnowCover',    mooseSnowCover);
   localStorage.setItem('mooseTempC',        mooseTempC);
   localStorage.setItem('mooseWindSpeed',    mooseWindSpeed);
-  localStorage.setItem('mooseAircraftType', mooseAircraftType);
   localStorage.setItem('mooseNotes',        mooseNotes);
 }
 

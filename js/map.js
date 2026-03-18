@@ -27,20 +27,9 @@ export function initializeMap() {
   ).addTo(map);
   L.control.layers({ OSM: osm, Satellite: satellite }).addTo(map);
 
-  // Map click → survey-specific modal
+  // Map click → BBS modal only; Moose/Turtle use the geotag button instead
   map.on('click', e => {
-    const survey = activeSurvey;
-    if (survey === 'BBS') {
-      if (!isPlacingPoint()) showSpeciesModal(e.latlng);
-    } else if (survey === 'MOOSE') {
-      import('./moose.js').then(m => {
-        if (!m.isMoosePlacingPoint()) m.showMooseModal(e.latlng);
-      });
-    } else if (survey === 'TURTLE') {
-      import('./turtle.js').then(m => {
-        if (!m.isTurtlePlacingPoint()) m.showTurtleModal(e.latlng);
-      });
-    }
+    if (activeSurvey === 'BBS' && !isPlacingPoint()) showSpeciesModal(e.latlng);
   });
 
   // Live geolocation
@@ -85,19 +74,43 @@ export function initializeMap() {
 function addMasterButtons() {
   const container = document.getElementById('masterButton');
   if (!container) return;
+
+  const isBBS = activeSurvey === 'BBS';
+  const obsBtn = isBBS
+    ? `<button id="btnOverlay" title="Distance/Bearing Overlay"><i class="fas fa-life-ring fa-2x"></i></button>`
+    : `<button id="btnRecord" title="Record Observation at Current Location"><i class="fas fa-map-pin fa-2x"></i></button>`;
+
   container.innerHTML = `
     <button onclick="showInstructions()" title="Help"><i class="fas fa-circle-question fa-2x"></i></button>
     <button id="btnSurvey"  title="Survey Metadata"><i class="fas fa-clipboard-list fa-2x"></i></button>
     <button id="btnDrawer"  title="Observations"><i class="fas fa-rectangle-list fa-2x"></i></button>
-    <button id="btnOverlay" title="Distance/Bearing Overlay"><i class="fas fa-life-ring fa-2x"></i></button>
+    ${obsBtn}
   `;
   container.style.cssText = `
     position:absolute; top:100px; left:30px; z-index:2000;
     display:flex; flex-direction:column; gap:12px;
   `;
-  document.getElementById('btnSurvey') ?.addEventListener('click', openSurveyModal);
-  document.getElementById('btnDrawer') ?.addEventListener('click', openDrawer);
-  document.getElementById('btnOverlay')?.addEventListener('click', toggleOverlay);
+  document.getElementById('btnSurvey')?.addEventListener('click', openSurveyModal);
+  document.getElementById('btnDrawer')?.addEventListener('click', openDrawer);
+  if (isBBS) {
+    document.getElementById('btnOverlay')?.addEventListener('click', toggleOverlay);
+  } else {
+    document.getElementById('btnRecord')?.addEventListener('click', () => {
+      if (!observerLocation) {
+        alert('GPS location not yet available. Please wait for a location fix.');
+        return;
+      }
+      if (activeSurvey === 'MOOSE') {
+        import('./moose.js').then(m => {
+          if (!m.isMoosePlacingPoint()) m.showMooseModal(observerLocation);
+        });
+      } else if (activeSurvey === 'TURTLE') {
+        import('./turtle.js').then(m => {
+          if (!m.isTurtlePlacingPoint()) m.showTurtleModal(observerLocation);
+        });
+      }
+    });
+  }
 }
 
 // ─── Distance/Bearing Overlay ─────────────────────────────────────────────

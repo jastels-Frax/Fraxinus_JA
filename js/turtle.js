@@ -80,7 +80,7 @@ export function saveTurtleObservation() {
     return;
   }
   if (!turtleCurrentLatLng) {
-    alert('No map location captured. Tap the map to place an observation.');
+    alert('No location captured. Use the Record Observation button to geotag your current position.');
     return;
   }
 

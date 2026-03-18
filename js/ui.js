@@ -14,7 +14,7 @@ import {
   wind, windDir, tempC, precip, siteHabitat, setSurveyMetadata,
   mooseProjectID, mooseObserver, mooseTransectID, mooseSurveyDate,
   mooseStartTime, mooseEndTime, mooseVisibility, mooseSnowCover,
-  mooseTempC, mooseWindSpeed, mooseAircraftType, mooseNotes, setMooseMetadata,
+  mooseTempC, mooseWindSpeed, mooseNotes, setMooseMetadata,
   turtleProjectID, turtleObserver, turtleSiteName, turtleSurveyDate,
   turtleStartTime, turtleEndTime, turtleWaterTemp, turtleAirTemp,
   turtleWaterLevel, turtleWeather, turtleNotes, setTurtleMetadata
@@ -69,7 +69,6 @@ export function closeSurveyModal() {
       mooseSnowCover:    _val('mooseSnowCoverInput'),
       mooseTempC:        _val('mooseTempCInput'),
       mooseWindSpeed:    _val('mooseWindSpeedInput'),
-      mooseAircraftType: _val('mooseAircraftTypeInput'),
       mooseNotes:        _val('mooseNotesInput')
     };
     setMooseMetadata(snap);
@@ -165,8 +164,6 @@ export function injectSurveyModal() {
         <input type="number" id="mooseTempCInput" />
         <label>Wind Speed:</label>
         <input type="text" id="mooseWindSpeedInput" placeholder="Beaufort scale or km/h" />
-        <label>Aircraft Type (if applicable):</label>
-        <input type="text" id="mooseAircraftTypeInput" />
         <label>Notes:</label>
         <textarea id="mooseNotesInput" rows="3"></textarea>
         <br/>
@@ -247,7 +244,6 @@ function prefillSurveyModal() {
     _setVal('mooseSnowCoverInput',    mooseSnowCover);
     _setVal('mooseTempCInput',        mooseTempC);
     _setVal('mooseWindSpeedInput',    mooseWindSpeed);
-    _setVal('mooseAircraftTypeInput', mooseAircraftType);
     _setVal('mooseNotesInput',        mooseNotes);
   } else if (survey === 'TURTLE') {
     _setVal('turtleProjectIDInput',  turtleProjectID);
