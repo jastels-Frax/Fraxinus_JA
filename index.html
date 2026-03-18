@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Wildlife Field Survey App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       SURVEY SELECTION SCREEN (shown on first load; hidden after selection)
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div id="surveySelection">
+    <div class="selection-content">
+      <h1 class="selection-title">
+        <i class="fas fa-binoculars"></i> Wildlife Field Survey
+      </h1>
+      <p class="selection-subtitle">Select a survey type to begin</p>
+
+      <div class="survey-cards">
+        <!-- Breeding Bird Survey -->
+        <button class="survey-choice-btn" data-survey="BBS">
+          <i class="fas fa-dove survey-card-icon"></i>
+          <span class="survey-card-title">Breeding Bird Survey</span>
+          <span class="survey-card-desc">
+            Point-count methodology with species search, breeding codes,
+            distance/bearing overlay and countdown timer.
+          </span>
+        </button>
+
+        <!-- Mainland Moose Survey -->
+        <button class="survey-choice-btn" data-survey="MOOSE">
+          <i class="fas fa-paw survey-card-icon"></i>
+          <span class="survey-card-title">Mainland Moose Survey</span>
+          <span class="survey-card-desc">
+            Wildlife sign &amp; direct observation recording for pellet-group
+            inventories and winter tracking transects.
+          </span>
+        </button>
+
+        <!-- Wood Turtle Survey -->
+        <button class="survey-choice-btn" data-survey="TURTLE">
+          <i class="fas fa-circle survey-card-icon" style="font-size:2rem;"></i>
+          <span class="survey-card-title">Wood Turtle Survey</span>
+          <span class="survey-card-desc">
+            Individual turtle capture data, habitat observations, and
+            riparian reach metadata for stream surveys.
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       MAP APP (hidden until survey selected)
+  ════════════════════════════════════════════════════════════════════════ -->
+
+  <!-- 1) Map container -->
+  <div id="map" style="height:100vh; display:none;"></div>
+
+  <!-- 2) Modal backdrop (shared) -->
+  <div id="modalBackdrop" class="modal-backdrop" style="display:none;"></div>
+
+  <!-- 3) Survey Metadata modal (content injected by ui.js per survey type) -->
+  <div id="surveyModal" class="modal" style="display:none;"></div>
+
+  <!-- 4) BBS Species Observation modal -->
+  <div id="speciesModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <h2>Add Species Observation</h2>
+      <input type="text" id="speciesSearch" autocomplete="off" placeholder="Search for Species" />
+      <ul id="speciesList" class="autocomplete-list"></ul>
+      <label>Count:</label>
+      <div class="count-controls">
+        <button id="countMinus">−</button>
+        <span id="speciesCountDisplay">1</span>
+        <button id="countPlus">+</button>
+      </div>
+      <label for="breedingInput">Breeding Evidence:</label>
+      <select id="breedingInput">
+        <option value="">None</option>
+        <option value="X">Observed (X)</option>
+        <option value="H">Possible – Singing (H)</option>
+        <option value="S">Possible – Territorial (S)</option>
+        <option value="P">Probable – Pair (P)</option>
+        <option value="T">Probable – Agitated (T)</option>
+        <option value="C">Confirmed – Nest (C)</option>
+      </select>
+      <!-- BUG FIX #1: IDs changed from passHt/flightDir → passHtInput/flightDirInput -->
+      <input type="text" id="passHtInput"    name="passHtInput"    placeholder="Flyover Pass Height" />
+      <input type="text" id="flightDirInput" name="flightDirInput" placeholder="Flyover Direction" />
+      <textarea id="noteInput" rows="2" placeholder="Optional notes..."></textarea>
+      <div style="margin-top:10px;">
+        <button id="speciesSaveButton">Save Observation</button>
+        <button onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5) Data Drawer (bottom sheet) -->
+  <div id="dataDrawer" class="drawer" style="display:none;"></div>
+
+  <!-- 6) Master buttons (top-left) -->
+  <div id="masterButton" style="display:none;"></div>
+
+  <!-- 7) Countdown HUD placeholder -->
+  <div id="countdownHUD"></div>
+
+  <!-- 8) BBS Timer Strip (hidden by default; shown for BBS only) -->
+  <div id="survey-timer-strip" style="display:none;">
+    <i class="fas fa-clock fa-2x" title="Survey Length (min)"></i>
+    <input id="surveyLength" type="number" value="10" min="1" />
+    <div id="timerDisplay">10:00</div>
+    <button id="startTimerBtn" title="Start"><i class="fas fa-play"></i></button>
+    <button id="pauseTimerBtn" title="Pause"><i class="fas fa-pause"></i></button>
+    <button id="resetTimerBtn" title="Reset"><i class="fas fa-redo-alt"></i></button>
+  </div>
+
+  <!-- 9) Instructions Modal -->
+  <div id="instructionsModal">
+    <div class="modal-content">
+      <h1><i class="fas fa-circle-question"></i> Instructions</h1>
+      <ul style="padding-left:20px;">
+        <li>
+          <h2>Survey Setup</h2>
+          Navigate to your survey location and enter all metadata before beginning.
+          For BBS, orient to true north to accurately estimate observation positions.
+          The toggleable distance/bearing overlay (concentric rings at 50 m, 100 m, 150 m, 200 m
+          with cardinal directions) assists with spatial placement.
+          Range and bearing are calculated relative to your current GPS position.
+        </li>
+        <li>
+          <h2>Recording Observations</h2>
+          Tap the map at the estimated location of the observation.
+          <b>BBS:</b> Use the species search bar (common name or 4-letter code) to identify species.
+          <b>Moose:</b> Select species and observation type from the dropdowns.
+          <b>Turtle:</b> Record individual or habitat observations with the relevant fields.
+          Observations are not saved until you tap "Save Observation".
+        </li>
+        <li>
+          <h2>Editing &amp; Deleting</h2>
+          Tap any map marker to open its edit popup, or use the 🔍 icon in the data drawer.
+          Delete individual records with the ❌ button in the drawer or the Delete button in the popup.
+        </li>
+        <li>
+          <h2>Data Storage &amp; Export</h2>
+          All observations are cached in a local IndexedDB database for offline use.
+          Current-session markers are larger and brighter; archived markers are smaller and dark.
+          Export CSV, GeoJSON, or KML from the data drawer. Each survey type has its own export prefix
+          (BBS_, MOOSE_, TURTLE_).
+        </li>
+      </ul>
+      <div class="button-row">
+        <button onclick="closeInstructions()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Global species list (BBS) -->
+  <script src="data/species_list.js"></script>
+  <!-- App entry point -->
+  <script type="module" src="js/main.js"></script>
+
+</body>
+</html>
