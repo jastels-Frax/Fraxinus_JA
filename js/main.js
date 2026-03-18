@@ -16,6 +16,7 @@ import {
   initNewSession, saveDraft, submitSession,
   loadSessions, deleteSession, resumeSession, clearInMemoryArrays
 } from './sessions.js';
+import { speciesMarkers, mooseObservations, turtleObservations, habitatObservations } from './storageData.js';
 import {
   exportSpeciesCSV, exportSpeciesGeoJSON, exportSpeciesKML,
   exportMooseCSV,   exportMooseGeoJSON,   exportMooseKML,
@@ -95,25 +96,60 @@ function _returnToHome() {
   _renderSessionLists();
 }
 
-// ─── Back button — auto-save draft if observations exist ─────────────────
-window.goBackToSelection = async function () {
-  try { await saveDraft(); } catch (e) { console.error('Auto-save failed:', e); }
+// ─── Observation count for the active survey ──────────────────────────────
+function _currentObsCount() {
+  const primary = activeSurvey === 'BBS'   ? speciesMarkers.length
+                : activeSurvey === 'MOOSE' ? mooseObservations.length
+                :                            turtleObservations.length;
+  return primary + habitatObservations.length;
+}
+
+// ─── "No observations" popup ──────────────────────────────────────────────
+function _showNoDataModal() {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9500;display:flex;align-items:center;justify-content:center;font-family:Oswald,sans-serif;';
+  overlay.innerHTML = `
+    <div style="background:#222;border:1px solid #3a3a3a;border-radius:12px;padding:28px 32px;text-align:center;max-width:320px;width:90vw;box-shadow:0 8px 32px rgba(0,0,0,0.7);">
+      <div style="font-size:2rem;margin-bottom:12px;">📋</div>
+      <h2 style="color:#f0f0f0;font-family:Oswald,sans-serif;font-size:1.1rem;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;margin:0 0 10px;">No Observations</h2>
+      <p style="color:#999;font-family:Oswald,sans-serif;font-size:0.85rem;font-weight:300;margin:0 0 20px;line-height:1.5;">Add at least one observation before saving or submitting.</p>
+      <button id="_noDataOk" style="font-family:Oswald,sans-serif;font-size:0.9rem;font-weight:500;letter-spacing:0.05em;text-transform:uppercase;padding:9px 20px;border-radius:6px;cursor:pointer;background:#2d6b2d;border:1px solid #3d8f3d;color:#fff;">OK</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  overlay.querySelector('#_noDataOk').addEventListener('click', close);
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+}
+
+// ─── Back button — navigate immediately; save happens in the background ───
+// We must NOT await any DB operation here — if IDB hangs the button freezes.
+window.goBackToSelection = function () {
+  saveDraft().catch(e => console.warn('Back-button auto-save failed:', e));
+  clearInMemoryArrays();   // clear now so a new survey starts clean
   _returnToHome();
 };
 
 // ─── Save to Drafts button ────────────────────────────────────────────────
 window.saveDraftAndGoHome = async function () {
-  try { await saveDraft(); } catch (e) { console.error('Save draft failed:', e); }
+  if (_currentObsCount() === 0) { _showNoDataModal(); return; }
+  try {
+    await saveDraft();
+  } catch (e) {
+    console.error('Save draft failed:', e);
+    alert('Could not save draft:\n' + (e?.message || String(e)));
+  }
   _returnToHome();
 };
 
 // ─── Submit button — save, show export dialog, then go home ──────────────
 window.submitAndShowExport = async function () {
+  if (_currentObsCount() === 0) { _showNoDataModal(); return; }
   try {
     await submitSession();
     _showExportDialog(() => _returnToHome());
   } catch (e) {
     console.error('Submit failed:', e);
+    alert('Could not submit:\n' + (e?.message || String(e)));
     _returnToHome();
   }
 };

@@ -61,16 +61,20 @@ export function clearInMemoryArrays() {
 
 // ─── Build the session record ─────────────────────────────────────────────
 async function _buildRecord(status) {
+  // Capture all synchronous state BEFORE the first await so that
+  // fire-and-forget callers (e.g. the back button) can't race with
+  // clearInMemoryArrays() or a new survey being launched.
+  const id       = _sessionId;
+  const type     = G.activeSurvey;
+  const label    = _buildLabel();
+  const metadata = G.getMetadataSnapshot();
+  const obsCount = _obsCount();
+  const snapshot = _serializeObs();
+
   const sessions = await _loadAllSessions();
-  const existing = sessions.find(s => s.id === _sessionId);
+  const existing = sessions.find(s => s.id === id);
   return {
-    id:        _sessionId,
-    type:      G.activeSurvey,
-    status,
-    label:     _buildLabel(),
-    metadata:  G.getMetadataSnapshot(),
-    obsCount:  _obsCount(),
-    snapshot:  _serializeObs(),
+    id, type, status, label, metadata, obsCount, snapshot,
     createdAt: existing?.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };

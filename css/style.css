@@ -70,6 +70,10 @@ body {
   max-width: 380px;
   width: 100%;
   height: auto;
+  border-radius: 14px;
+  border: 2px solid #111;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  display: block;
 }
 
 /* Text fallback shown if image is missing */
