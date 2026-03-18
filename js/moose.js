@@ -5,6 +5,7 @@ import { syncMooseToIndexedDB } from './storage.js';
 import { updateTable } from './ui.js';
 import { map } from './map.js';
 import * as G from './surveyGlobals.js';
+import { capturePhoto } from './photo.js';
 
 // ─── Modal State ──────────────────────────────────────────────────────────
 let moosePlacingPoint = false;
@@ -149,7 +150,8 @@ export function createMoosePopupHTML(index, obs) {
     </div>
     <div class="form-row">
       <label>Photo Ref:</label>
-      <input type="text" id="moosePopPhoto-${index}" value="${obs.photoRef || ''}" placeholder="Photo filename or ID" />
+      <input type="text" id="moosePopPhoto-${index}" value="${obs.photoRef || ''}" placeholder="Photo filename or ID" style="flex:1;" />
+      <button type="button" onclick="capturePopupPhoto(${obs.latlng?.lat ?? null}, ${obs.latlng?.lng ?? null}, 'moosePopPhoto-${index}')" title="Take Photo"><i class="fas fa-camera"></i></button>
     </div>
     <div class="form-row">
       <label>Notes:</label>
@@ -197,6 +199,7 @@ window.updateMooseObservation = updateMooseObservation;
 window.deleteMooseMarker      = deleteMooseMarker;
 window.saveMooseObservation   = saveMooseObservation;
 window.closeMooseModal        = closeMooseModal;
+window.captureMoosePhoto      = () => capturePhoto(mooseCurrentLatLng, 'moosePhotoRefInput');
 
 // ─── Option Generators ────────────────────────────────────────────────────
 function _sel(val, cur) { return val === cur ? 'selected' : ''; }
@@ -258,7 +261,10 @@ export function injectMooseModal() {
         ${_mooseHabitatOptions()}
       </select>
       <label>Photo Reference (filename / ID):</label>
-      <input type="text" id="moosePhotoRefInput" placeholder="e.g. IMG_0042" />
+      <div style="display:flex; gap:6px; align-items:center;">
+        <input type="text" id="moosePhotoRefInput" placeholder="e.g. IMG_0042" style="flex:1;" />
+        <button type="button" onclick="captureMoosePhoto()" title="Take Photo"><i class="fas fa-camera"></i></button>
+      </div>
       <label>Notes:</label>
       <textarea id="mooseNoteInput" rows="3" placeholder="Optional notes..."></textarea>
       <div style="margin-top:10px; display:flex; gap:8px;">

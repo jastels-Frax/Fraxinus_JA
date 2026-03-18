@@ -5,6 +5,7 @@ import { syncTurtleToIndexedDB } from './storage.js';
 import { updateTable } from './ui.js';
 import { map } from './map.js';
 import * as G from './surveyGlobals.js';
+import { capturePhoto } from './photo.js';
 
 // ─── Modal State ──────────────────────────────────────────────────────────
 let turtlePlacingPoint = false;
@@ -231,7 +232,8 @@ export function createTurtlePopupHTML(index, obs) {
     </div>
     <div class="form-row">
       <label>Photo ID:</label>
-      <input type="text" id="turtlePopPhoto-${index}" value="${obs.photoID || ''}" placeholder="Photo filename or ID" />
+      <input type="text" id="turtlePopPhoto-${index}" value="${obs.photoID || ''}" placeholder="Photo filename or ID" style="flex:1;" />
+      <button type="button" onclick="capturePopupPhoto(${obs.latlng?.lat ?? null}, ${obs.latlng?.lng ?? null}, 'turtlePopPhoto-${index}')" title="Take Photo"><i class="fas fa-camera"></i></button>
     </div>
     <div class="form-row">
       <label>Notes:</label>
@@ -302,6 +304,7 @@ window.deleteTurtleMarker      = deleteTurtleMarker;
 window.saveTurtleObservation   = saveTurtleObservation;
 window.closeTurtleModal        = closeTurtleModal;
 window.refreshTurtlePopup      = refreshTurtlePopup;
+window.captureTurtlePhoto      = () => capturePhoto(turtleCurrentLatLng, 'turtlePhotoIDInput');
 
 // ─── Option Generators ────────────────────────────────────────────────────
 function _sel(val, cur) { return val === cur ? 'selected' : ''; }
@@ -401,7 +404,10 @@ export function injectTurtleModal() {
       </select>
 
       <label>Photo ID (filename / reference):</label>
-      <input type="text" id="turtlePhotoIDInput" placeholder="e.g. IMG_0042" />
+      <div style="display:flex; gap:6px; align-items:center;">
+        <input type="text" id="turtlePhotoIDInput" placeholder="e.g. IMG_0042" style="flex:1;" />
+        <button type="button" onclick="captureTurtlePhoto()" title="Take Photo"><i class="fas fa-camera"></i></button>
+      </div>
 
       <label>Notes:</label>
       <textarea id="turtleNoteInput" rows="3" placeholder="Optional notes..."></textarea>
