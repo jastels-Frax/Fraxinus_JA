@@ -225,11 +225,11 @@ function _sel(val, cur) { return val === cur ? 'selected' : ''; }
 
 // Known values for each field (without 'Other' — that's appended automatically)
 const _SPECIES_LIST  = [
-  'Moose', 'White-tailed Deer', 'Black Bear', 'Coyote', 'Eastern Wolf',
-  'Red Fox', 'Canada Lynx', 'Bobcat', 'River Otter', 'Beaver',
-  'Snowshoe Hare', 'Porcupine', 'Mink', 'American Marten', 'Fisher',
-  'Short-tailed Weasel', 'Long-tailed Weasel', 'Raccoon', 'Striped Skunk',
-  'Red Squirrel', 'Muskrat', 'Unknown'
+  'Moose', 'White-tailed Deer', 'Black Bear', 'Coyote',
+  'Red Fox', 'Canada Lynx',
+  'River Otter', 'Beaver', 'Mink', 'American Marten', 'Fisher',
+  'Snowshoe Hare', 'Porcupine', 'Raccoon', 'Striped Skunk',
+  'Unknown'
 ];
 const _OBS_TYPE_LIST = [
   'Browse', 'Tracks', 'Scat', 'Rub', 'Wallow', 'Bed',
