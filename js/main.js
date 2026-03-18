@@ -5,7 +5,7 @@ import './storageData.js';
 import './surveyGlobals.js';
 
 import { setActiveSurvey } from './surveyGlobals.js';
-import { initializeMap }   from './map.js';
+import { initializeMap, destroyMap } from './map.js';
 import { initTimerBindings, updateTable } from './ui.js';
 import { closeModal }      from './modal.js';
 import { updateSpeciesList, saveSpeciesObservation } from './species.js';
@@ -70,3 +70,20 @@ function _launchSurvey(type) {
   // 9. Initial empty table render
   updateTable();
 }
+
+// ─── Back to survey selection ──────────────────────────────────────────────
+window.goBackToSelection = function () {
+  // Close any open drawers / modals first
+  document.getElementById('dataDrawer').style.display      = 'none';
+  document.getElementById('surveyModal').style.display     = 'none';
+  document.getElementById('modalBackdrop').style.display   = 'none';
+  document.getElementById('survey-timer-strip').style.display = 'none';
+  document.getElementById('masterButton').style.display    = 'none';
+  document.getElementById('map').style.display             = 'none';
+
+  // Tear down the Leaflet map so it can be re-initialized next launch
+  destroyMap();
+
+  // Return to selection screen
+  document.getElementById('surveySelection').style.display = '';
+};

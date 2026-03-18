@@ -50,7 +50,7 @@ export function closeSurveyModal() {
       projectID:   _val('projectIDInput'),
       observer:    _val('observerInput'),
       pointID:     _val('pointIDInput'),
-      surveyType:  _val('surveyTypeInput'),
+      surveyType:  'Breeding Bird Survey',
       surveyLength:_val('surveyLengthInput'),
       wind:        _val('windInput'),
       windDir:     _val('windDirInput'),
@@ -115,12 +115,6 @@ export function injectSurveyModal() {
         <input type="text" id="observerInput" />
         <label>Survey Point ID:</label>
         <input type="text" id="pointIDInput" />
-        <label>Survey Type:</label>
-        <select id="surveyTypeInput">
-          <option value="Breeding Bird Survey">Breeding Bird Survey</option>
-          <option value="Mainland Moose Survey">Mainland Moose Survey</option>
-          <option value="Wood Turtle Survey">Wood Turtle Survey</option>
-        </select>
         <label>Survey Length (min):</label>
         <input type="number" id="surveyLengthInput" />
         <label>Wind Speed:</label>
@@ -227,7 +221,6 @@ function prefillSurveyModal() {
     _setVal('projectIDInput',   projectID);
     _setVal('observerInput',    observer);
     _setVal('pointIDInput',     pointID);
-    _setVal('surveyTypeInput',  'Breeding Bird Survey');
     _setVal('surveyLengthInput',surveyLength);
     _setVal('windInput',        wind);
     _setVal('windDirInput',     windDir);

@@ -85,6 +85,7 @@ function addMasterButtons() {
                      :                      'Record Turtle Observation';
 
   container.innerHTML = `
+    <button onclick="goBackToSelection()" title="Back to Survey Selection"><i class="fas fa-arrow-left fa-2x"></i></button>
     <button onclick="showInstructions()" title="Help"><i class="fas fa-circle-question fa-2x"></i></button>
     <button id="btnSurvey" title="Survey Metadata"><i class="fas fa-clipboard-list fa-2x"></i></button>
     <button id="btnDrawer" title="Observations"><i class="fas fa-rectangle-list fa-2x"></i></button>
@@ -130,6 +131,20 @@ function addMasterButtons() {
       if (!m.isHabitatPlacingPoint()) m.showHabitatModal(observerLocation);
     });
   });
+}
+
+// ─── Destroy map (called when returning to survey selection) ──────────────
+export function destroyMap() {
+  if (map) {
+    map.remove();
+    map = null;
+  }
+  observerLocation = null;
+  userLocationMarker = null;
+  userAccuracyCircle = null;
+  overlayGroup = null;
+  const container = document.getElementById('masterButton');
+  if (container) container.innerHTML = '';
 }
 
 // ─── Distance/Bearing Overlay ─────────────────────────────────────────────
