@@ -16,7 +16,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Survey selection button handlers ──────────────────────────────────
   document.querySelectorAll('.survey-choice-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      _launchSurvey(btn.dataset.survey); // 'BBS' | 'MOOSE' | 'TURTLE'
+      try {
+        _launchSurvey(btn.dataset.survey);
+      } catch (err) {
+        alert('Error launching survey:\n' + err.message + '\n\nCheck browser console (F12) for details.');
+        console.error(err);
+      }
     });
   });
 
