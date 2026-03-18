@@ -9,7 +9,7 @@ import { createTurtlePopupHTML } from './turtle.js';
 import { createHabitatPopupHTML } from './habitat.js';
 
 const DB_NAME    = 'SpeciesSurveyDB';
-const DB_VERSION = 4; // bumped to add sessions store
+const DB_VERSION = 5; // v5: ensure sessions store exists on all clients
 
 let db;
 

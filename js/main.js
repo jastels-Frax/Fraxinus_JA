@@ -95,20 +95,25 @@ function _returnToHome() {
 
 // ─── Back button — auto-save draft if observations exist ─────────────────
 window.goBackToSelection = async function () {
-  await saveDraft();
+  try { await saveDraft(); } catch (e) { console.error('Auto-save failed:', e); }
   _returnToHome();
 };
 
 // ─── Save to Drafts button ────────────────────────────────────────────────
 window.saveDraftAndGoHome = async function () {
-  await saveDraft();
+  try { await saveDraft(); } catch (e) { console.error('Save draft failed:', e); }
   _returnToHome();
 };
 
 // ─── Submit button — save, show export dialog, then go home ──────────────
 window.submitAndShowExport = async function () {
-  await submitSession();
-  _showExportDialog(() => _returnToHome());
+  try {
+    await submitSession();
+    _showExportDialog(() => _returnToHome());
+  } catch (e) {
+    console.error('Submit failed:', e);
+    _returnToHome();
+  }
 };
 
 // ─── Export dialog (shown after submit) ──────────────────────────────────
