@@ -24,7 +24,14 @@
 
       <!-- Fraxinus branding header -->
       <div class="frax-brand">
-        <img src="img/fraxinus-logo.png" alt="Fraxinus Environmental &amp; Geomatics" class="frax-logo-full" />
+        <img src="img/fraxinus-logo.png" alt="Fraxinus Environmental &amp; Geomatics" class="frax-logo-full"
+             onerror="this.style.display='none'; document.getElementById('frax-text-brand').style.display='flex';" />
+        <div id="frax-text-brand" class="frax-text-brand" style="display:none;">
+          <div class="frax-wordmark">
+            <span class="frax-name">FRAXINUS</span>
+            <span class="frax-tagline">Environmental &amp; Geomatics</span>
+          </div>
+        </div>
       </div>
 
       <h1 class="selection-title">Wildlife Field Survey</h1>
