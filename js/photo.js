@@ -49,3 +49,11 @@ window.capturePopupPhoto = function(lat, lng, inputId) {
   const latlng = (lat != null && lng != null) ? { lat, lng } : null;
   capturePhoto(latlng, inputId);
 };
+
+// Show/hide the companion "other" row/input based on the current select value.
+// otherId can be the text input itself or a wrapper row element.
+// Called via onchange="handleOtherSelect(this, 'someId')" in HTML.
+window.handleOtherSelect = function(sel, otherId) {
+  const el = document.getElementById(otherId);
+  if (el) el.style.display = sel.value === 'Other' ? '' : 'none';
+};

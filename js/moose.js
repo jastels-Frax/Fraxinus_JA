@@ -27,11 +27,15 @@ export function showMooseModal(latlng) {
   if (!modal || !backdrop) return;
 
   // Reset fields
-  modal.querySelector('#mooseSpeciesInput').value = '';
-  modal.querySelector('#mooseObsTypeInput').value = '';
-  modal.querySelector('#mooseHabitatInput').value = '';
-  modal.querySelector('#moosePhotoRefInput').value = '';
-  modal.querySelector('#mooseNoteInput').value = '';
+  modal.querySelector('#mooseSpeciesInput').value   = '';
+  modal.querySelector('#mooseObsTypeInput').value   = '';
+  modal.querySelector('#mooseHabitatInput').value   = '';
+  modal.querySelector('#moosePhotoRefInput').value  = '';
+  modal.querySelector('#mooseNoteInput').value      = '';
+  ['mooseSpeciesOtherWrap','mooseObsTypeOtherWrap','mooseHabitatOtherWrap'].forEach(id => {
+    const wrap = modal.querySelector(`#${id}`);
+    if (wrap) { wrap.style.display = 'none'; wrap.querySelector('input').value = ''; }
+  });
 
   modal.style.display = 'block';
   backdrop.style.display = 'block';
@@ -46,9 +50,9 @@ export function closeMooseModal() {
 
 // ─── Save Observation ─────────────────────────────────────────────────────
 export function saveMooseObservation() {
-  const species  = document.getElementById('mooseSpeciesInput')?.value.trim();
-  const obsType  = document.getElementById('mooseObsTypeInput')?.value.trim();
-  const habitat  = document.getElementById('mooseHabitatInput')?.value.trim();
+  const species  = _otherVal('mooseSpeciesInput',  'mooseSpeciesOther');
+  const obsType  = _otherVal('mooseObsTypeInput',  'mooseObsTypeOther');
+  const habitat  = _otherVal('mooseHabitatInput',  'mooseHabitatOther');
   const photoRef = document.getElementById('moosePhotoRefInput')?.value.trim();
   const note     = document.getElementById('mooseNoteInput')?.value.trim();
 
@@ -124,6 +128,9 @@ export function saveMooseObservation() {
 
 // ─── Popup HTML ───────────────────────────────────────────────────────────
 export function createMoosePopupHTML(index, obs) {
+  const spcOther  = _customText(_SPECIES_LIST,  obs.species);
+  const otOther   = _customText(_OBS_TYPE_LIST, obs.obsType);
+  const habOther  = _customText(_HABITAT_LIST,  obs.habitat);
   const div = document.createElement('div');
   div.className = 'popup-content compact';
   div.innerHTML = `
@@ -132,21 +139,33 @@ export function createMoosePopupHTML(index, obs) {
     </div>
     <div class="form-row">
       <label>Species:</label>
-      <select id="moosePopSpecies-${index}">
+      <select id="moosePopSpecies-${index}" onchange="handleOtherSelect(this,'moosePopSpeciesOtherRow-${index}')">
         ${_mooseSpeciesOptions(obs.species)}
       </select>
     </div>
+    <div class="form-row" id="moosePopSpeciesOtherRow-${index}" style="${(spcOther || obs.species === 'Other') ? '' : 'display:none;'}">
+      <label></label>
+      <input type="text" id="moosePopSpeciesOther-${index}" value="${spcOther}" placeholder="Specify species…" style="flex:1;" />
+    </div>
     <div class="form-row">
       <label>Obs. Type:</label>
-      <select id="moosePopObsType-${index}">
+      <select id="moosePopObsType-${index}" onchange="handleOtherSelect(this,'moosePopObsTypeOtherRow-${index}')">
         ${_mooseObsTypeOptions(obs.obsType)}
       </select>
     </div>
+    <div class="form-row" id="moosePopObsTypeOtherRow-${index}" style="${(otOther || obs.obsType === 'Other') ? '' : 'display:none;'}">
+      <label></label>
+      <input type="text" id="moosePopObsTypeOther-${index}" value="${otOther}" placeholder="Specify observation type…" style="flex:1;" />
+    </div>
     <div class="form-row">
       <label>Habitat:</label>
-      <select id="moosePopHabitat-${index}">
+      <select id="moosePopHabitat-${index}" onchange="handleOtherSelect(this,'moosePopHabitatOtherRow-${index}')">
         ${_mooseHabitatOptions(obs.habitat)}
       </select>
+    </div>
+    <div class="form-row" id="moosePopHabitatOtherRow-${index}" style="${(habOther || obs.habitat === 'Other') ? '' : 'display:none;'}">
+      <label></label>
+      <input type="text" id="moosePopHabitatOther-${index}" value="${habOther}" placeholder="Specify habitat…" style="flex:1;" />
     </div>
     <div class="form-row">
       <label>Photo Ref:</label>
@@ -169,9 +188,9 @@ export function createMoosePopupHTML(index, obs) {
 function updateMooseObservation(index) {
   const rec = mooseObservations[index];
   if (!rec) return;
-  rec.species  = document.getElementById(`moosePopSpecies-${index}`)?.value  || rec.species;
-  rec.obsType  = document.getElementById(`moosePopObsType-${index}`)?.value  || rec.obsType;
-  rec.habitat  = document.getElementById(`moosePopHabitat-${index}`)?.value  || rec.habitat;
+  rec.species  = _otherVal(`moosePopSpecies-${index}`,  `moosePopSpeciesOther-${index}`)  || rec.species;
+  rec.obsType  = _otherVal(`moosePopObsType-${index}`,  `moosePopObsTypeOther-${index}`)  || rec.obsType;
+  rec.habitat  = _otherVal(`moosePopHabitat-${index}`,  `moosePopHabitatOther-${index}`)  || rec.habitat;
   rec.photoRef = document.getElementById(`moosePopPhoto-${index}`)?.value    || '';
   rec.note     = document.getElementById(`moosePopNote-${index}`)?.value     || '';
 
@@ -204,37 +223,59 @@ window.captureMoosePhoto      = () => capturePhoto(mooseCurrentLatLng, 'moosePho
 // ─── Option Generators ────────────────────────────────────────────────────
 function _sel(val, cur) { return val === cur ? 'selected' : ''; }
 
+// Known values for each field (without 'Other' — that's appended automatically)
+const _SPECIES_LIST  = [
+  'Moose', 'White-tailed Deer', 'Black Bear', 'Coyote', 'Eastern Wolf',
+  'Red Fox', 'Canada Lynx', 'Bobcat', 'River Otter', 'Beaver',
+  'Snowshoe Hare', 'Porcupine', 'Mink', 'American Marten', 'Fisher',
+  'Short-tailed Weasel', 'Long-tailed Weasel', 'Raccoon', 'Striped Skunk',
+  'Red Squirrel', 'Muskrat', 'Unknown'
+];
+const _OBS_TYPE_LIST = [
+  'Browse', 'Tracks', 'Scat', 'Rub', 'Wallow', 'Bed',
+  'Direct Visual', 'Antler Shed', 'Carcass/Remains',
+  'Trail Camera', 'Pellet Group', 'Unknown'
+];
+const _HABITAT_LIST  = [
+  'Open Wetland', 'Riparian Shrub', 'Upland Forest',
+  'Cutover/Regeneration', 'Lakeshore', 'Roadside',
+  'Coniferous Forest', 'Deciduous Forest', 'Mixed Forest',
+  'Bog/Fen', 'Agricultural Field'
+];
+
+// If stored value is not in the known list, pre-select "Other" in the dropdown.
+function _selWithOther(known, cur) {
+  return (cur && !known.includes(cur)) ? 'Other' : cur;
+}
+// Return the custom text if the stored value was free-form (not a known item or 'Other').
+function _customText(known, stored) {
+  if (!stored || stored === 'Other' || known.includes(stored)) return '';
+  return stored;
+}
+
 function _mooseSpeciesOptions(cur = '') {
-  const list = [
-    'Moose', 'White-tailed Deer', 'Black Bear', 'Coyote', 'Eastern Wolf',
-    'Red Fox', 'Canada Lynx', 'Bobcat', 'River Otter', 'Beaver',
-    'Snowshoe Hare', 'Porcupine', 'Mink', 'American Marten', 'Fisher',
-    'Short-tailed Weasel', 'Long-tailed Weasel', 'Raccoon', 'Striped Skunk',
-    'Red Squirrel', 'Muskrat', 'Unknown'
-  ];
+  const sel = _selWithOther(_SPECIES_LIST, cur);
   return `<option value="">-- Select --</option>` +
-    list.map(s => `<option value="${s}" ${_sel(s, cur)}>${s}</option>`).join('');
+    [..._SPECIES_LIST, 'Other'].map(s => `<option value="${s}" ${_sel(s, sel)}>${s}</option>`).join('');
 }
 
 function _mooseObsTypeOptions(cur = '') {
-  const list = [
-    'Browse', 'Tracks', 'Scat', 'Rub', 'Wallow', 'Bed',
-    'Direct Visual', 'Antler Shed', 'Carcass/Remains',
-    'Trail Camera', 'Pellet Group', 'Unknown'
-  ];
+  const sel = _selWithOther(_OBS_TYPE_LIST, cur);
   return `<option value="">-- Select --</option>` +
-    list.map(s => `<option value="${s}" ${_sel(s, cur)}>${s}</option>`).join('');
+    [..._OBS_TYPE_LIST, 'Other'].map(s => `<option value="${s}" ${_sel(s, sel)}>${s}</option>`).join('');
 }
 
 function _mooseHabitatOptions(cur = '') {
-  const list = [
-    'Open Wetland', 'Riparian Shrub', 'Upland Forest',
-    'Cutover/Regeneration', 'Lakeshore', 'Roadside',
-    'Coniferous Forest', 'Deciduous Forest', 'Mixed Forest',
-    'Bog/Fen', 'Agricultural Field', 'Other'
-  ];
+  const sel = _selWithOther(_HABITAT_LIST, cur);
   return `<option value="">-- Select --</option>` +
-    list.map(s => `<option value="${s}" ${_sel(s, cur)}>${s}</option>`).join('');
+    [..._HABITAT_LIST, 'Other'].map(s => `<option value="${s}" ${_sel(s, sel)}>${s}</option>`).join('');
+}
+
+// Read a select value, substituting the companion text input when "Other" is selected.
+function _otherVal(selectId, otherId) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return '';
+  return sel.value === 'Other' ? (document.getElementById(otherId)?.value.trim() || '') : sel.value;
 }
 
 // ─── Inject modal HTML into DOM ───────────────────────────────────────────
@@ -249,17 +290,26 @@ export function injectMooseModal() {
     <div class="modal-content">
       <h2>Wildlife Observation</h2>
       <label>Species:</label>
-      <select id="mooseSpeciesInput">
+      <select id="mooseSpeciesInput" onchange="handleOtherSelect(this,'mooseSpeciesOtherWrap')">
         ${_mooseSpeciesOptions()}
       </select>
+      <div id="mooseSpeciesOtherWrap" style="display:none; margin-top:4px;">
+        <input type="text" id="mooseSpeciesOther" placeholder="Specify species…" style="width:100%;" />
+      </div>
       <label>Observation Type:</label>
-      <select id="mooseObsTypeInput">
+      <select id="mooseObsTypeInput" onchange="handleOtherSelect(this,'mooseObsTypeOtherWrap')">
         ${_mooseObsTypeOptions()}
       </select>
+      <div id="mooseObsTypeOtherWrap" style="display:none; margin-top:4px;">
+        <input type="text" id="mooseObsTypeOther" placeholder="Specify observation type…" style="width:100%;" />
+      </div>
       <label>Habitat:</label>
-      <select id="mooseHabitatInput">
+      <select id="mooseHabitatInput" onchange="handleOtherSelect(this,'mooseHabitatOtherWrap')">
         ${_mooseHabitatOptions()}
       </select>
+      <div id="mooseHabitatOtherWrap" style="display:none; margin-top:4px;">
+        <input type="text" id="mooseHabitatOther" placeholder="Specify habitat…" style="width:100%;" />
+      </div>
       <label>Photo Reference (filename / ID):</label>
       <div style="display:flex; gap:6px; align-items:center;">
         <input type="text" id="moosePhotoRefInput" placeholder="e.g. IMG_0042" style="flex:1;" />

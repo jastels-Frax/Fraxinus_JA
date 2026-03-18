@@ -39,6 +39,11 @@ export function showTurtleModal(latlng) {
   modal.querySelector('#turtlePhotoIDInput').value    = '';
   modal.querySelector('#turtleNoteInput').value       = '';
 
+  ['turtleObsTypeOtherWrap','turtleConditionOtherWrap','turtleActivityOtherWrap','turtleHabitatOtherWrap'].forEach(id => {
+    const wrap = modal.querySelector(`#${id}`);
+    if (wrap) { wrap.style.display = 'none'; wrap.querySelector('input').value = ''; }
+  });
+
   _refreshTurtleModalVisibility(modal);
 
   modal.style.display    = 'block';
@@ -64,15 +69,15 @@ function _refreshTurtleModalVisibility(modal) {
 
 // ─── Save Observation ─────────────────────────────────────────────────────
 export function saveTurtleObservation() {
-  const obsType       = document.getElementById('turtleObsTypeInput')?.value.trim();
+  const obsType       = _otherVal('turtleObsTypeInput',   'turtleObsTypeOther');
   const sex           = document.getElementById('turtleSexInput')?.value.trim()       || '';
   const ageClass      = document.getElementById('turtleAgeClassInput')?.value.trim()  || '';
   const carapace      = document.getElementById('turtleCarapaceInput')?.value.trim()  || '';
-  const condition     = document.getElementById('turtleConditionInput')?.value.trim() || '';
+  const condition     = _otherVal('turtleConditionInput', 'turtleConditionOther');
   const basking       = document.getElementById('turtleBaskingInput')?.value.trim()   || '';
   const substrate     = document.getElementById('turtleSubstrateInput')?.value.trim() || '';
-  const activity      = document.getElementById('turtleActivityInput')?.value.trim()  || '';
-  const habitat       = document.getElementById('turtleHabitatInput')?.value.trim()   || '';
+  const activity      = _otherVal('turtleActivityInput',  'turtleActivityOther');
+  const habitat       = _otherVal('turtleHabitatInput',   'turtleHabitatOther');
   const photoID       = document.getElementById('turtlePhotoIDInput')?.value.trim()   || '';
   const note          = document.getElementById('turtleNoteInput')?.value.trim()       || '';
 
@@ -151,8 +156,12 @@ export function saveTurtleObservation() {
 
 // ─── Popup HTML ───────────────────────────────────────────────────────────
 export function createTurtlePopupHTML(index, obs) {
-  const isDirect  = obs.obsType === 'Direct Species Observation';
-  const isHabitat = obs.obsType === 'Habitat Observation';
+  const isDirect   = obs.obsType === 'Direct Species Observation';
+  const isHabitat  = obs.obsType === 'Habitat Observation';
+  const otOther    = _customText(_TURTLE_OBS_TYPES,  obs.obsType);
+  const condOther  = _customText(_TURTLE_CONDITIONS, obs.condition);
+  const actOther   = _customText(_TURTLE_ACTIVITIES, obs.activity);
+  const habOther   = _customText(_TURTLE_HABITATS,   obs.habitat);
   const div = document.createElement('div');
   div.className = 'popup-content compact';
   div.innerHTML = `
@@ -160,9 +169,12 @@ export function createTurtlePopupHTML(index, obs) {
     <div class="form-row">
       <label>Obs. Type:</label>
       <select id="turtlePopObsType-${index}" onchange="refreshTurtlePopup(${index})">
-        <option value="Direct Species Observation" ${obs.obsType === 'Direct Species Observation' ? 'selected' : ''}>Direct Species Observation</option>
-        <option value="Habitat Observation" ${obs.obsType === 'Habitat Observation' ? 'selected' : ''}>Habitat Observation</option>
+        ${_turtleObsTypeOptions(obs.obsType)}
       </select>
+    </div>
+    <div class="form-row" id="turtlePopObsTypeOtherRow-${index}" style="${(otOther || obs.obsType === 'Other') ? '' : 'display:none;'}">
+      <label></label>
+      <input type="text" id="turtlePopObsTypeOther-${index}" value="${otOther}" placeholder="Specify observation type…" style="flex:1;" />
     </div>
 
     <div id="turtlePopDirect-${index}" style="display:${isDirect ? 'block' : 'none'};">
@@ -191,15 +203,13 @@ export function createTurtlePopupHTML(index, obs) {
       </div>
       <div class="form-row">
         <label>Condition:</label>
-        <select id="turtlePopCondition-${index}">
-          <option value="">-- Select --</option>
-          <option value="Excellent" ${obs.condition === 'Excellent' ? 'selected' : ''}>Excellent</option>
-          <option value="Good"      ${obs.condition === 'Good'      ? 'selected' : ''}>Good</option>
-          <option value="Fair"      ${obs.condition === 'Fair'      ? 'selected' : ''}>Fair</option>
-          <option value="Poor"      ${obs.condition === 'Poor'      ? 'selected' : ''}>Poor</option>
-          <option value="Injured"   ${obs.condition === 'Injured'   ? 'selected' : ''}>Injured</option>
-          <option value="Dead"      ${obs.condition === 'Dead'      ? 'selected' : ''}>Dead</option>
+        <select id="turtlePopCondition-${index}" onchange="handleOtherSelect(this,'turtlePopConditionOtherRow-${index}')">
+          ${_turtleConditionOptions(obs.condition)}
         </select>
+      </div>
+      <div class="form-row" id="turtlePopConditionOtherRow-${index}" style="${(condOther || obs.condition === 'Other') ? '' : 'display:none;'}">
+        <label></label>
+        <input type="text" id="turtlePopConditionOther-${index}" value="${condOther}" placeholder="Specify condition…" style="flex:1;" />
       </div>
       <div class="form-row">
         <label>Basking:</label>
@@ -218,17 +228,25 @@ export function createTurtlePopupHTML(index, obs) {
     <div id="turtlePopHabitat-${index}" style="display:${isHabitat ? 'block' : 'none'};">
       <div class="form-row">
         <label>Activity:</label>
-        <select id="turtlePopActivity-${index}">
+        <select id="turtlePopActivity-${index}" onchange="handleOtherSelect(this,'turtlePopActivityOtherRow-${index}')">
           ${_turtleActivityOptions(obs.activity)}
         </select>
+      </div>
+      <div class="form-row" id="turtlePopActivityOtherRow-${index}" style="${(actOther || obs.activity === 'Other') ? '' : 'display:none;'}">
+        <label></label>
+        <input type="text" id="turtlePopActivityOther-${index}" value="${actOther}" placeholder="Specify activity…" style="flex:1;" />
       </div>
     </div>
 
     <div class="form-row">
       <label>Riparian Habitat:</label>
-      <select id="turtlePopHabitatType-${index}">
+      <select id="turtlePopHabitatType-${index}" onchange="handleOtherSelect(this,'turtlePopHabitatOtherRow-${index}')">
         ${_turtleHabitatOptions(obs.habitat)}
       </select>
+    </div>
+    <div class="form-row" id="turtlePopHabitatOtherRow-${index}" style="${(habOther || obs.habitat === 'Other') ? '' : 'display:none;'}">
+      <label></label>
+      <input type="text" id="turtlePopHabitatOther-${index}" value="${habOther}" placeholder="Specify habitat…" style="flex:1;" />
     </div>
     <div class="form-row">
       <label>Photo ID:</label>
@@ -252,8 +270,10 @@ function refreshTurtlePopup(index) {
   const type      = document.getElementById(`turtlePopObsType-${index}`)?.value;
   const isDirect  = type === 'Direct Species Observation';
   const isHabitat = type === 'Habitat Observation';
-  document.getElementById(`turtlePopDirect-${index}`).style.display  = isDirect  ? 'block' : 'none';
-  document.getElementById(`turtlePopHabitat-${index}`).style.display = isHabitat ? 'block' : 'none';
+  document.getElementById(`turtlePopDirect-${index}`).style.display       = isDirect  ? 'block' : 'none';
+  document.getElementById(`turtlePopHabitat-${index}`).style.display      = isHabitat ? 'block' : 'none';
+  const otherRow = document.getElementById(`turtlePopObsTypeOtherRow-${index}`);
+  if (otherRow) otherRow.style.display = type === 'Other' ? '' : 'none';
 }
 
 // ─── Popup Save / Delete ──────────────────────────────────────────────────
@@ -261,15 +281,15 @@ function updateTurtleObservation(index) {
   const rec = turtleObservations[index];
   if (!rec) return;
 
-  rec.obsType        = document.getElementById(`turtlePopObsType-${index}`)?.value    || rec.obsType;
-  rec.sex            = document.getElementById(`turtlePopSex-${index}`)?.value        || '';
-  rec.ageClass       = document.getElementById(`turtlePopAge-${index}`)?.value        || '';
-  rec.carapaceLength = document.getElementById(`turtlePopCarapace-${index}`)?.value   || '';
-  rec.condition      = document.getElementById(`turtlePopCondition-${index}`)?.value  || '';
-  rec.basking        = document.getElementById(`turtlePopBasking-${index}`)?.value    || '';
-  rec.substrate      = document.getElementById(`turtlePopSubstrate-${index}`)?.value  || '';
-  rec.activity       = document.getElementById(`turtlePopActivity-${index}`)?.value   || '';
-  rec.habitat        = document.getElementById(`turtlePopHabitatType-${index}`)?.value|| '';
+  rec.obsType        = _otherVal(`turtlePopObsType-${index}`,     `turtlePopObsTypeOther-${index}`)   || rec.obsType;
+  rec.sex            = document.getElementById(`turtlePopSex-${index}`)?.value                         || '';
+  rec.ageClass       = document.getElementById(`turtlePopAge-${index}`)?.value                         || '';
+  rec.carapaceLength = document.getElementById(`turtlePopCarapace-${index}`)?.value                    || '';
+  rec.condition      = _otherVal(`turtlePopCondition-${index}`,  `turtlePopConditionOther-${index}`)   || '';
+  rec.basking        = document.getElementById(`turtlePopBasking-${index}`)?.value                     || '';
+  rec.substrate      = document.getElementById(`turtlePopSubstrate-${index}`)?.value                   || '';
+  rec.activity       = _otherVal(`turtlePopActivity-${index}`,   `turtlePopActivityOther-${index}`)    || '';
+  rec.habitat        = _otherVal(`turtlePopHabitatType-${index}`, `turtlePopHabitatOther-${index}`)    || '';
   rec.photoID        = document.getElementById(`turtlePopPhoto-${index}`)?.value      || '';
   rec.note           = document.getElementById(`turtlePopNote-${index}`)?.value       || '';
 
@@ -309,20 +329,47 @@ window.captureTurtlePhoto      = () => capturePhoto(turtleCurrentLatLng, 'turtle
 // ─── Option Generators ────────────────────────────────────────────────────
 function _sel(val, cur) { return val === cur ? 'selected' : ''; }
 
+const _TURTLE_OBS_TYPES  = ['Direct Species Observation', 'Habitat Observation'];
+const _TURTLE_CONDITIONS = ['Excellent', 'Good', 'Fair', 'Poor', 'Injured', 'Dead'];
+const _TURTLE_ACTIVITIES = ['Basking', 'Foraging', 'Overwintering', 'Nesting', 'Travelling', 'Refuge/Shelter', 'Unknown'];
+const _TURTLE_HABITATS   = ['Marsh', 'Riparian Forest', 'Upland Forest', 'Rocky Shore', 'Sandy Bank', 'Agricultural Field', 'Road/Path', 'Open Water', 'Gravel Bar', 'Shrub/Scrub'];
+
+function _selWithOther(known, cur) {
+  return (cur && !known.includes(cur)) ? 'Other' : cur;
+}
+function _customText(known, stored) {
+  if (!stored || stored === 'Other' || known.includes(stored)) return '';
+  return stored;
+}
+
 function _turtleActivityOptions(cur = '') {
-  const list = ['Basking', 'Foraging', 'Overwintering', 'Nesting', 'Travelling', 'Refuge/Shelter', 'Unknown'];
+  const sel = _selWithOther(_TURTLE_ACTIVITIES, cur);
   return `<option value="">-- Select --</option>` +
-    list.map(s => `<option value="${s}" ${_sel(s, cur)}>${s}</option>`).join('');
+    [..._TURTLE_ACTIVITIES, 'Other'].map(s => `<option value="${s}" ${_sel(s, sel)}>${s}</option>`).join('');
 }
 
 function _turtleHabitatOptions(cur = '') {
-  const list = [
-    'Marsh', 'Riparian Forest', 'Upland Forest', 'Rocky Shore',
-    'Sandy Bank', 'Agricultural Field', 'Road/Path',
-    'Open Water', 'Gravel Bar', 'Shrub/Scrub', 'Other'
-  ];
+  const sel = _selWithOther(_TURTLE_HABITATS, cur);
   return `<option value="">-- Select --</option>` +
-    list.map(s => `<option value="${s}" ${_sel(s, cur)}>${s}</option>`).join('');
+    [..._TURTLE_HABITATS, 'Other'].map(s => `<option value="${s}" ${_sel(s, sel)}>${s}</option>`).join('');
+}
+
+function _turtleObsTypeOptions(cur = '') {
+  const sel = _selWithOther(_TURTLE_OBS_TYPES, cur);
+  return [..._TURTLE_OBS_TYPES, 'Other'].map(s => `<option value="${s}" ${_sel(s, sel)}>${s}</option>`).join('');
+}
+
+function _turtleConditionOptions(cur = '') {
+  const sel = _selWithOther(_TURTLE_CONDITIONS, cur);
+  return `<option value="">-- Select --</option>` +
+    [..._TURTLE_CONDITIONS, 'Other'].map(s => `<option value="${s}" ${_sel(s, sel)}>${s}</option>`).join('');
+}
+
+// Read a select value, substituting the companion text input when "Other" is selected.
+function _otherVal(selectId, otherId) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return '';
+  return sel.value === 'Other' ? (document.getElementById(otherId)?.value.trim() || '') : sel.value;
 }
 
 // ─── Inject modal HTML into DOM ───────────────────────────────────────────
@@ -339,9 +386,11 @@ export function injectTurtleModal() {
 
       <label>Observation Type:</label>
       <select id="turtleObsTypeInput" onchange="turtleModalTypeChange()">
-        <option value="Direct Species Observation">Direct Species Observation</option>
-        <option value="Habitat Observation">Habitat Observation</option>
+        ${_turtleObsTypeOptions()}
       </select>
+      <div id="turtleObsTypeOtherWrap" style="display:none; margin-top:4px;">
+        <input type="text" id="turtleObsTypeOther" placeholder="Specify observation type…" style="width:100%;" />
+      </div>
 
       <!-- Direct Species fields -->
       <div id="turtleDirectFields">
@@ -366,15 +415,12 @@ export function injectTurtleModal() {
         <input type="number" id="turtleCarapaceInput" placeholder="e.g. 142" />
 
         <label>Condition:</label>
-        <select id="turtleConditionInput">
-          <option value="">-- Select --</option>
-          <option value="Excellent">Excellent</option>
-          <option value="Good">Good</option>
-          <option value="Fair">Fair</option>
-          <option value="Poor">Poor</option>
-          <option value="Injured">Injured</option>
-          <option value="Dead">Dead</option>
+        <select id="turtleConditionInput" onchange="handleOtherSelect(this,'turtleConditionOtherWrap')">
+          ${_turtleConditionOptions()}
         </select>
+        <div id="turtleConditionOtherWrap" style="display:none; margin-top:4px;">
+          <input type="text" id="turtleConditionOther" placeholder="Specify condition…" style="width:100%;" />
+        </div>
 
         <label>Basking:</label>
         <select id="turtleBaskingInput">
@@ -390,18 +436,24 @@ export function injectTurtleModal() {
       <!-- Habitat Observation fields -->
       <div id="turtleHabitatFields" style="display:none;">
         <label>Activity:</label>
-        <select id="turtleActivityInput">
+        <select id="turtleActivityInput" onchange="handleOtherSelect(this,'turtleActivityOtherWrap')">
           ${_turtleActivityOptions()}
         </select>
+        <div id="turtleActivityOtherWrap" style="display:none; margin-top:4px;">
+          <input type="text" id="turtleActivityOther" placeholder="Specify activity…" style="width:100%;" />
+        </div>
         <p style="color:#aaa; font-size:0.85em; margin:4px 0;">
           📷 Prompt: Capture a photo if possible and record the ID below.
         </p>
       </div>
 
       <label>Riparian Habitat Type:</label>
-      <select id="turtleHabitatInput">
+      <select id="turtleHabitatInput" onchange="handleOtherSelect(this,'turtleHabitatOtherWrap')">
         ${_turtleHabitatOptions()}
       </select>
+      <div id="turtleHabitatOtherWrap" style="display:none; margin-top:4px;">
+        <input type="text" id="turtleHabitatOther" placeholder="Specify habitat…" style="width:100%;" />
+      </div>
 
       <label>Photo ID (filename / reference):</label>
       <div style="display:flex; gap:6px; align-items:center;">
@@ -425,4 +477,7 @@ export function injectTurtleModal() {
 window.turtleModalTypeChange = function () {
   const modal = document.getElementById('turtleModal');
   if (modal) _refreshTurtleModalVisibility(modal);
+  const sel  = document.getElementById('turtleObsTypeInput');
+  const wrap = document.getElementById('turtleObsTypeOtherWrap');
+  if (sel && wrap) wrap.style.display = sel.value === 'Other' ? '' : 'none';
 };
