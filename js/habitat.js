@@ -165,8 +165,6 @@ const HABITAT_CRITERIA = {
   ]
 };
 
-const CONDITION_LIST = ['Excellent', 'Good', 'Fair', 'Poor'];
-
 // Marker colours per survey — dashed outline to distinguish from species marks
 const MARKER_COLOUR = { BBS: '#7c3aed', MOOSE: '#b45309', TURTLE: '#0d9488' };
 
@@ -183,7 +181,6 @@ export function showHabitatModal(latlng) {
   modal.querySelector('#habitatCriteriaList').innerHTML  = '';
   const otherWrap = modal.querySelector('#habitatFeatureTypeOtherWrap');
   if (otherWrap) { otherWrap.style.display = 'none'; otherWrap.querySelector('input').value = ''; }
-  modal.querySelector('#habitatConditionInput').value = '';
   modal.querySelector('#habitatPhotoInput').value     = '';
   modal.querySelector('#habitatNoteInput').value      = '';
 
@@ -233,7 +230,6 @@ export function saveHabitatObservation() {
   const criteria  = Array.from(
     document.querySelectorAll('#habitatCriteriaList input:checked')
   ).map(cb => cb.value);
-  const condition = document.getElementById('habitatConditionInput')?.value.trim() || '';
   const photoRef  = document.getElementById('habitatPhotoInput')?.value.trim()     || '';
   const note      = document.getElementById('habitatNoteInput')?.value.trim()      || '';
 
@@ -268,7 +264,7 @@ export function saveHabitatObservation() {
 
   const obsRecord = {
     surveyType: survey, featureType, criteria,
-    condition, photoRef, note,
+    photoRef, note,
     latlng, timestamp, marker, label
   };
 
@@ -302,13 +298,6 @@ export function createHabitatPopupHTML(index, obs) {
       <label></label>
       <input type="text" id="habPopFeatureOther-${index}" value="${otherTx}" placeholder="Specify feature type…" style="flex:1;" />
     </div>
-    <div class="form-row">
-      <label>Condition:</label>
-      <select id="habPopCondition-${index}">
-        <option value="">-- Select --</option>
-        ${CONDITION_LIST.map(c => `<option value="${c}" ${c === obs.condition ? 'selected' : ''}>${c}</option>`).join('')}
-      </select>
-    </div>
 <div class="form-row">
       <label>Photo Ref:</label>
       <input type="text" id="habPopPhoto-${index}" value="${obs.photoRef || ''}" placeholder="Filename or ID" style="flex:1;" />
@@ -335,7 +324,6 @@ function updateHabitatObservation(index) {
   rec.featureType = selEl?.value === 'Other'
     ? (document.getElementById(`habPopFeatureOther-${index}`)?.value.trim() || 'Other')
     : (selEl?.value || rec.featureType);
-  rec.condition = document.getElementById(`habPopCondition-${index}`)?.value || '';
 rec.photoRef  = document.getElementById(`habPopPhoto-${index}`)?.value     || '';
   rec.note      = document.getElementById(`habPopNote-${index}`)?.value      || '';
 
@@ -394,12 +382,6 @@ export function injectHabitatModal(surveyType) {
         </label>
         <div id="habitatCriteriaList"></div>
       </div>
-
-      <label>Condition:</label>
-      <select id="habitatConditionInput">
-        <option value="">-- Select --</option>
-        ${CONDITION_LIST.map(c => `<option value="${c}">${c}</option>`).join('')}
-      </select>
 
 <label>Photo Reference (filename / ID):</label>
       <div style="display:flex; gap:6px; align-items:center;">
