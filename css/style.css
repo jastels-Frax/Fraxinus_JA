@@ -63,23 +63,17 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 18px;
   margin-bottom: 28px;
 }
 
-.frax-logo-full {
-  max-width: 380px;
-  width: 100%;
-  height: auto;
-  border-radius: 14px;
+.frax-logo-mark {
+  height: 88px;
+  width: auto;
+  border-radius: 12px;
   border: 2px solid #111;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-  display: block;
-}
-
-/* Text fallback shown if image is missing */
-.frax-text-brand {
-  align-items: center;
-  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  flex-shrink: 0;
 }
 
 .frax-wordmark {
@@ -771,15 +765,17 @@ body {
   user-select: none;
 }
 
-/* Hide the real checkbox — clipped inside the label */
+/* Hide the real checkbox — completely removed from layout */
 .habitat-criteria-toggle input[type="checkbox"] {
   position: absolute;
+  -webkit-appearance: none;
+  appearance: none;
   opacity: 0;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
 }
 
 /* Toggle track */
@@ -927,12 +923,14 @@ body {
   transition: background 0.2s;
 }
 
-.session-btn-resume {
+.session-btn-resume,
+.session-btn-edit {
   background: var(--frax-green-dark);
   border-color: var(--frax-green);
   color: #fff;
 }
-.session-btn-resume:hover { background: var(--frax-green); }
+.session-btn-resume:hover,
+.session-btn-edit:hover { background: var(--frax-green); }
 
 .session-btn-export {
   background: #2a2a2a;
@@ -947,6 +945,15 @@ body {
   color: #c44;
 }
 .session-btn-delete:hover { background: #3a1212; border-color: #c44; color: #f66; }
+
+.session-empty {
+  color: #666;
+  font-size: 0.8rem;
+  font-weight: 300;
+  text-align: center;
+  padding: 12px 0 4px;
+  margin: 0;
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    EXPORT DIALOG (post-submit overlay)

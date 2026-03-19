@@ -220,14 +220,18 @@ async function _renderSessionLists() {
   _populateList('draftsList',  drafts,  true);
   _populateList('recentList',  recent,  false);
 
-  document.getElementById('draftsSection').style.display  = drafts.length  ? '' : 'none';
-  document.getElementById('recentSection').style.display  = recent.length  ? '' : 'none';
+  document.getElementById('draftsSection').style.display = drafts.length ? '' : 'none';
+  document.getElementById('recentSection').style.display = '';
 }
 
 function _populateList(listId, sessions, isDraft) {
   const el = document.getElementById(listId);
   if (!el) return;
   el.innerHTML = '';
+  if (!sessions.length && !isDraft) {
+    el.innerHTML = '<p class="session-empty">No archived surveys yet.</p>';
+    return;
+  }
   sessions.forEach(s => {
     const item = document.createElement('div');
     item.className = 'session-item';
@@ -241,13 +245,21 @@ function _populateList(listId, sessions, isDraft) {
         </div>
       </div>
       <div class="session-item-actions">
-        ${isDraft ? `<button class="session-btn-resume" data-id="${s.id}" title="Resume">▶ Resume</button>` : ''}
+        ${isDraft
+        ? `<button class="session-btn-resume" data-id="${s.id}" title="Resume">▶ Resume</button>`
+        : `<button class="session-btn-edit"   data-id="${s.id}" title="Edit">✏ Edit</button>`}
         <button class="session-btn-export" data-type="${s.type}" data-id="${s.id}" title="Re-export">⬇ Export</button>
         <button class="session-btn-delete" data-id="${s.id}" title="Delete">✕</button>
       </div>`;
 
     if (isDraft) {
       item.querySelector('.session-btn-resume').addEventListener('click', async e => {
+        e.stopPropagation();
+        const session = (await loadSessions()).find(x => x.id === s.id);
+        if (session) _resumeSurvey(session);
+      });
+    } else {
+      item.querySelector('.session-btn-edit').addEventListener('click', async e => {
         e.stopPropagation();
         const session = (await loadSessions()).find(x => x.id === s.id);
         if (session) _resumeSurvey(session);
@@ -296,10 +308,6 @@ function _showReExportDialog(session) {
   // Temporarily restore snapshot to in-memory arrays, export, then clear
   const snap = session.snapshot || {};
   const doExport = async (fmt) => {
-    // Populate in-memory arrays from snapshot so export functions work
-    await import('./storage.js').then(m => m.restoreSnapshot(snap));
-    // Re-load into memory (storage load functions populate in-memory arrays)
-    // Use a simpler direct approach: push serialized records to arrays
     const { speciesMarkers, mooseObservations, turtleObservations, habitatObservations } = await import('./storageData.js');
     clearInMemoryArrays();
     (snap.speciesMarkers     || []).forEach(r => speciesMarkers.push(r));
