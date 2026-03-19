@@ -17,8 +17,9 @@ let overlayGroup       = null;
 
 // ─── Main Initialiser ─────────────────────────────────────────────────────
 export function initializeMap() {
-  // Default centre (Nova Scotia) so tiles render immediately while GPS locks
-  map = L.map('map', { center: [44.65, -63.57], zoom: 8 });
+  map = L.map('map');
+  // Default view (Nova Scotia) so tiles render before GPS locks
+  map.setView([44.65, -63.57], 8);
   map.doubleClickZoom.disable();
 
   // Ensure Leaflet recalculates after the container becomes visible
