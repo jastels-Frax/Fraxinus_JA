@@ -17,8 +17,12 @@ let overlayGroup       = null;
 
 // ─── Main Initialiser ─────────────────────────────────────────────────────
 export function initializeMap() {
-  map = L.map('map');
+  // Default centre (Nova Scotia) so tiles render immediately while GPS locks
+  map = L.map('map', { center: [44.65, -63.57], zoom: 8 });
   map.doubleClickZoom.disable();
+
+  // Ensure Leaflet recalculates after the container becomes visible
+  requestAnimationFrame(() => { map && map.invalidateSize(); });
 
   // Base layers
   const osm       = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
