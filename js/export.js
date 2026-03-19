@@ -33,6 +33,13 @@ function csvRow(vals) {
   return vals.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',');
 }
 
+// Works for both live observations (Leaflet marker) and snapshot observations (plain latlng).
+function getLoc(obs) {
+  if (obs.latlng?.lat != null) return obs.latlng;
+  if (obs.marker?.getLatLng) return obs.marker.getLatLng();
+  return null;
+}
+
 // ─── BBS Exports ──────────────────────────────────────────────────────────
 export function exportSpeciesCSV() {
   const date    = todayString();
@@ -54,8 +61,8 @@ export function exportSpeciesCSV() {
 
 export function exportSpeciesGeoJSON() {
   const date     = todayString();
-  const features = speciesMarkers.filter(m => m?.marker?.getLatLng).map(m => {
-    const { lat, lng } = m.marker.getLatLng();
+  const features = speciesMarkers.filter(m => getLoc(m)).map(m => {
+    const { lat, lng } = getLoc(m);
     return {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [lng, lat] },
@@ -78,9 +85,9 @@ export function exportSpeciesGeoJSON() {
 
 export function exportSpeciesKML() {
   const date   = todayString();
-  const marks  = speciesMarkers.filter(m => m?.marker?.getLatLng);
+  const marks  = speciesMarkers.filter(m => getLoc(m));
   const pmarks = marks.map(m => {
-    const { lat, lng } = m.marker.getLatLng();
+    const { lat, lng } = getLoc(m);
     return `
   <Placemark>
     <name>${m.code || 'Species'}</name>
@@ -137,8 +144,8 @@ export function exportMooseCSV() {
 
 export function exportMooseGeoJSON() {
   const date     = todayString();
-  const features = mooseObservations.filter(o => o?.marker?.getLatLng).map(o => {
-    const { lat, lng } = o.marker.getLatLng();
+  const features = mooseObservations.filter(o => getLoc(o)).map(o => {
+    const { lat, lng } = getLoc(o);
     return {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [lng, lat] },
@@ -159,9 +166,9 @@ export function exportMooseGeoJSON() {
 
 export function exportMooseKML() {
   const date  = todayString();
-  const marks = mooseObservations.filter(o => o?.marker?.getLatLng);
+  const marks = mooseObservations.filter(o => getLoc(o));
   const pmarks = marks.map(o => {
-    const { lat, lng } = o.marker.getLatLng();
+    const { lat, lng } = getLoc(o);
     return `
   <Placemark>
     <name>${o.species || 'Wildlife'} — ${o.obsType || ''}</name>
@@ -213,8 +220,8 @@ export function exportTurtleCSV() {
 
 export function exportTurtleGeoJSON() {
   const date     = todayString();
-  const features = turtleObservations.filter(o => o?.marker?.getLatLng).map(o => {
-    const { lat, lng } = o.marker.getLatLng();
+  const features = turtleObservations.filter(o => getLoc(o)).map(o => {
+    const { lat, lng } = getLoc(o);
     return {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [lng, lat] },
@@ -236,9 +243,9 @@ export function exportTurtleGeoJSON() {
 
 export function exportTurtleKML() {
   const date  = todayString();
-  const marks = turtleObservations.filter(o => o?.marker?.getLatLng);
+  const marks = turtleObservations.filter(o => getLoc(o));
   const pmarks = marks.map(o => {
-    const { lat, lng } = o.marker.getLatLng();
+    const { lat, lng } = getLoc(o);
     const sexAbbr = o.sex === 'Male' ? 'M' : o.sex === 'Female' ? 'F' : 'U';
     const name    = o.activity ? `${sexAbbr} · ${o.activity}` : sexAbbr;
     return `
@@ -291,8 +298,8 @@ export function exportHabitatCSV() {
 
 export function exportHabitatGeoJSON() {
   const date     = todayString();
-  const features = habitatObservations.filter(o => o?.marker?.getLatLng).map(o => {
-    const { lat, lng } = o.marker.getLatLng();
+  const features = habitatObservations.filter(o => getLoc(o)).map(o => {
+    const { lat, lng } = getLoc(o);
     return {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [lng, lat] },
@@ -316,9 +323,9 @@ export function exportHabitatGeoJSON() {
 
 export function exportHabitatKML() {
   const date  = todayString();
-  const marks = habitatObservations.filter(o => o?.marker?.getLatLng);
+  const marks = habitatObservations.filter(o => getLoc(o));
   const pmarks = marks.map(o => {
-    const { lat, lng } = o.marker.getLatLng();
+    const { lat, lng } = getLoc(o);
     return `
   <Placemark>
     <name>${o.featureType || 'Habitat Feature'}</name>
