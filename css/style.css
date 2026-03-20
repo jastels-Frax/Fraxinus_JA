@@ -752,15 +752,15 @@ body {
 .habitat-criteria-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin-top: 10px;
+  gap: 18px;
+  margin-top: 12px;
 }
 
 .habitat-criteria-toggle {
   position: relative;
   display: flex;
-  align-items: center;
-  gap: 16px;
+  align-items: flex-start;
+  gap: 14px;
   cursor: pointer;
   font-family: 'Oswald', sans-serif;
   font-size: 0.88rem;
@@ -783,6 +783,8 @@ body {
   border-radius: 10px;
   border: 1px solid #555;
   flex-shrink: 0;
+  /* nudge track down to align with the cap-height of the first text line */
+  margin-top: 2px;
   transition: background 0.2s, border-color 0.2s;
 }
 
