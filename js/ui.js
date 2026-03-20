@@ -6,7 +6,7 @@ import {
   exportTurtleCSV,  exportTurtleGeoJSON,  exportTurtleKML,
   exportHabitatCSV, exportHabitatGeoJSON, exportHabitatKML
 } from './export.js';
-import { map } from './map.js';
+import { map, lockMap, unlockMap } from './map.js';
 import { speciesMarkers, mooseObservations, turtleObservations, habitatObservations } from './storageData.js';
 import { syncToIndexedDB, syncMooseToIndexedDB, syncTurtleToIndexedDB } from './storage.js';
 import {
@@ -25,11 +25,13 @@ import {
 export function openDrawer() {
   document.getElementById('dataDrawer').style.display = 'block';
   document.getElementById('modalBackdrop').style.display = 'block';
+  lockMap();
 }
 
 export function closeDrawer() {
   document.getElementById('dataDrawer').style.display = 'none';
   document.getElementById('modalBackdrop').style.display = 'none';
+  unlockMap();
 }
 
 // ─── Survey Metadata Modal ────────────────────────────────────────────────
