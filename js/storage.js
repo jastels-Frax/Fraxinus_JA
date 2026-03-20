@@ -317,21 +317,19 @@ export async function deleteSessionRecord(id) {
   });
 }
 
-// ─── Clear all 4 observation stores (called after draft/submit) ───────────
+// ─── Clear all 4 observation stores in parallel ───────────────────────────
 export async function clearObservationStores() {
   if (!db) await openDatabase();
   const names = ['speciesMarkers', 'mooseObservations', 'turtleObservations', 'habitatObservations'];
-  for (const name of names) {
-    await new Promise((resolve, reject) => {
-      const tx  = db.transaction(name, 'readwrite');
-      const req = tx.objectStore(name).clear();
-      req.onsuccess = () => resolve();
-      req.onerror   = e => reject(e.target.error);
-    });
-  }
+  await Promise.all(names.map(name => new Promise((resolve, reject) => {
+    const tx  = db.transaction(name, 'readwrite');
+    const req = tx.objectStore(name).clear();
+    req.onsuccess = () => resolve();
+    req.onerror   = e => reject(e.target.error);
+  })));
 }
 
-// ─── Restore a snapshot back into the 4 observation stores ───────────────
+// ─── Restore a snapshot back into the 4 observation stores in parallel ────
 export async function restoreSnapshot(snapshot) {
   if (!db) await openDatabase();
   const storeMap = {
@@ -340,16 +338,14 @@ export async function restoreSnapshot(snapshot) {
     turtleObservations: snapshot.turtleObservations || [],
     habitatObservations:snapshot.habitatObservations|| []
   };
-  for (const [name, records] of Object.entries(storeMap)) {
-    await new Promise((resolve, reject) => {
-      const tx    = db.transaction(name, 'readwrite');
-      const store = tx.objectStore(name);
-      store.clear();
-      records.forEach(rec => { const { id, ...rest } = rec; store.add(rest); });
-      tx.oncomplete = () => resolve();
-      tx.onerror    = e => reject(e.target.error);
-    });
-  }
+  await Promise.all(Object.entries(storeMap).map(([name, records]) => new Promise((resolve, reject) => {
+    const tx    = db.transaction(name, 'readwrite');
+    const store = tx.objectStore(name);
+    store.clear();
+    records.forEach(rec => { const { id, ...rest } = rec; store.add(rest); });
+    tx.oncomplete = () => resolve();
+    tx.onerror    = e => reject(e.target.error);
+  })));
 }
 
 export { openDatabase };

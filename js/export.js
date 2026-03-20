@@ -1,7 +1,6 @@
 // js/export.js — Multi-survey CSV / GeoJSON / KML export
 
 import { speciesMarkers, mooseObservations, turtleObservations, habitatObservations } from './storageData.js';
-import { activeSurvey } from './surveyGlobals.js';
 
 // ─── Utilities ────────────────────────────────────────────────────────────
 function todayString() {

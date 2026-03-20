@@ -14,6 +14,7 @@ export let observerLocation = null;
 let userLocationMarker = null;
 let userAccuracyCircle = null;
 let overlayGroup       = null;
+let geoWatchId         = null;
 
 // ─── Main Initialiser ─────────────────────────────────────────────────────
 export function initializeMap() {
@@ -38,7 +39,7 @@ export function initializeMap() {
   });
 
   // Live geolocation
-  navigator.geolocation.watchPosition(
+  geoWatchId = navigator.geolocation.watchPosition(
     position => {
       const latlng   = [position.coords.latitude, position.coords.longitude];
       const accuracy = position.coords.accuracy;
@@ -141,10 +142,8 @@ function addMasterButtons() {
 
 // ─── Destroy map (called when returning to survey selection) ──────────────
 export function destroyMap() {
-  if (map) {
-    map.remove();
-    map = null;
-  }
+  if (geoWatchId != null) { navigator.geolocation.clearWatch(geoWatchId); geoWatchId = null; }
+  if (map) { map.remove(); map = null; }
   observerLocation = null;
   userLocationMarker = null;
   userAccuracyCircle = null;

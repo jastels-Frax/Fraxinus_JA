@@ -7,7 +7,6 @@ import './surveyGlobals.js';
 import { setActiveSurvey, activeSurvey } from './surveyGlobals.js';
 import { initializeMap, destroyMap } from './map.js';
 import { initTimerBindings, updateTable } from './ui.js';
-import { closeModal }      from './modal.js';
 import { updateSpeciesList, saveSpeciesObservation } from './species.js';
 import { injectMooseModal } from './moose.js';
 import { injectTurtleModal } from './turtle.js';
@@ -36,13 +35,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   });
-
-  // ── BBS modal backdrop / button bindings (attached once; modal hidden by default)
-  document.getElementById('modalBackdrop')?.addEventListener('click', closeModal);
-  document.getElementById('speciesSearch')?.addEventListener('input', e => {
-    updateSpeciesList(e.target.value);
-  });
-  document.getElementById('speciesSaveButton')?.addEventListener('click', saveSpeciesObservation);
 
   // ── Render session lists on home screen ───────────────────────────────
   await _renderSessionLists();
@@ -91,6 +83,7 @@ function _returnToHome() {
   hide('masterButton');
   hide('map');
   try { destroyMap(); } catch (e) { console.error('destroyMap error:', e); }
+  setActiveSurvey(null);
   const sel = document.getElementById('surveySelection');
   if (sel) sel.style.display = '';
   _renderSessionLists();
@@ -156,9 +149,6 @@ window.submitAndShowExport = async function () {
 
 // ─── Export dialog (shown after submit) ──────────────────────────────────
 function _showExportDialog(onDone) {
-  const survey = document.querySelector('[data-active-survey]')?.dataset.activeSurvey
-              || window._lastSurveyType || 'BBS';
-
   const overlay = document.createElement('div');
   overlay.id = 'exportDialog';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9000;display:flex;align-items:center;justify-content:center;font-family:Oswald,sans-serif;';
@@ -192,13 +182,12 @@ function _showExportDialog(onDone) {
   document.getElementById('expSkip').addEventListener('click', close);
 }
 
-function _runExport(fmt) {
-  // activeSurvey is still set at this point (cleared after _returnToHome)
-  if (activeSurvey === 'BBS') {
+function _runExport(fmt, type = activeSurvey) {
+  if (type === 'BBS') {
     if (fmt === 'csv')     { exportSpeciesCSV();  exportHabitatCSV();     }
     if (fmt === 'geojson') { exportSpeciesGeoJSON(); exportHabitatGeoJSON(); }
     if (fmt === 'kml')     { exportSpeciesKML();  exportHabitatKML();     }
-  } else if (activeSurvey === 'MOOSE') {
+  } else if (type === 'MOOSE') {
     if (fmt === 'csv')     { exportMooseCSV();    exportHabitatCSV();     }
     if (fmt === 'geojson') { exportMooseGeoJSON(); exportHabitatGeoJSON(); }
     if (fmt === 'kml')     { exportMooseKML();    exportHabitatKML();     }
@@ -253,16 +242,14 @@ function _populateList(listId, sessions, isDraft) {
       </div>`;
 
     if (isDraft) {
-      item.querySelector('.session-btn-resume').addEventListener('click', async e => {
+      item.querySelector('.session-btn-resume').addEventListener('click', e => {
         e.stopPropagation();
-        const session = (await loadSessions()).find(x => x.id === s.id);
-        if (session) _resumeSurvey(session);
+        _resumeSurvey(s);
       });
     } else {
-      item.querySelector('.session-btn-edit').addEventListener('click', async e => {
+      item.querySelector('.session-btn-edit').addEventListener('click', e => {
         e.stopPropagation();
-        const session = (await loadSessions()).find(x => x.id === s.id);
-        if (session) _resumeSurvey(session);
+        _resumeSurvey(s);
       });
     }
 
@@ -307,28 +294,13 @@ function _showReExportDialog(session) {
 
   // Temporarily restore snapshot to in-memory arrays, export, then clear
   const snap = session.snapshot || {};
-  const doExport = async (fmt) => {
-    const { speciesMarkers, mooseObservations, turtleObservations, habitatObservations } = await import('./storageData.js');
+  const doExport = (fmt) => {
     clearInMemoryArrays();
     (snap.speciesMarkers     || []).forEach(r => speciesMarkers.push(r));
     (snap.mooseObservations  || []).forEach(r => mooseObservations.push(r));
     (snap.turtleObservations || []).forEach(r => turtleObservations.push(r));
     (snap.habitatObservations|| []).forEach(r => habitatObservations.push(r));
-
-    const type = session.type;
-    if (type === 'BBS') {
-      if (fmt === 'csv')     { exportSpeciesCSV();     exportHabitatCSV();     }
-      if (fmt === 'geojson') { exportSpeciesGeoJSON();  exportHabitatGeoJSON(); }
-      if (fmt === 'kml')     { exportSpeciesKML();      exportHabitatKML();     }
-    } else if (type === 'MOOSE') {
-      if (fmt === 'csv')     { exportMooseCSV();        exportHabitatCSV();     }
-      if (fmt === 'geojson') { exportMooseGeoJSON();    exportHabitatGeoJSON(); }
-      if (fmt === 'kml')     { exportMooseKML();        exportHabitatKML();     }
-    } else {
-      if (fmt === 'csv')     { exportTurtleCSV();       exportHabitatCSV();     }
-      if (fmt === 'geojson') { exportTurtleGeoJSON();   exportHabitatGeoJSON(); }
-      if (fmt === 'kml')     { exportTurtleKML();       exportHabitatKML();     }
-    }
+    _runExport(fmt, session.type);
     clearInMemoryArrays();
     close();
   };
