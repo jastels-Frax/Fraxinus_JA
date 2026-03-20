@@ -926,6 +926,7 @@ body {
 }
 
 .session-btn-resume,
+.session-btn-edit,
 .session-btn-export,
 .session-btn-delete {
   font-family: 'Oswald', sans-serif;
