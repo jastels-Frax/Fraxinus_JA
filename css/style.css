@@ -210,10 +210,10 @@ body {
   background: rgba(0,0,0,0.5);
   display: none;
   pointer-events: auto;
-  /* Must sit above map (auto), masterButton (2000), dataDrawer (2001),
-     and timerStrip (3000) so nothing underneath is interactive while
-     a modal is open. Modals themselves are raised to 4000. */
-  z-index: 3500;
+  /* Sits above Leaflet layers but below UI controls (masterButton 2000,
+     dataDrawer 2001, timerStrip 3000) so only the map tiles are dimmed.
+     Modals themselves are raised to 4000. */
+  z-index: 1999;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

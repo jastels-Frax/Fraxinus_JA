@@ -3,7 +3,7 @@
 import { mooseObservations } from './storageData.js';
 import { syncMooseToIndexedDB } from './storage.js';
 import { updateTable } from './ui.js';
-import { map } from './map.js';
+import { map, lockMap, unlockMap } from './map.js';
 import * as G from './surveyGlobals.js';
 import { capturePhoto } from './photo.js';
 
@@ -39,6 +39,7 @@ export function showMooseModal(latlng) {
 
   modal.style.display = 'block';
   backdrop.style.display = 'block';
+  lockMap();
 }
 
 export function closeMooseModal() {
@@ -46,6 +47,7 @@ export function closeMooseModal() {
   mooseCurrentLatLng = null;
   document.getElementById('mooseModal')?.style.setProperty('display', 'none');
   document.getElementById('modalBackdrop')?.style.setProperty('display', 'none');
+  unlockMap();
 }
 
 // ─── Save Observation ─────────────────────────────────────────────────────

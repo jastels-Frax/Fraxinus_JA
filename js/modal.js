@@ -2,6 +2,7 @@
 
 import { updateSpeciesList, adjustCount, saveSpeciesObservation } from './species.js';
 import { observer, pointID } from './surveyGlobals.js';
+import { lockMap, unlockMap } from './map.js';
 
 let placingPoint  = false;
 let currentLatLng = null;
@@ -35,6 +36,7 @@ export function showSpeciesModal(latlng) {
 
   modal.style.display    = 'block';
   backdrop.style.display = 'block';
+  lockMap();
   updateSpeciesList('');
 }
 
@@ -43,6 +45,7 @@ export function closeModal() {
   currentLatLng = null;
   document.getElementById('speciesModal')?.style.setProperty('display', 'none');
   document.getElementById('modalBackdrop')?.style.setProperty('display', 'none');
+  unlockMap();
 }
 
 export function isPlacingPoint() { return placingPoint; }

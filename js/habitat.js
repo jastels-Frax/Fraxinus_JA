@@ -6,7 +6,7 @@
 import { habitatObservations } from './storageData.js';
 import { syncHabitatToIndexedDB } from './storage.js';
 import { updateTable } from './ui.js';
-import { map } from './map.js';
+import { map, lockMap, unlockMap } from './map.js';
 import * as G from './surveyGlobals.js';
 import { capturePhoto } from './photo.js';
 
@@ -165,6 +165,7 @@ export function showHabitatModal(latlng) {
 
   modal.style.display    = 'block';
   backdrop.style.display = 'block';
+  lockMap();
 }
 
 export function closeHabitatModal() {
@@ -172,6 +173,7 @@ export function closeHabitatModal() {
   habitatCurrentLatLng = null;
   document.getElementById('habitatModal')?.style.setProperty('display', 'none');
   document.getElementById('modalBackdrop')?.style.setProperty('display', 'none');
+  unlockMap();
 }
 
 // ─── Feature type change — show criteria toggles ──────────────────────────
@@ -338,7 +340,7 @@ export function injectHabitatModal(surveyType) {
   const el = document.createElement('div');
   el.id        = 'habitatModal';
   el.className = 'modal';
-  el.style.cssText = 'display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:2500;';
+  el.style.cssText = 'display:none;';
 
   const features = FEATURE_TYPES[surveyType] || [];
   el.innerHTML = `

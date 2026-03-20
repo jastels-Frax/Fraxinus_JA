@@ -3,7 +3,7 @@
 import { turtleObservations } from './storageData.js';
 import { syncTurtleToIndexedDB } from './storage.js';
 import { updateTable } from './ui.js';
-import { map } from './map.js';
+import { map, lockMap, unlockMap } from './map.js';
 import * as G from './surveyGlobals.js';
 import { capturePhoto } from './photo.js';
 
@@ -42,6 +42,7 @@ export function showTurtleModal(latlng) {
 
   modal.style.display    = 'block';
   backdrop.style.display = 'block';
+  lockMap();
 }
 
 export function closeTurtleModal() {
@@ -49,6 +50,7 @@ export function closeTurtleModal() {
   turtleCurrentLatLng  = null;
   document.getElementById('turtleModal')?.style.setProperty('display', 'none');
   document.getElementById('modalBackdrop')?.style.setProperty('display', 'none');
+  unlockMap();
 }
 
 // ─── Save Observation ─────────────────────────────────────────────────────

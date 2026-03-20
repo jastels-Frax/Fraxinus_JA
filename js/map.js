@@ -142,6 +142,21 @@ function addMasterButtons() {
   });
 }
 
+// ─── Map interaction lock (used while a modal is open) ────────────────────
+export function lockMap() {
+  if (!map) return;
+  map.dragging.disable();
+  map.touchZoom.disable();
+  map.scrollWheelZoom.disable();
+}
+
+export function unlockMap() {
+  if (!map) return;
+  map.dragging.enable();
+  map.touchZoom.enable();
+  map.scrollWheelZoom.enable();
+}
+
 // ─── Destroy map (called when returning to survey selection) ──────────────
 export function destroyMap() {
   if (geoWatchId != null) { navigator.geolocation.clearWatch(geoWatchId); geoWatchId = null; }
