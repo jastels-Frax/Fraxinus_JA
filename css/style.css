@@ -1057,15 +1057,27 @@ body {
 
 .export-dialog-btns button:hover { background: var(--frax-green); }
 
-.export-dialog-btns button.export-skip {
-  background: transparent;
-  border-color: #555;
-  color: var(--frax-text-muted);
+.export-dialog-btns button.export-store-local {
+  background: #1a3a5a;
+  border-color: #3a7abf;
+  color: #90c8f8;
   margin-top: 4px;
 }
+.export-dialog-btns button.export-store-local:hover {
+  background: #1f4a70;
+  color: #b8deff;
+}
+
+.export-dialog-btns button.export-skip {
+  background: transparent;
+  border-color: transparent;
+  color: #555;
+  margin-top: 0;
+  font-size: 0.75rem;
+  padding: 6px 16px;
+}
 .export-dialog-btns button.export-skip:hover {
-  background: #2a2a2a;
-  color: var(--frax-text);
+  color: var(--frax-text-muted);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

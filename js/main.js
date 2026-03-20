@@ -196,12 +196,13 @@ function _showExportDialog(onDone) {
     <div class="export-dialog-box">
       <div class="export-dialog-icon">✅</div>
       <h2 class="export-dialog-title">Survey Submitted</h2>
-      <p class="export-dialog-sub">Download your data before returning home.</p>
+      <p class="export-dialog-sub">Saved to your archive. Download a copy?</p>
       <div class="export-dialog-btns">
         <button id="expCsv">Download CSV</button>
         <button id="expGeoJson">Download GeoJSON</button>
         <button id="expKml">Download KML</button>
-        <button id="expSkip" class="export-skip">Skip — Return Home</button>
+        <button id="expStore" class="export-store-local">💾 Store Locally — No Download</button>
+        <button id="expSkip" class="export-skip">Done</button>
       </div>
     </div>`;
 
@@ -218,6 +219,7 @@ function _showExportDialog(onDone) {
   document.getElementById('expKml').addEventListener('click', () => {
     _runExport('kml'); close();
   });
+  document.getElementById('expStore').addEventListener('click', close);
   document.getElementById('expSkip').addEventListener('click', close);
 }
 
