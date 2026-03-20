@@ -43,6 +43,7 @@ export function openSurveyModal() {
   prefillSurveyModal();
   modal.style.display    = 'block';
   backdrop.style.display = 'block';
+  lockMap();
 }
 
 export function closeSurveyModal() {
@@ -93,6 +94,7 @@ export function closeSurveyModal() {
   }
   document.getElementById('surveyModal').style.display = 'none';
   document.getElementById('modalBackdrop').style.display = 'none';
+  unlockMap();
 }
 
 function _val(id) {

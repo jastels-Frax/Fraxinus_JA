@@ -16,6 +16,11 @@ let userAccuracyCircle = null;
 let overlayGroup       = null;
 let geoWatchId         = null;
 
+// Counts how many overlays/modals are currently open.  The map stays locked
+// until every caller has released its lock, preventing an early unlock when
+// multiple panels are stacked (e.g. instructions opened while drawer is open).
+let _lockCount = 0;
+
 // ─── Main Initialiser ─────────────────────────────────────────────────────
 export function initializeMap() {
   map = L.map('map', { zoomControl: false });
@@ -142,9 +147,10 @@ function addMasterButtons() {
   });
 }
 
-// ─── Map interaction lock (used while a modal is open) ────────────────────
+// ─── Map interaction lock (used while any modal/overlay is open) ──────────
 export function lockMap() {
-  if (!map) return;
+  _lockCount++;
+  if (!map || _lockCount > 1) return;   // already locked — just bump the counter
   map.dragging.disable();
   map.touchZoom.disable();
   map.scrollWheelZoom.disable();
@@ -152,7 +158,8 @@ export function lockMap() {
 }
 
 export function unlockMap() {
-  if (!map) return;
+  _lockCount = Math.max(0, _lockCount - 1);
+  if (!map || _lockCount > 0) return;   // other overlays still open
   map.dragging.enable();
   map.touchZoom.enable();
   map.scrollWheelZoom.enable();
@@ -163,6 +170,7 @@ export function unlockMap() {
 export function destroyMap() {
   if (geoWatchId != null) { navigator.geolocation.clearWatch(geoWatchId); geoWatchId = null; }
   if (map) { map.remove(); map = null; }
+  _lockCount = 0;
   observerLocation = null;
   userLocationMarker = null;
   userAccuracyCircle = null;

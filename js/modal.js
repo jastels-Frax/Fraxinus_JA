@@ -55,11 +55,13 @@ export { currentLatLng };
 function showInstructions() {
   document.getElementById('instructionsModal')?.style.setProperty('display', 'block');
   document.getElementById('modalBackdrop')?.style.setProperty('display', 'block');
+  lockMap();
 }
 
 function closeInstructions() {
   document.getElementById('instructionsModal')?.style.setProperty('display', 'none');
   document.getElementById('modalBackdrop')?.style.setProperty('display', 'none');
+  unlockMap();
 }
 
 document.addEventListener('keydown', e => {
