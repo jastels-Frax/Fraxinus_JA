@@ -956,11 +956,11 @@ body {
 .session-btn-export:hover { background: #383838; color: #fff; }
 
 .session-btn-delete {
-  background: transparent;
-  border-color: #5a2222;
-  color: #c44;
+  background: #5a1a1a;
+  border-color: #c44;
+  color: #ff8080;
 }
-.session-btn-delete:hover { background: #3a1212; border-color: #c44; color: #f66; }
+.session-btn-delete:hover { background: #7a2020; border-color: #f66; color: #ffa0a0; }
 
 .session-empty {
   color: #666;

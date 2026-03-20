@@ -277,7 +277,7 @@ function _populateList(listId, sessions, isDraft) {
         ? `<button class="session-btn-resume" data-id="${s.id}" title="Resume">▶ Resume</button>`
         : `<button class="session-btn-edit"   data-id="${s.id}" title="Edit">✏ Edit</button>`}
         <button class="session-btn-export" data-type="${s.type}" data-id="${s.id}" title="Re-export">⬇ Export</button>
-        <button class="session-btn-delete" data-id="${s.id}" title="Delete">✕</button>
+        <button class="session-btn-delete" data-id="${s.id}" title="Delete">✕ Delete</button>
       </div>`;
 
     if (isDraft) {
