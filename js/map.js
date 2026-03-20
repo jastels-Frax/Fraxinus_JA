@@ -103,7 +103,7 @@ function addMasterButtons() {
   `;
   container.style.cssText = `
     position:absolute; top:100px; left:30px; z-index:2000;
-    display:flex; flex-direction:column; gap:12px;
+    display:flex; flex-direction:column; gap:16px;
   `;
 
   document.getElementById('btnSurvey')?.addEventListener('click', openSurveyModal);

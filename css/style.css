@@ -44,7 +44,8 @@ body {
   inset: 0;
   background: var(--frax-black);
   display: flex;
-  align-items: center;
+  /* flex-start prevents overflow clipping at top on mobile */
+  align-items: flex-start;
   justify-content: center;
   z-index: 9999;
   overflow-y: auto;
@@ -56,6 +57,9 @@ body {
   max-width: 780px;
   width: 100%;
   text-align: center;
+  /* auto margins center vertically when content fits, collapse when it doesn't */
+  margin: auto;
+  padding-bottom: 16px;
 }
 
 /* ── Fraxinus brand header ─────────────────── */
@@ -444,13 +448,13 @@ body {
 }
 
 #masterButton button {
-  font-size: 14px;
+  font-size: 18px;
   font-family: 'Oswald', sans-serif;
   color: #ffffff;
   background-color: rgba(17,17,17,0.7);
   border: 1px solid rgba(45,107,45,0.6);
   border-radius: 20%;
-  padding: 8px;
+  padding: 10px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.6);
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s;
@@ -464,10 +468,10 @@ body {
 
 /* Survey emoji action buttons (species + habitat) */
 .btn-survey-icon {
-  font-size: 1.5rem !important;
+  font-size: 2rem !important;
   line-height: 1;
-  width: 44px;
-  height: 44px;
+  width: 57px;
+  height: 57px;
   display: flex !important;
   align-items: center;
   justify-content: center;
@@ -748,15 +752,15 @@ body {
 .habitat-criteria-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 6px;
+  gap: 14px;
+  margin-top: 10px;
 }
 
 .habitat-criteria-toggle {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 16px;
   cursor: pointer;
   font-family: 'Oswald', sans-serif;
   font-size: 0.88rem;
@@ -1022,10 +1026,10 @@ body {
    SESSION ACTION BUTTONS (💾 draft / ✅ submit in master button bar)
 ═══════════════════════════════════════════════════════════════════════════ */
 .btn-session-action {
-  font-size: 1.2rem !important;
+  font-size: 1.55rem !important;
   line-height: 1;
-  width: 44px;
-  height: 44px;
+  width: 57px;
+  height: 57px;
   display: flex !important;
   align-items: center;
   justify-content: center;
