@@ -192,6 +192,7 @@ export function syncTurtleToIndexedDB() {
     airTemp:    o.airTemp,
     waterLevel: o.waterLevel,
     weather:    o.weather,
+    species:    o.species  || '',
     sex:        o.sex      || '',
     ageClass:   o.ageClass || '',
     activity:   o.activity || '',

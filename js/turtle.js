@@ -27,6 +27,7 @@ export function showTurtleModal(latlng) {
   if (!modal || !backdrop) return;
 
   // Reset fields
+  modal.querySelector('#turtleSpeciesInput').value    = '';
   modal.querySelector('#turtleSexInput').value        = '';
   modal.querySelector('#turtleAgeClassInput').value   = '';
   modal.querySelector('#turtleActivityInput').value   = '';
@@ -52,6 +53,7 @@ export function closeTurtleModal() {
 
 // ─── Save Observation ─────────────────────────────────────────────────────
 export function saveTurtleObservation() {
+  const species  = document.getElementById('turtleSpeciesInput')?.value.trim()  || '';
   const sex      = document.getElementById('turtleSexInput')?.value.trim()      || '';
   const ageClass = document.getElementById('turtleAgeClassInput')?.value.trim() || '';
   const activity = _otherVal('turtleActivityInput', 'turtleActivityOther');
@@ -70,7 +72,8 @@ export function saveTurtleObservation() {
 
   // Build map label
   const sexAbbr   = sex === 'Male' ? 'M' : sex === 'Female' ? 'F' : 'U';
-  const labelText = activity ? `${sexAbbr} · ${activity}` : sexAbbr;
+  const spAbbr    = species ? species.split(' ').map(w => w[0]).join('') : '?';
+  const labelText = `${spAbbr} ${sexAbbr}${activity ? ' · ' + activity : ''}`;
 
   const marker = L.circleMarker(latlng, {
     radius: 15,
@@ -99,6 +102,7 @@ export function saveTurtleObservation() {
     airTemp:    G.turtleAirTemp    || '',
     waterLevel: G.turtleWaterLevel || '',
     weather:    G.turtleWeather    || '',
+    species,
     sex,
     ageClass,
     activity,
@@ -128,6 +132,12 @@ export function createTurtlePopupHTML(index, obs) {
   div.className = 'popup-content compact';
   div.innerHTML = `
     <div style="font-weight:600; margin-bottom:6px;">Turtle Observation</div>
+    <div class="form-row">
+      <label>Species:</label>
+      <select id="turtlePopSpecies-${index}">
+        ${_turtleSpeciesOptions(obs.species || '')}
+      </select>
+    </div>
     <div class="form-row">
       <label>Sex:</label>
       <select id="turtlePopSex-${index}">
@@ -189,6 +199,7 @@ function updateTurtleObservation(index) {
   const rec = turtleObservations[index];
   if (!rec) return;
 
+  rec.species  = document.getElementById(`turtlePopSpecies-${index}`)?.value      || '';
   rec.sex      = document.getElementById(`turtlePopSex-${index}`)?.value          || '';
   rec.ageClass = document.getElementById(`turtlePopAge-${index}`)?.value          || '';
   rec.activity = _otherVal(`turtlePopActivity-${index}`,    `turtlePopActivityOther-${index}`)   || '';
@@ -197,7 +208,8 @@ function updateTurtleObservation(index) {
   rec.note     = document.getElementById(`turtlePopNote-${index}`)?.value  || '';
 
   const sexAbbr   = rec.sex === 'Male' ? 'M' : rec.sex === 'Female' ? 'F' : 'U';
-  const labelText = rec.activity ? `${sexAbbr} · ${rec.activity}` : sexAbbr;
+  const spAbbr    = rec.species ? rec.species.split(' ').map(w => w[0]).join('') : '?';
+  const labelText = `${spAbbr} ${sexAbbr}${rec.activity ? ' · ' + rec.activity : ''}`;
 
   rec.label.setIcon(L.divIcon({
     className: 'marker-label',
@@ -228,6 +240,22 @@ window.captureTurtlePhoto      = () => capturePhoto(turtleCurrentLatLng, 'turtle
 
 // ─── Option Generators ────────────────────────────────────────────────────
 function _sel(val, cur) { return val === cur ? 'selected' : ''; }
+
+// Nova Scotia freshwater turtle species with provincial S-ranks
+const _NS_TURTLE_SPECIES = [
+  { name: 'Wood Turtle',              sci: 'Glyptemys insculpta',  srank: 'S2' },
+  { name: "Blanding's Turtle",        sci: 'Emydoidea blandingii', srank: 'S2' },
+  { name: 'Snapping Turtle',          sci: 'Chelydra serpentina',  srank: 'S4' },
+  { name: 'Eastern Painted Turtle',   sci: 'Chrysemys picta picta',srank: 'S5' },
+];
+
+function _turtleSpeciesOptions(cur = '') {
+  return `<option value="">-- Select Species --</option>` +
+    _NS_TURTLE_SPECIES.map(s => {
+      const val = s.name;
+      return `<option value="${val}" ${_sel(val, cur)}>${s.name} (${s.sci}) — ${s.srank}</option>`;
+    }).join('');
+}
 
 const _TURTLE_ACTIVITIES = ['Basking', 'Swimming', 'Foraging', 'Travelling', 'Nesting', 'Refuge/Shelter', 'Unknown'];
 const _TURTLE_HABITATS   = ['Marsh', 'Riparian Forest', 'Upland Forest', 'Rocky Shore', 'Sandy Bank', 'Agricultural Field', 'Road/Path', 'Open Water', 'Gravel Bar', 'Shrub/Scrub'];
@@ -269,6 +297,11 @@ export function injectTurtleModal() {
   el.innerHTML = `
     <div class="modal-content">
       <h2>Turtle Observation</h2>
+
+      <label>Species:</label>
+      <select id="turtleSpeciesInput">
+        ${_turtleSpeciesOptions()}
+      </select>
 
       <label>Sex:</label>
       <select id="turtleSexInput">

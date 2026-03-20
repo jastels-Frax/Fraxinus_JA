@@ -202,13 +202,13 @@ export function exportTurtleCSV() {
   const headers = [
     'PROJECT_ID','SITE_NAME','OBSERVER','SURVEY_DATE','START_TIME','END_TIME',
     'WATER_TEMP_C','AIR_TEMP_C','WATER_LEVEL','WEATHER',
-    'SEX','AGE_CLASS','ACTIVITY','HABITAT',
+    'SPECIES','SEX','AGE_CLASS','ACTIVITY','HABITAT',
     'PHOTO_ID','LAT','LNG','NOTE','OBS_TIMESTAMP'
   ];
   const rows = [headers, ...turtleObservations.map(o => [
     o.projectID, o.siteName, o.observer, o.surveyDate, o.startTime, o.endTime,
     o.waterTemp, o.airTemp, o.waterLevel, o.weather,
-    o.sex, o.ageClass, o.activity, o.habitat,
+    o.species || '', o.sex, o.ageClass, o.activity, o.habitat,
     o.photoID,
     o.latlng?.lat ?? '', o.latlng?.lng ?? '',
     o.note, o.timestamp
@@ -229,6 +229,7 @@ export function exportTurtleGeoJSON() {
         SURVEY_DATE: o.surveyDate, START_TIME: o.startTime, END_TIME: o.endTime,
         WATER_TEMP_C: o.waterTemp, AIR_TEMP_C: o.airTemp,
         WATER_LEVEL: o.waterLevel, WEATHER: o.weather,
+        SPECIES: o.species || '',
         SEX: o.sex, AGE_CLASS: o.ageClass, ACTIVITY: o.activity, HABITAT: o.habitat,
         PHOTO_ID: o.photoID, NOTE: o.note, OBS_TIMESTAMP: o.timestamp
       }
@@ -246,11 +247,12 @@ export function exportTurtleKML() {
   const pmarks = marks.map(o => {
     const { lat, lng } = getLoc(o);
     const sexAbbr = o.sex === 'Male' ? 'M' : o.sex === 'Female' ? 'F' : 'U';
-    const name    = o.activity ? `${sexAbbr} · ${o.activity}` : sexAbbr;
+    const name    = `${o.species || 'Turtle'} — ${sexAbbr}${o.activity ? ' · ' + o.activity : ''}`;
     return `
   <Placemark>
     <name>${name}</name>
     <description><![CDATA[
+<b>Species:</b> ${o.species || ''}<br/>
 <b>Observer:</b> ${o.observer || ''}<br/>
 <b>Site:</b> ${o.siteName || ''}<br/>
 <b>Sex:</b> ${o.sex || ''}<br/>
