@@ -146,45 +146,8 @@
     <button id="resetTimerBtn" title="Reset"><i class="fas fa-redo-alt"></i></button>
   </div>
 
-  <!-- 9) Instructions Modal -->
-  <div id="instructionsModal">
-    <div class="modal-content">
-      <h1><i class="fas fa-circle-question"></i> Instructions</h1>
-      <ul style="padding-left:20px;">
-        <li>
-          <h2>Survey Setup</h2>
-          Navigate to your survey location and enter all metadata before beginning.
-          For BBS, orient to true north to accurately estimate observation positions.
-          The toggleable distance/bearing overlay (concentric rings at 50 m, 100 m, 150 m, 200 m
-          with cardinal directions) assists with spatial placement.
-          Range and bearing are calculated relative to your current GPS position.
-        </li>
-        <li>
-          <h2>Recording Observations</h2>
-          Tap the map at the estimated location of the observation.
-          <b>BBS:</b> Use the species search bar (common name or 4-letter code) to identify species.
-          <b>Moose:</b> Select species and observation type from the dropdowns.
-          <b>Turtle:</b> Record individual or habitat observations with the relevant fields.
-          Observations are not saved until you tap "Save Observation".
-        </li>
-        <li>
-          <h2>Editing &amp; Deleting</h2>
-          Tap any map marker to open its edit popup, or use the 🔍 icon in the data drawer.
-          Delete individual records with the ❌ button in the drawer or the Delete button in the popup.
-        </li>
-        <li>
-          <h2>Data Storage &amp; Export</h2>
-          All observations are cached in a local IndexedDB database for offline use.
-          Current-session markers are larger and brighter; archived markers are smaller and dark.
-          Export CSV, GeoJSON, or KML from the data drawer. Each survey type has its own export prefix
-          (BBS_, MOOSE_, TURTLE_).
-        </li>
-      </ul>
-      <div class="button-row">
-        <button onclick="closeInstructions()">Close</button>
-      </div>
-    </div>
-  </div>
+  <!-- 9) Instructions Modal — content injected dynamically by modal.js -->
+  <div id="instructionsModal"></div>
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
