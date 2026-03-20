@@ -4,7 +4,7 @@
 import './storageData.js';
 import './surveyGlobals.js';
 
-import { setActiveSurvey, activeSurvey } from './surveyGlobals.js';
+import { setActiveSurvey, activeSurvey, resetMetadata } from './surveyGlobals.js';
 import { initializeMap, destroyMap } from './map.js';
 import { initTimerBindings, updateTable } from './ui.js';
 import { updateSpeciesList, saveSpeciesObservation } from './species.js';
@@ -52,6 +52,7 @@ async function _launchSurvey(type) {
 }
 
 function _startFreshSurvey(type) {
+  resetMetadata(type);    // clear stale fields; preserves surveyor name
   initNewSession(type);
   setActiveSurvey(type);
   _showMapUI(type);

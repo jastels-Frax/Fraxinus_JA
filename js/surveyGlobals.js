@@ -35,6 +35,18 @@ export function restoreMetadata(type, meta) {
   else setTurtleMetadata(meta);
 }
 
+// Clears all metadata for the given survey type, preserving only the
+// surveyor name so the user does not have to re-enter it every session.
+export function resetMetadata(type) {
+  if (type === 'BBS') {
+    setSurveyMetadata({ observer });           // preserve BBS observer name
+  } else if (type === 'MOOSE') {
+    setMooseMetadata({ mooseObserver });       // preserve Moose observer name
+  } else {
+    setTurtleMetadata({ turtleObserver });     // preserve Turtle observer name
+  }
+}
+
 // ─── BBS Metadata ─────────────────────────────────────────────────────────
 export let projectID    = localStorage.getItem('projectID')    || '';
 export let pointID      = localStorage.getItem('pointID')      || '';
