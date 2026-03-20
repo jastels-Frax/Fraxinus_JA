@@ -748,7 +748,7 @@ body {
 .habitat-criteria-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   margin-top: 6px;
 }
 
@@ -765,17 +765,9 @@ body {
   user-select: none;
 }
 
-/* Hide the real checkbox — completely removed from layout */
+/* Hide the real checkbox — completely removed from rendering */
 .habitat-criteria-toggle input[type="checkbox"] {
-  position: absolute;
-  -webkit-appearance: none;
-  appearance: none;
-  opacity: 0;
-  width: 0;
-  height: 0;
-  margin: 0;
-  padding: 0;
-  pointer-events: none;
+  display: none;
 }
 
 /* Toggle track */
