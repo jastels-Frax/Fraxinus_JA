@@ -151,7 +151,7 @@ window.submitAndShowExport = async function () {
 function _showExportDialog(onDone) {
   const overlay = document.createElement('div');
   overlay.id = 'exportDialog';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9000;display:flex;align-items:center;justify-content:center;font-family:Oswald,sans-serif;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:10000;display:flex;align-items:center;justify-content:center;font-family:Oswald,sans-serif;';
 
   overlay.innerHTML = `
     <div class="export-dialog-box">
@@ -273,7 +273,7 @@ function _populateList(listId, sessions, isDraft) {
 // ─── Re-export dialog for submitted/draft sessions ────────────────────────
 function _showReExportDialog(session) {
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9000;display:flex;align-items:center;justify-content:center;font-family:Oswald,sans-serif;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:10000;display:flex;align-items:center;justify-content:center;font-family:Oswald,sans-serif;';
 
   overlay.innerHTML = `
     <div class="export-dialog-box">
