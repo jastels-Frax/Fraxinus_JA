@@ -60,6 +60,7 @@ function _startFreshSurvey(type) {
 // ─── "Continue or New?" dialog ────────────────────────────────────────────
 function _showContinueOrNewDialog(recentDraft, type) {
   const overlay = document.createElement('div');
+  overlay.className = 'survey-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:10000;display:flex;align-items:center;justify-content:center;font-family:Oswald,sans-serif;';
   overlay.innerHTML = `
     <div class="export-dialog-box">
@@ -112,8 +113,29 @@ function _showMapUI(type) {
   updateTable();
 }
 
+// ─── Close every survey overlay/modal/panel before going home ────────────
+function _closeAllSurveyUI() {
+  // Observation forms (each also calls unlockMap + resets placing-point flag)
+  window.closeModal?.();
+  window.closeMooseModal?.();
+  window.closeTurtleModal?.();
+  window.closeHabitatModal?.();
+  // Help panel and metadata form
+  window.closeInstructions?.();
+  window.closeSurveyModal?.();
+  // Observation list drawer
+  window.closeDrawer?.();
+  // Dynamically appended overlays (export dialog, no-data warning, etc.)
+  document.querySelectorAll('.survey-overlay').forEach(el => el.remove());
+  // Belt-and-braces: ensure backdrop is hidden and map lock is cleared
+  const backdrop = document.getElementById('modalBackdrop');
+  if (backdrop) backdrop.style.display = 'none';
+  document.getElementById('masterButton')?.classList.remove('ui-locked');
+}
+
 // ─── Tear down map UI, return to home ────────────────────────────────────
 function _returnToHome() {
+  _closeAllSurveyUI();
   const hide = id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; };
   hide('dataDrawer');
   hide('surveyModal');
@@ -139,6 +161,7 @@ function _currentObsCount() {
 // ─── "No observations" popup ──────────────────────────────────────────────
 function _showNoDataModal() {
   const overlay = document.createElement('div');
+  overlay.className = 'survey-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9500;display:flex;align-items:center;justify-content:center;font-family:Oswald,sans-serif;';
   overlay.innerHTML = `
     <div style="background:#222;border:1px solid #3a3a3a;border-radius:12px;padding:28px 32px;text-align:center;max-width:320px;width:90vw;box-shadow:0 8px 32px rgba(0,0,0,0.7);">
@@ -190,6 +213,7 @@ window.submitAndShowExport = async function () {
 function _showExportDialog(onDone) {
   const overlay = document.createElement('div');
   overlay.id = 'exportDialog';
+  overlay.className = 'survey-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:10000;display:flex;align-items:center;justify-content:center;font-family:Oswald,sans-serif;';
 
   overlay.innerHTML = `
@@ -314,6 +338,7 @@ function _populateList(listId, sessions, isDraft) {
 // ─── Re-export dialog for submitted/draft sessions ────────────────────────
 function _showReExportDialog(session) {
   const overlay = document.createElement('div');
+  overlay.className = 'survey-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:10000;display:flex;align-items:center;justify-content:center;font-family:Oswald,sans-serif;';
 
   overlay.innerHTML = `
