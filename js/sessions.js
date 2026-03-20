@@ -84,6 +84,10 @@ async function _buildRecord(status) {
 export async function saveDraft() {
   const record = await _buildRecord('draft');
   await saveSessionRecord(record);
+  // Supersede: remove any older drafts with the same label (different id)
+  const all   = await _loadAllSessions();
+  const dupes = all.filter(s => s.status === 'draft' && s.label === record.label && s.id !== record.id);
+  await Promise.all(dupes.map(s => deleteSessionRecord(s.id)));
   await clearObservationStores();
   clearInMemoryArrays();
 }

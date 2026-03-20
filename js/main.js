@@ -26,9 +26,9 @@ import {
 document.addEventListener('DOMContentLoaded', async () => {
   // ── Survey selection button handlers ──────────────────────────────────
   document.querySelectorAll('.survey-choice-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       try {
-        _launchSurvey(btn.dataset.survey);
+        await _launchSurvey(btn.dataset.survey);
       } catch (err) {
         alert('Error launching survey:\n' + err.message + '\n\nCheck browser console (F12) for details.');
         console.error(err);
@@ -41,10 +41,49 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // ─── Launch a survey (new session) ────────────────────────────────────────
-function _launchSurvey(type) {
+async function _launchSurvey(type) {
+  const sessions = await loadSessions();
+  const drafts   = sessions.filter(s => s.status === 'draft' && s.type === type);
+  if (drafts.length > 0) {
+    _showContinueOrNewDialog(drafts[0], type);
+    return;
+  }
+  _startFreshSurvey(type);
+}
+
+function _startFreshSurvey(type) {
   initNewSession(type);
   setActiveSurvey(type);
   _showMapUI(type);
+}
+
+// ─── "Continue or New?" dialog ────────────────────────────────────────────
+function _showContinueOrNewDialog(recentDraft, type) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:10000;display:flex;align-items:center;justify-content:center;font-family:Oswald,sans-serif;';
+  overlay.innerHTML = `
+    <div class="export-dialog-box">
+      <div class="export-dialog-icon">${SURVEY_EMOJI[type] || '📋'}</div>
+      <h2 class="export-dialog-title">Survey In Progress</h2>
+      <p class="export-dialog-sub" style="margin-bottom:4px;">${recentDraft.label}</p>
+      <p class="export-dialog-sub" style="color:#888;font-size:0.78rem;margin-bottom:0;">
+        ${recentDraft.obsCount || 0} obs &middot; ${new Date(recentDraft.updatedAt).toLocaleString()}
+      </p>
+      <div class="export-dialog-btns">
+        <button id="_contBtn">▶ Continue</button>
+        <button id="_newBtn" class="export-skip">＋ Start New</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#_contBtn').addEventListener('click', () => {
+    overlay.remove();
+    _resumeSurvey(recentDraft);
+  });
+  overlay.querySelector('#_newBtn').addEventListener('click', () => {
+    overlay.remove();
+    _startFreshSurvey(type);
+  });
 }
 
 // ─── Resume a draft session ───────────────────────────────────────────────
