@@ -148,6 +148,7 @@ export function lockMap() {
   map.dragging.disable();
   map.touchZoom.disable();
   map.scrollWheelZoom.disable();
+  document.getElementById('masterButton')?.classList.add('ui-locked');
 }
 
 export function unlockMap() {
@@ -155,6 +156,7 @@ export function unlockMap() {
   map.dragging.enable();
   map.touchZoom.enable();
   map.scrollWheelZoom.enable();
+  document.getElementById('masterButton')?.classList.remove('ui-locked');
 }
 
 // ─── Destroy map (called when returning to survey selection) ──────────────

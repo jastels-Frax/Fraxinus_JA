@@ -84,8 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
     searchInput.addEventListener('input', e => updateSpeciesList(e.target.value));
   }
 
-  const backdrop = document.getElementById('modalBackdrop');
-  if (backdrop) backdrop.addEventListener('click', closeModal);
+  // Backdrop click intentionally does NOT close observation modals —
+  // the user must use Save or Cancel to prevent accidental dismissal.
 });
 
 // ─── Global Bindings ──────────────────────────────────────────────────────

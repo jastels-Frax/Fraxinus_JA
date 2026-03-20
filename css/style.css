@@ -452,6 +452,11 @@ body {
   gap: 12px;
 }
 
+#masterButton.ui-locked {
+  pointer-events: none;
+  opacity: 0.35;
+}
+
 #masterButton button {
   font-size: 14px;
   font-family: 'Oswald', sans-serif;
