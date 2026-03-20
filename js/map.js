@@ -18,7 +18,7 @@ let geoWatchId         = null;
 
 // ─── Main Initialiser ─────────────────────────────────────────────────────
 export function initializeMap() {
-  map = L.map('map');
+  map = L.map('map', { zoomControl: false });
   // Default view (Nova Scotia) so tiles render before GPS locks
   map.setView([44.65, -63.57], 8);
   map.doubleClickZoom.disable();
@@ -31,7 +31,9 @@ export function initializeMap() {
   const satellite = L.tileLayer(
     'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
   ).addTo(map);
+  // Layer switcher top-right, zoom control directly below it
   L.control.layers({ OSM: osm, Satellite: satellite }).addTo(map);
+  L.control.zoom({ position: 'topright' }).addTo(map);
 
   // Map click → BBS modal only; Moose/Turtle use the geotag button instead
   map.on('click', e => {
@@ -102,7 +104,7 @@ function addMasterButtons() {
     <button id="btnSubmit" title="Save and Submit" class="btn-session-action">✅</button>
   `;
   container.style.cssText = `
-    position:absolute; top:100px; left:30px; z-index:2000;
+    position:absolute; top:16px; left:16px; z-index:2000;
     display:flex; flex-direction:column; gap:12px;
   `;
 

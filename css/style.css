@@ -442,8 +442,8 @@ body {
 ═══════════════════════════════════════════════════════════════════════════ */
 #masterButton {
   position: absolute;
-  top: 100px;
-  left: 30px;
+  top: 16px;
+  left: 16px;
   z-index: 2000;
   display: flex;
   flex-direction: column;
