@@ -189,7 +189,7 @@ export function exportMooseKML() {
   }).join('\n');
   const kml = `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
-  <Document><name>Moose Survey Observations</name>
+  <Document><name>General Wildlife Survey Observations</name>
 ${pmarks}
   </Document>
 </kml>`;

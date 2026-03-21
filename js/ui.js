@@ -137,7 +137,7 @@ export function injectSurveyModal() {
   } else if (survey === 'MOOSE') {
     container.innerHTML = `
       <div class="modal-content">
-        <h2>Survey Metadata — Mainland Moose Survey</h2>
+        <h2>Survey Metadata — General Wildlife Survey</h2>
         <label>Project ID:</label>
         <input type="text" id="mooseProjectIDInput" />
         <label>Observer:</label>
@@ -342,7 +342,7 @@ function _renderMooseTable(drawer) {
           <button onclick="exportMooseKML()">KML</button>
         </div>
       </div>
-      <h2 style="margin-top:0;">Mainland Moose Survey Observations</h2>
+      <h2 style="margin-top:0;">General Wildlife Survey Observations</h2>
       <div style="overflow-x:auto;">
         <table>
           <thead><tr>

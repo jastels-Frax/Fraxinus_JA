@@ -90,14 +90,14 @@ const HELP_CONTENT = {
     </ul>`,
 
   MOOSE: `
-    <h1><i class="fas fa-circle-question"></i> Moose Survey Instructions</h1>
+    <h1><i class="fas fa-circle-question"></i> General Wildlife Survey Instructions</h1>
     <ul style="padding-left:20px;">
       <li><h2>Before You Start</h2>
         <ul>
           <li>Tap the clipboard icon and fill in all metadata (project, transect ID, observer, conditions).</li>
         </ul>
       </li>
-      <li><h2>Recording Moose</h2>
+      <li><h2>Recording Wildlife</h2>
         <ul>
           <li>Tap the map at the observation location.</li>
           <li>Select the animal type and observation category from the dropdowns, enter a count, add notes if needed.</li>

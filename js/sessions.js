@@ -25,7 +25,7 @@ export function setResumedSessionId(id) {
 function _buildLabel() {
   const date = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
   if (G.activeSurvey === 'BBS')   return `BBS – ${G.pointID         || 'No Point ID'} – ${date}`;
-  if (G.activeSurvey === 'MOOSE') return `Moose – ${G.mooseTransectID || 'No Transect'} – ${date}`;
+  if (G.activeSurvey === 'MOOSE') return `Wildlife – ${G.mooseTransectID || 'No Transect'} – ${date}`;
   return `Turtle – ${G.turtleSiteName || 'No Site'} – ${date}`;
 }
 
