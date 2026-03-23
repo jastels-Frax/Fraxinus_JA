@@ -4,7 +4,7 @@
 import './storageData.js';
 import './surveyGlobals.js';
 
-import { setActiveSurvey, activeSurvey, resetMetadata } from './surveyGlobals.js';
+import { setActiveSurvey, activeSurvey, resetMetadata, hasAnyMetadata } from './surveyGlobals.js';
 import { initializeMap, destroyMap } from './map.js';
 import { initTimerBindings, updateTable } from './ui.js';
 import { updateSpeciesList, saveSpeciesObservation } from './species.js';
@@ -12,7 +12,7 @@ import { injectMooseModal } from './moose.js';
 import { injectTurtleModal } from './turtle.js';
 import { injectHabitatModal } from './habitat.js';
 import {
-  initNewSession, saveDraft, submitSession,
+  initNewSession, saveDraft, saveDraftSilently, submitSession,
   loadSessions, deleteSession, resumeSession, clearInMemoryArrays
 } from './sessions.js';
 import { speciesMarkers, mooseObservations, turtleObservations, habitatObservations } from './storageData.js';
@@ -26,6 +26,9 @@ import { uploadToFelt } from './felt.js';
 import { showToast } from './toast.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // ── Expose globals needed by any inline onclick= handlers ─────────────
+  window.uploadToFelt = uploadToFelt;
+
   // ── Settings gear button ───────────────────────────────────────────────
   const settingsBtn = document.getElementById('btn-settings');
   if (settingsBtn) settingsBtn.addEventListener('click', _showSettingsModal);
@@ -40,6 +43,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error(err);
       }
     });
+  });
+
+  // ── Browser back-button → same flow as the in-app back button ─────────
+  window.addEventListener('popstate', () => {
+    if (activeSurvey) {
+      history.pushState(null, '', location.href);
+      window.goBackToSelection();
+    }
   });
 
   // ── Render session lists on home screen ───────────────────────────────
@@ -101,8 +112,29 @@ async function _resumeSurvey(session) {
   _showMapUI(session.type);
 }
 
+// ─── Auto-save timer ──────────────────────────────────────────────────────
+let _autoSaveTimer = null;
+
+function _startAutoSave() {
+  _stopAutoSave();
+  const secs = parseInt(localStorage.getItem('autoSaveInterval') || '0', 10);
+  if (!secs) return;
+  _autoSaveTimer = setInterval(async () => {
+    if (!activeSurvey) return;
+    try { await saveDraftSilently(); }
+    catch (e) { console.warn('Auto-save failed:', e); }
+  }, secs * 1000);
+}
+
+function _stopAutoSave() {
+  if (_autoSaveTimer) { clearInterval(_autoSaveTimer); _autoSaveTimer = null; }
+}
+
 // ─── Shared map UI setup ──────────────────────────────────────────────────
 function _showMapUI(type) {
+  // Push state so the browser back button fires popstate instead of navigating away
+  history.pushState(null, '', location.href);
+
   document.getElementById('surveySelection').style.display = 'none';
   document.getElementById('map').style.removeProperty('display');
   document.getElementById('masterButton').style.removeProperty('display');
@@ -118,6 +150,7 @@ function _showMapUI(type) {
   initializeMap();
   if (type === 'BBS') initTimerBindings();
   updateTable();
+  _startAutoSave();
 }
 
 // ─── Close every survey overlay/modal/panel before going home ────────────
@@ -142,6 +175,7 @@ function _closeAllSurveyUI() {
 
 // ─── Tear down map UI, return to home ────────────────────────────────────
 function _returnToHome() {
+  _stopAutoSave();
   _closeAllSurveyUI();
   const hide = id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; };
   hide('dataDrawer');
@@ -183,13 +217,58 @@ function _showNoDataModal() {
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
 }
 
-// ─── Back button — navigate immediately; save happens in the background ───
-// We must NOT await any DB operation here — if IDB hangs the button freezes.
+// ─── Back button — auto-save with metadata guard ──────────────────────────
 window.goBackToSelection = function () {
+  // Case C: no metadata at all → prompt before discarding
+  if (!hasAnyMetadata()) {
+    _showNoMetadataModal();
+    return;
+  }
+  // Cases A & B: has metadata (with or without observations) — auto-save draft
+  const obsCount = _currentObsCount();
+  // _buildRecord captures state synchronously before the first await, so
+  // calling clearInMemoryArrays() immediately after is safe.
   saveDraft().catch(e => console.warn('Back-button auto-save failed:', e));
-  clearInMemoryArrays();   // clear now so a new survey starts clean
+  clearInMemoryArrays();
   _returnToHome();
+  showToast(
+    obsCount > 0 ? 'Survey saved to drafts.' : 'Survey saved to drafts (no observations yet).',
+    'success'
+  );
 };
+
+// ─── No-metadata modal (Case C) ────────────────────────────────────────────
+function _showNoMetadataModal() {
+  const overlay = document.createElement('div');
+  overlay.className = 'survey-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:10000;display:flex;align-items:center;justify-content:center;font-family:Oswald,sans-serif;';
+  overlay.innerHTML = `
+    <div class="modal-content" style="max-width:320px;width:90vw;text-align:center;">
+      <h2 style="color:steelblue;margin:0 0 12px;">No Metadata</h2>
+      <p style="color:#ccc;font-size:0.88rem;line-height:1.5;margin:0 0 20px;">
+        No survey information has been entered yet. Please fill in the survey metadata before saving, or discard and exit.
+      </p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <button id="_noMetaEnter"
+          style="background:#2d6b2d;border:1px solid #3d8f3d;color:#fff;padding:9px 16px;border-radius:6px;cursor:pointer;font-family:Oswald,sans-serif;">
+          Enter Metadata
+        </button>
+        <button id="_noMetaDiscard"
+          style="background:#6b2d2d;border:1px solid #8f3d3d;color:#fff;padding:9px 16px;border-radius:6px;cursor:pointer;font-family:Oswald,sans-serif;">
+          Discard and Exit
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  // "Enter Metadata" — close modal, stay in survey so user can fill in fields
+  overlay.querySelector('#_noMetaEnter').addEventListener('click', () => overlay.remove());
+  // "Discard and Exit" — abandon survey without saving
+  overlay.querySelector('#_noMetaDiscard').addEventListener('click', () => {
+    overlay.remove();
+    clearInMemoryArrays();
+    _returnToHome();
+  });
+}
 
 // ─── Save to Drafts button ────────────────────────────────────────────────
 window.saveDraftAndGoHome = async function () {
@@ -206,9 +285,20 @@ window.saveDraftAndGoHome = async function () {
 // ─── Submit button — save, show export dialog, then go home ──────────────
 window.submitAndShowExport = async function () {
   if (_currentObsCount() === 0) { _showNoDataModal(); return; }
+  // Capture survey type and observation snapshot BEFORE submitSession() clears
+  // the in-memory arrays and IDB observation stores, so the export dialog can
+  // still offer CSV / GeoJSON / KML / Felt uploads after submission.
+  const capturedType = activeSurvey;
+  const _strip = o => { const { marker, label, ...r } = o; return { ...r, latlng: { lat: o.latlng.lat, lng: o.latlng.lng } }; };
+  const capturedSnap = {
+    speciesMarkers:      speciesMarkers.map(_strip),
+    mooseObservations:   mooseObservations.map(_strip),
+    turtleObservations:  turtleObservations.map(_strip),
+    habitatObservations: habitatObservations.map(_strip),
+  };
   try {
     await submitSession();
-    _showExportDialog(() => _returnToHome());
+    _showExportDialog(capturedType, capturedSnap, () => _returnToHome());
   } catch (e) {
     console.error('Submit failed:', e);
     alert('Could not submit:\n' + (e?.message || String(e)));
@@ -218,40 +308,129 @@ window.submitAndShowExport = async function () {
 
 // ─── Settings modal ───────────────────────────────────────────────────────
 function _showSettingsModal() {
-  const existingKey = localStorage.getItem('feltApiKey') || '';
+  const defObs   = localStorage.getItem('defaultObserver')  || '';
+  const defPrj   = localStorage.getItem('defaultProjectID') || '';
+  const autoSave = localStorage.getItem('autoSaveInterval') || '0';
+  const feltKey  = localStorage.getItem('feltApiKey')       || '';
+
+  const _esc = s => String(s).replace(/"/g, '&quot;');
+  const _sel = v => (opt) => v === opt ? 'selected' : '';
+
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 16px;box-sizing:border-box;';
   overlay.innerHTML = `
-    <div class="modal-content" style="max-width:360px;width:90vw;">
-      <h2 style="display:flex;align-items:center;gap:8px;"><i class="fas fa-gear"></i> Settings</h2>
-      <label style="display:block;margin-top:12px;">Felt API Key</label>
-      <input type="password" id="feltApiKeyInput" value="${existingKey.replace(/"/g, '&quot;')}"
+    <div class="modal-content" style="max-width:380px;width:100%;margin:auto;">
+      <h2 style="display:flex;align-items:center;gap:8px;margin:0 0 16px;"><i class="fas fa-gear"></i> Settings</h2>
+
+      <p style="color:#888;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 8px;">Defaults</p>
+      <label style="display:block;">Default Observer Name</label>
+      <input type="text" id="settingsDefObs" value="${_esc(defObs)}"
+        placeholder="e.g. J. Smith" autocomplete="off"
+        style="width:100%;box-sizing:border-box;margin-top:4px;" />
+      <p style="color:#999;font-size:0.78rem;margin:4px 0 12px;line-height:1.4;">
+        Pre-fills the observer field for new surveys across all types.
+      </p>
+
+      <label style="display:block;">Default Project ID</label>
+      <input type="text" id="settingsDefPrj" value="${_esc(defPrj)}"
+        placeholder="e.g. NTB-2026" autocomplete="off"
+        style="width:100%;box-sizing:border-box;margin-top:4px;" />
+      <p style="color:#999;font-size:0.78rem;margin:4px 0 16px;line-height:1.4;">
+        Pre-fills the project ID field across all survey types.
+      </p>
+
+      <hr style="border:none;border-top:1px solid #3a3a3a;margin:0 0 16px;" />
+      <p style="color:#888;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 8px;">Auto-Save</p>
+      <label style="display:block;">Auto-save interval</label>
+      <select id="settingsAutoSave" style="width:100%;box-sizing:border-box;margin-top:4px;">
+        <option value="0"   ${_sel(autoSave)('0')  }>Off</option>
+        <option value="30"  ${_sel(autoSave)('30') }>Every 30 seconds</option>
+        <option value="60"  ${_sel(autoSave)('60') }>Every minute</option>
+        <option value="120" ${_sel(autoSave)('120')}>Every 2 minutes</option>
+        <option value="300" ${_sel(autoSave)('300')}>Every 5 minutes</option>
+      </select>
+      <p style="color:#999;font-size:0.78rem;margin:4px 0 16px;line-height:1.4;">
+        Silently saves a draft while a survey is in progress.
+      </p>
+
+      <hr style="border:none;border-top:1px solid #3a3a3a;margin:0 0 16px;" />
+      <p style="color:#888;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 8px;">Felt Integration</p>
+      <label style="display:block;">Felt API Key</label>
+      <input type="password" id="feltApiKeyInput" value="${_esc(feltKey)}"
         placeholder="felt_pat_…" autocomplete="off"
         style="width:100%;box-sizing:border-box;margin-top:4px;" />
-      <p style="color:#999;font-size:0.78rem;margin:8px 0 16px;line-height:1.4;">
-        Stored locally on this device. Sent only to the Felt API. Not suitable for public deployment.
+      <p style="color:#999;font-size:0.78rem;margin:4px 0 16px;line-height:1.4;">
+        Stored locally on this device. Sent only to the Felt API.
       </p>
+
+      <hr style="border:none;border-top:1px solid #3a3a3a;margin:0 0 16px;" />
+      <p style="color:#888;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 8px;">Data Management</p>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+        <button id="settingsExportBackup"
+          style="background:#1e3a5f;border:1px solid #2a5a9f;color:#fff;padding:9px 16px;border-radius:6px;cursor:pointer;font-family:Oswald,sans-serif;text-align:left;">
+          <i class="fas fa-download"></i> Export Full Backup (JSON)
+        </button>
+        <button id="settingsClearArchive"
+          style="background:#5f1e1e;border:1px solid #9f2a2a;color:#fff;padding:9px 16px;border-radius:6px;cursor:pointer;font-family:Oswald,sans-serif;text-align:left;">
+          <i class="fas fa-trash"></i> Clear All Archived Sessions
+        </button>
+      </div>
+
       <div style="display:flex;gap:8px;justify-content:flex-end;">
         <button id="settingsCancel" style="background:#333;border:1px solid #555;color:#fff;padding:8px 16px;border-radius:6px;cursor:pointer;">Cancel</button>
-        <button id="settingsSave" style="background:#2d6b2d;border:1px solid #3d8f3d;color:#fff;padding:8px 16px;border-radius:6px;cursor:pointer;">Save</button>
+        <button id="settingsSave"   style="background:#2d6b2d;border:1px solid #3d8f3d;color:#fff;padding:8px 16px;border-radius:6px;cursor:pointer;">Save</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);
 
   const close = () => overlay.remove();
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
   overlay.querySelector('#settingsCancel').addEventListener('click', close);
+
   overlay.querySelector('#settingsSave').addEventListener('click', () => {
-    const val = (overlay.querySelector('#feltApiKeyInput').value || '').trim();
-    if (val) localStorage.setItem('feltApiKey', val);
-    else localStorage.removeItem('feltApiKey');
-    showToast('API key saved', 'success');
+    const defObsVal  = (overlay.querySelector('#settingsDefObs').value  || '').trim();
+    const defPrjVal  = (overlay.querySelector('#settingsDefPrj').value  || '').trim();
+    const autoSaveVal = overlay.querySelector('#settingsAutoSave').value;
+    const feltKeyVal = (overlay.querySelector('#feltApiKeyInput').value || '').trim();
+
+    if (defObsVal)  localStorage.setItem('defaultObserver',  defObsVal);
+    else            localStorage.removeItem('defaultObserver');
+    if (defPrjVal)  localStorage.setItem('defaultProjectID', defPrjVal);
+    else            localStorage.removeItem('defaultProjectID');
+    localStorage.setItem('autoSaveInterval', autoSaveVal);
+    if (feltKeyVal) localStorage.setItem('feltApiKey', feltKeyVal);
+    else            localStorage.removeItem('feltApiKey');
+
+    showToast('Settings saved', 'success');
     close();
   });
-  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+
+  overlay.querySelector('#settingsExportBackup').addEventListener('click', async () => {
+    const sessions = await loadSessions();
+    const json = JSON.stringify(sessions, null, 2);
+    const date = new Date().toLocaleDateString('en-CA').replace(/-/g, '');
+    const blob = new Blob([json], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = Object.assign(document.createElement('a'), { href: url, download: `fraxinus_backup_${date}.json` });
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Backup downloaded', 'success');
+  });
+
+  overlay.querySelector('#settingsClearArchive').addEventListener('click', async () => {
+    if (!confirm('Delete all archived (submitted) sessions? This cannot be undone.')) return;
+    const all      = await loadSessions();
+    const archived = all.filter(s => s.status === 'submitted');
+    await Promise.all(archived.map(s => deleteSession(s.id)));
+    const n = archived.length;
+    showToast(`${n} archived session${n !== 1 ? 's' : ''} deleted`, 'success');
+    _renderSessionLists();
+  });
 }
 
 // ─── Export dialog (shown after submit) ──────────────────────────────────
-function _showExportDialog(onDone) {
+// type and snap are captured before submitSession() clears in-memory arrays.
+function _showExportDialog(type, snap, onDone) {
   const overlay = document.createElement('div');
   overlay.id = 'exportDialog';
   overlay.className = 'survey-overlay';
@@ -276,22 +455,32 @@ function _showExportDialog(onDone) {
 
   const close = () => { overlay.remove(); onDone(); };
 
-  document.getElementById('expCsv').addEventListener('click', () => {
-    _runExport('csv'); close();
-  });
-  document.getElementById('expGeoJson').addEventListener('click', () => {
-    _runExport('geojson'); close();
-  });
-  document.getElementById('expKml').addEventListener('click', () => {
-    _runExport('kml'); close();
-  });
-  document.getElementById('expFelt').addEventListener('click', () => {
+  // Restore snapshot arrays, call fn(), then clear — safe export helper
+  const withSnap = (fn) => {
+    clearInMemoryArrays();
+    (snap.speciesMarkers     || []).forEach(r => speciesMarkers.push(r));
+    (snap.mooseObservations  || []).forEach(r => mooseObservations.push(r));
+    (snap.turtleObservations || []).forEach(r => turtleObservations.push(r));
+    (snap.habitatObservations|| []).forEach(r => habitatObservations.push(r));
+    fn();
+    clearInMemoryArrays();
+  };
+
+  document.getElementById('expCsv').addEventListener('click',     () => { withSnap(() => _runExport('csv',     type)); close(); });
+  document.getElementById('expGeoJson').addEventListener('click', () => { withSnap(() => _runExport('geojson', type)); close(); });
+  document.getElementById('expKml').addEventListener('click',     () => { withSnap(() => _runExport('kml',     type)); close(); });
+  document.getElementById('expFelt').addEventListener('click',    () => {
     overlay.remove();
-    // Upload survey observations; onDone() called after Felt modal closes
-    uploadToFelt(activeSurvey, onDone);
+    // Restore snapshot so uploadToFelt can read observations (arrays were cleared by submitSession)
+    clearInMemoryArrays();
+    (snap.speciesMarkers     || []).forEach(r => speciesMarkers.push(r));
+    (snap.mooseObservations  || []).forEach(r => mooseObservations.push(r));
+    (snap.turtleObservations || []).forEach(r => turtleObservations.push(r));
+    (snap.habitatObservations|| []).forEach(r => habitatObservations.push(r));
+    uploadToFelt(type, () => { clearInMemoryArrays(); onDone(); });
   });
   document.getElementById('expStore').addEventListener('click', close);
-  document.getElementById('expSkip').addEventListener('click', close);
+  document.getElementById('expSkip').addEventListener('click',  close);
 }
 
 function _runExport(fmt, type = activeSurvey) {

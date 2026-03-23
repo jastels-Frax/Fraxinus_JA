@@ -92,6 +92,17 @@ export async function saveDraft() {
   clearInMemoryArrays();
 }
 
+// ─── Save to Drafts (silent, non-destructive — for auto-save timer) ──────
+// Identical to saveDraft() but does NOT clear the observation stores or
+// in-memory arrays, so the survey can continue uninterrupted.
+export async function saveDraftSilently() {
+  const record = await _buildRecord('draft');
+  await saveSessionRecord(record);
+  const all   = await _loadAllSessions();
+  const dupes = all.filter(s => s.status === 'draft' && s.label === record.label && s.id !== record.id);
+  await Promise.all(dupes.map(s => deleteSessionRecord(s.id)));
+}
+
 // ─── Submit ───────────────────────────────────────────────────────────────
 export async function submitSession() {
   const record = await _buildRecord('submitted');

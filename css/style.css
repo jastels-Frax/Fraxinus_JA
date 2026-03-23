@@ -1104,6 +1104,15 @@ body {
   border-color: var(--frax-green) !important;
 }
 
+/* GPS auto-follow active state */
+#btnGPS.gps-follow-active {
+  background-color: rgba(30, 100, 220, 0.55) !important;
+  border-color: #4a9fff !important;
+}
+#btnGPS.gps-follow-active:hover {
+  background-color: rgba(30, 100, 220, 0.75) !important;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    FELT INTEGRATION
 ═══════════════════════════════════════════════════════════════════════════ */

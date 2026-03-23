@@ -329,6 +329,7 @@ async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
 
 // ── Public entry point ────────────────────────────────────────────────────
 export function uploadToFelt(surveyTarget, onClose) {
+  console.log('[felt.js] uploadToFelt called. surveyTarget:', surveyTarget, 'obs count:', _getObsCount(surveyTarget));
   _apiKey = (localStorage.getItem('feltApiKey') || '').trim();
   if (!_apiKey) {
     showToast('No Felt API key. Add one in Settings.', 'error');

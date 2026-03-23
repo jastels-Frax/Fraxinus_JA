@@ -35,15 +35,24 @@ export function restoreMetadata(type, meta) {
   else setTurtleMetadata(meta);
 }
 
-// Clears all metadata for the given survey type, preserving only the
-// surveyor name so the user does not have to re-enter it every session.
+// Returns true if the active survey has at least one non-blank key field.
+export function hasAnyMetadata() {
+  if (activeSurvey === 'BBS')   return [projectID, pointID, observer].some(v => v && v.trim());
+  if (activeSurvey === 'MOOSE') return [mooseProjectID, mooseObserver, mooseTransectID].some(v => v && v.trim());
+  return [turtleProjectID, turtleObserver, turtleSiteName].some(v => v && v.trim());
+}
+
+// Clears all metadata for the given survey type, preserving the surveyor name
+// and applying any global defaults set in Settings.
 export function resetMetadata(type) {
+  const defObs = localStorage.getItem('defaultObserver')  || '';
+  const defPrj = localStorage.getItem('defaultProjectID') || '';
   if (type === 'BBS') {
-    setSurveyMetadata({ observer });           // preserve BBS observer name
+    setSurveyMetadata({ observer: observer || defObs, projectID: projectID || defPrj });
   } else if (type === 'MOOSE') {
-    setMooseMetadata({ mooseObserver });       // preserve Moose observer name
+    setMooseMetadata({ mooseObserver: mooseObserver || defObs, mooseProjectID: mooseProjectID || defPrj });
   } else {
-    setTurtleMetadata({ turtleObserver });     // preserve Turtle observer name
+    setTurtleMetadata({ turtleObserver: turtleObserver || defObs, turtleProjectID: turtleProjectID || defPrj });
   }
 }
 

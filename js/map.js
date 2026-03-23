@@ -15,6 +15,7 @@ let userLocationMarker = null;
 let userAccuracyCircle = null;
 let overlayGroup       = null;
 let geoWatchId         = null;
+let _autoFollow        = false;
 
 // Counts how many overlays/modals are currently open.  The map stays locked
 // until every caller has released its lock, preventing an early unlock when
@@ -55,6 +56,7 @@ export function initializeMap() {
       if (userLocationMarker) {
         userLocationMarker.setLatLng(latlng);
         userAccuracyCircle.setLatLng(latlng).setRadius(accuracy);
+        if (_autoFollow) map.setView(latlng, map.getZoom());
       } else {
         userLocationMarker = L.circleMarker(latlng, {
           radius: 6, color: '#00f', fillColor: 'white', fillOpacity: 1, weight: 1
@@ -105,6 +107,7 @@ function addMasterButtons() {
     ${survey === 'BBS' ? `<button id="btnOverlay" title="Distance/Bearing Overlay"><i class="fas fa-life-ring fa-2x"></i></button>` : ''}
     <button id="btnSpecies" title="${speciesTitle}" class="btn-survey-icon">${speciesEmoji}</button>
     <button id="btnHabitat" title="Record Habitat / Feature Observation" class="btn-survey-icon">🌿</button>
+    <button id="btnGPS"    title="GPS Auto-Follow" class="btn-session-action"><i class="fas fa-location-crosshairs"></i></button>
     <button id="btnDraft"  title="Save to Drafts"  class="btn-session-action">💾</button>
     <button id="btnSubmit" title="Save and Submit" class="btn-session-action">✅</button>
   `;
@@ -136,6 +139,13 @@ function addMasterButtons() {
         import('./turtle.js').then(m => { if (!m.isTurtlePlacingPoint()) m.showTurtleModal(observerLocation); });
       }
     }
+  });
+
+  // GPS auto-follow toggle
+  document.getElementById('btnGPS')?.addEventListener('click', () => {
+    _autoFollow = !_autoFollow;
+    document.getElementById('btnGPS')?.classList.toggle('gps-follow-active', _autoFollow);
+    if (_autoFollow && observerLocation && map) map.setView(observerLocation, map.getZoom());
   });
 
   // Habitat button (all surveys — uses GPS if available, map centre as fallback)
@@ -171,6 +181,7 @@ export function destroyMap() {
   if (geoWatchId != null) { navigator.geolocation.clearWatch(geoWatchId); geoWatchId = null; }
   if (map) { map.remove(); map = null; }
   _lockCount = 0;
+  _autoFollow = false;
   observerLocation = null;
   userLocationMarker = null;
   userAccuracyCircle = null;
