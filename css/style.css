@@ -1103,3 +1103,219 @@ body {
   background-color: rgba(45,107,45,0.35) !important;
   border-color: var(--frax-green) !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FELT INTEGRATION
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Toast notifications ─────────────────────────────────────────────── */
+#toast-container {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  width: max-content;
+  max-width: 90vw;
+}
+
+.toast {
+  background: #2c2c2c;
+  color: #f0f0f0;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border-left: 4px solid #3a3a3a;
+  font-size: 0.88rem;
+  max-width: 340px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: auto;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  font-family: Oswald, sans-serif;
+}
+
+.toast.show   { opacity: 1; }
+.toast-success { border-left-color: #2d6b2d; }
+.toast-error   { border-left-color: #8b1a1a; }
+.toast-info    { border-left-color: #1a3a5a; }
+.toast a       { color: #7fc97f; }
+
+/* ── Settings gear button ────────────────────────────────────────────── */
+#surveySelection {
+  position: relative;
+}
+
+#btn-settings {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: #777;
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 8px;
+  z-index: 10;
+  line-height: 1;
+}
+
+#btn-settings:hover { color: #f0f0f0; }
+
+/* ── Felt upload modal overlay ───────────────────────────────────────── */
+.felt-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5000;
+}
+
+.felt-dialog {
+  background: var(--frax-surface-2, #2c2c2c);
+  border: 1px solid var(--frax-border, #3a3a3a);
+  border-radius: 12px;
+  width: 90vw;
+  max-width: 440px;
+  max-height: 85vh;
+  overflow-y: auto;
+  font-family: Oswald, sans-serif;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+}
+
+.felt-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid var(--frax-border, #3a3a3a);
+}
+
+.felt-dialog-title {
+  color: var(--frax-green-light, #3d8f3d);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.9rem;
+}
+
+.felt-close-x {
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  line-height: 1;
+}
+.felt-close-x:hover { color: #f0f0f0; }
+
+.felt-dialog-body {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.felt-field label {
+  display: block;
+  color: #bbb;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 5px;
+}
+
+.felt-field select,
+.felt-field input[type="text"],
+.felt-field input[type="password"] {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--frax-dark, #1a1a1a);
+  border: 1px solid #484848;
+  color: #fff;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 0.9rem;
+  font-family: Oswald, sans-serif;
+}
+
+.felt-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.felt-radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #f0f0f0;
+}
+
+.felt-radio-disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.felt-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px 14px;
+  border-top: 1px solid var(--frax-border, #3a3a3a);
+}
+
+.felt-dialog-footer button {
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-family: Oswald, sans-serif;
+  cursor: pointer;
+  border: 1px solid #555;
+  background: #333;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.felt-btn-primary {
+  background: #2d6b2d !important;
+  border-color: #3d8f3d !important;
+}
+.felt-btn-primary:hover { background: #3d8f3d !important; }
+
+.felt-btn-cancel { /* uses default felt-dialog-footer button style */ }
+.felt-btn-cancel:hover { background: #444; }
+
+.felt-dialog-footer button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Felt button in export dialogs ───────────────────────────────────── */
+.export-felt-btn {
+  background: #1a3a1a !important;
+  border-color: #2d6b2d !important;
+  color: #fff !important;
+}
+.export-felt-btn:hover {
+  background: #2d6b2d !important;
+}
+
+/* ── Felt button in data drawer ──────────────────────────────────────── */
+.felt-export-btn {
+  background: #1a3a1a;
+  border: 1px solid #2d6b2d;
+  color: #fff;
+}
+.felt-export-btn:hover {
+  background: #2d6b2d;
+}

@@ -6,6 +6,7 @@ import {
   exportTurtleCSV,  exportTurtleGeoJSON,  exportTurtleKML,
   exportHabitatCSV, exportHabitatGeoJSON, exportHabitatKML
 } from './export.js';
+import { uploadToFelt } from './felt.js';
 import { map, lockMap, unlockMap } from './map.js';
 import { speciesMarkers, mooseObservations, turtleObservations, habitatObservations } from './storageData.js';
 import { syncToIndexedDB, syncMooseToIndexedDB, syncTurtleToIndexedDB } from './storage.js';
@@ -290,6 +291,7 @@ function _renderBBSTable(drawer) {
           <button onclick="exportSpeciesCSV()">CSV</button>
           <button onclick="exportSpeciesGeoJSON()">GeoJSON</button>
           <button onclick="exportSpeciesKML()">KML</button>
+          <button class="felt-export-btn" onclick="uploadToFelt('BBS')">↑ Felt</button>
         </div>
       </div>
       <h2 style="margin-top:0;">Breeding Bird Survey Observations</h2>
@@ -340,6 +342,7 @@ function _renderMooseTable(drawer) {
           <button onclick="exportMooseCSV()">CSV</button>
           <button onclick="exportMooseGeoJSON()">GeoJSON</button>
           <button onclick="exportMooseKML()">KML</button>
+          <button class="felt-export-btn" onclick="uploadToFelt('MOOSE')">↑ Felt</button>
         </div>
       </div>
       <h2 style="margin-top:0;">General Wildlife Survey Observations</h2>
@@ -382,6 +385,7 @@ function _renderTurtleTable(drawer) {
           <button onclick="exportTurtleCSV()">CSV</button>
           <button onclick="exportTurtleGeoJSON()">GeoJSON</button>
           <button onclick="exportTurtleKML()">KML</button>
+          <button class="felt-export-btn" onclick="uploadToFelt('TURTLE')">↑ Felt</button>
         </div>
       </div>
       <h2 style="margin-top:0;">Wood Turtle Survey Observations</h2>
@@ -432,6 +436,7 @@ function _appendHabitatSection(drawer) {
         <button onclick="exportHabitatCSV()">Habitat CSV</button>
         <button onclick="exportHabitatGeoJSON()">Habitat GeoJSON</button>
         <button onclick="exportHabitatKML()">Habitat KML</button>
+        <button class="felt-export-btn" onclick="uploadToFelt('HABITAT')">↑ Habitat Felt</button>
       </div>
     </div>
     <div style="overflow-x:auto;">
@@ -571,3 +576,4 @@ window.exportTurtleKML       = exportTurtleKML;
 window.exportHabitatCSV      = exportHabitatCSV;
 window.exportHabitatGeoJSON  = exportHabitatGeoJSON;
 window.exportHabitatKML      = exportHabitatKML;
+window.uploadToFelt          = uploadToFelt;

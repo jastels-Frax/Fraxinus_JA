@@ -22,8 +22,14 @@ import {
   exportTurtleCSV,  exportTurtleGeoJSON,  exportTurtleKML,
   exportHabitatCSV, exportHabitatGeoJSON, exportHabitatKML
 } from './export.js';
+import { uploadToFelt } from './felt.js';
+import { showToast } from './toast.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // ── Settings gear button ───────────────────────────────────────────────
+  const settingsBtn = document.getElementById('btn-settings');
+  if (settingsBtn) settingsBtn.addEventListener('click', _showSettingsModal);
+
   // ── Survey selection button handlers ──────────────────────────────────
   document.querySelectorAll('.survey-choice-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -210,6 +216,40 @@ window.submitAndShowExport = async function () {
   }
 };
 
+// ─── Settings modal ───────────────────────────────────────────────────────
+function _showSettingsModal() {
+  const existingKey = localStorage.getItem('feltApiKey') || '';
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML = `
+    <div class="modal-content" style="max-width:360px;width:90vw;">
+      <h2 style="display:flex;align-items:center;gap:8px;"><i class="fas fa-gear"></i> Settings</h2>
+      <label style="display:block;margin-top:12px;">Felt API Key</label>
+      <input type="password" id="feltApiKeyInput" value="${existingKey.replace(/"/g, '&quot;')}"
+        placeholder="felt_pat_…" autocomplete="off"
+        style="width:100%;box-sizing:border-box;margin-top:4px;" />
+      <p style="color:#999;font-size:0.78rem;margin:8px 0 16px;line-height:1.4;">
+        Stored locally on this device. Sent only to the Felt API. Not suitable for public deployment.
+      </p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button id="settingsCancel" style="background:#333;border:1px solid #555;color:#fff;padding:8px 16px;border-radius:6px;cursor:pointer;">Cancel</button>
+        <button id="settingsSave" style="background:#2d6b2d;border:1px solid #3d8f3d;color:#fff;padding:8px 16px;border-radius:6px;cursor:pointer;">Save</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  const close = () => overlay.remove();
+  overlay.querySelector('#settingsCancel').addEventListener('click', close);
+  overlay.querySelector('#settingsSave').addEventListener('click', () => {
+    const val = (overlay.querySelector('#feltApiKeyInput').value || '').trim();
+    if (val) localStorage.setItem('feltApiKey', val);
+    else localStorage.removeItem('feltApiKey');
+    showToast('API key saved', 'success');
+    close();
+  });
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+}
+
 // ─── Export dialog (shown after submit) ──────────────────────────────────
 function _showExportDialog(onDone) {
   const overlay = document.createElement('div');
@@ -226,6 +266,7 @@ function _showExportDialog(onDone) {
         <button id="expCsv">Download CSV</button>
         <button id="expGeoJson">Download GeoJSON</button>
         <button id="expKml">Download KML</button>
+        <button id="expFelt" class="export-felt-btn">↑ Upload to Felt</button>
         <button id="expStore" class="export-store-local">💾 Store Locally — No Download</button>
         <button id="expSkip" class="export-skip">Done</button>
       </div>
@@ -243,6 +284,11 @@ function _showExportDialog(onDone) {
   });
   document.getElementById('expKml').addEventListener('click', () => {
     _runExport('kml'); close();
+  });
+  document.getElementById('expFelt').addEventListener('click', () => {
+    overlay.remove();
+    // Upload survey observations; onDone() called after Felt modal closes
+    uploadToFelt(activeSurvey, onDone);
   });
   document.getElementById('expStore').addEventListener('click', close);
   document.getElementById('expSkip').addEventListener('click', close);
@@ -351,6 +397,7 @@ function _showReExportDialog(session) {
         <button id="reexpCsv">Download CSV</button>
         <button id="reexpGeoJson">Download GeoJSON</button>
         <button id="reexpKml">Download KML</button>
+        <button id="reexpFelt" class="export-felt-btn">↑ Upload to Felt</button>
         <button id="reexpClose" class="export-skip">Close</button>
       </div>
     </div>`;
@@ -372,8 +419,21 @@ function _showReExportDialog(session) {
     close();
   };
 
+  const doFeltUpload = () => {
+    // Restore snapshot arrays synchronously; felt.js builds GeoJSON immediately,
+    // then clears arrays via the onClose callback after the modal closes.
+    clearInMemoryArrays();
+    (snap.speciesMarkers     || []).forEach(r => speciesMarkers.push(r));
+    (snap.mooseObservations  || []).forEach(r => mooseObservations.push(r));
+    (snap.turtleObservations || []).forEach(r => turtleObservations.push(r));
+    (snap.habitatObservations|| []).forEach(r => habitatObservations.push(r));
+    overlay.remove();
+    uploadToFelt(session.type, () => { clearInMemoryArrays(); });
+  };
+
   overlay.querySelector('#reexpCsv').addEventListener('click',     () => doExport('csv'));
   overlay.querySelector('#reexpGeoJson').addEventListener('click', () => doExport('geojson'));
   overlay.querySelector('#reexpKml').addEventListener('click',     () => doExport('kml'));
+  overlay.querySelector('#reexpFelt').addEventListener('click',    doFeltUpload);
   overlay.querySelector('#reexpClose').addEventListener('click', close);
 }

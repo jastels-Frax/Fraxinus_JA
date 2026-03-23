@@ -58,8 +58,7 @@ export function exportSpeciesCSV() {
   triggerDownload(csv, `BBS_OBS_${date}_csv.csv`, 'text/csv');
 }
 
-export function exportSpeciesGeoJSON() {
-  const date     = todayString();
+export function buildSpeciesGeoJSON() {
   const features = speciesMarkers.filter(m => getLoc(m)).map(m => {
     const { lat, lng } = getLoc(m);
     return {
@@ -76,10 +75,11 @@ export function exportSpeciesGeoJSON() {
       }
     };
   });
-  triggerDownload(
-    JSON.stringify({ type: 'FeatureCollection', features }, null, 2),
-    `BBS_OBS_${date}_geojson.geojson`, 'application/json'
-  );
+  return JSON.stringify({ type: 'FeatureCollection', features }, null, 2);
+}
+
+export function exportSpeciesGeoJSON() {
+  triggerDownload(buildSpeciesGeoJSON(), `BBS_OBS_${todayString()}_geojson.geojson`, 'application/json');
 }
 
 export function exportSpeciesKML() {
@@ -141,8 +141,7 @@ export function exportMooseCSV() {
   triggerDownload(csv, `MOOSE_OBS_${date}_csv.csv`, 'text/csv');
 }
 
-export function exportMooseGeoJSON() {
-  const date     = todayString();
+export function buildMooseGeoJSON() {
   const features = mooseObservations.filter(o => getLoc(o)).map(o => {
     const { lat, lng } = getLoc(o);
     return {
@@ -157,10 +156,11 @@ export function exportMooseGeoJSON() {
       }
     };
   });
-  triggerDownload(
-    JSON.stringify({ type: 'FeatureCollection', features }, null, 2),
-    `MOOSE_OBS_${date}_geojson.geojson`, 'application/json'
-  );
+  return JSON.stringify({ type: 'FeatureCollection', features }, null, 2);
+}
+
+export function exportMooseGeoJSON() {
+  triggerDownload(buildMooseGeoJSON(), `MOOSE_OBS_${todayString()}_geojson.geojson`, 'application/json');
 }
 
 export function exportMooseKML() {
@@ -217,8 +217,7 @@ export function exportTurtleCSV() {
   triggerDownload(csv, `TURTLE_OBS_${date}_csv.csv`, 'text/csv');
 }
 
-export function exportTurtleGeoJSON() {
-  const date     = todayString();
+export function buildTurtleGeoJSON() {
   const features = turtleObservations.filter(o => getLoc(o)).map(o => {
     const { lat, lng } = getLoc(o);
     return {
@@ -235,10 +234,11 @@ export function exportTurtleGeoJSON() {
       }
     };
   });
-  triggerDownload(
-    JSON.stringify({ type: 'FeatureCollection', features }, null, 2),
-    `TURTLE_OBS_${date}_geojson.geojson`, 'application/json'
-  );
+  return JSON.stringify({ type: 'FeatureCollection', features }, null, 2);
+}
+
+export function exportTurtleGeoJSON() {
+  triggerDownload(buildTurtleGeoJSON(), `TURTLE_OBS_${todayString()}_geojson.geojson`, 'application/json');
 }
 
 export function exportTurtleKML() {
@@ -297,8 +297,7 @@ export function exportHabitatCSV() {
   triggerDownload(csv, `HABITAT_OBS_${date}_csv.csv`, 'text/csv');
 }
 
-export function exportHabitatGeoJSON() {
-  const date     = todayString();
+export function buildHabitatGeoJSON() {
   const features = habitatObservations.filter(o => getLoc(o)).map(o => {
     const { lat, lng } = getLoc(o);
     return {
@@ -316,10 +315,11 @@ export function exportHabitatGeoJSON() {
       }
     };
   });
-  triggerDownload(
-    JSON.stringify({ type: 'FeatureCollection', features }, null, 2),
-    `HABITAT_OBS_${date}_geojson.geojson`, 'application/json'
-  );
+  return JSON.stringify({ type: 'FeatureCollection', features }, null, 2);
+}
+
+export function exportHabitatGeoJSON() {
+  triggerDownload(buildHabitatGeoJSON(), `HABITAT_OBS_${todayString()}_geojson.geojson`, 'application/json');
 }
 
 export function exportHabitatKML() {
