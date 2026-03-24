@@ -310,16 +310,18 @@ async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
   const feltRes = await fetch(`${FELT_API}/maps/${mapId}/layers`, {
     method:  'POST',
     headers: _authHeaders(),
-    body:    JSON.stringify({ name: layerName, file_names: [filename] })
+    body:    JSON.stringify([{ name: layerName, file_names: [filename] }])
   });
   console.log('[FELT 7] Step A response status:', feltRes.status);
   if (!feltRes.ok) {
     const text = await feltRes.text();
     throw new Error(`Upload init failed (HTTP ${feltRes.status}): ${text}`);
   }
-  const payload = await feltRes.json();
+  const payloadRaw = await feltRes.json();
+  // /layers returns an array when the body was an array; take the first element
+  const payload = Array.isArray(payloadRaw) ? payloadRaw[0] : payloadRaw;
   console.log('[FELT 8] Step A payload keys:', Object.keys(payload));
-  // Felt /layers returns { layer_id, presigned_attributes: { url, ...fields } }
+  // Each layer entry has: { layer_id, presigned_attributes: { url, ...fields } }
   const layerId           = payload.layer_id;
   const presignedDetails  = Array.isArray(payload.presigned_attributes)
     ? payload.presigned_attributes[0]
