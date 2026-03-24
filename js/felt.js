@@ -52,13 +52,19 @@ function _getObsCount(target) {
 }
 
 function _buildGeoJSON(target) {
-  if (target === 'HABITAT') return buildHabitatGeoJSON();
+  console.log('[FELT G] _buildGeoJSON target:', target);
+  if (target === 'HABITAT') {
+    const r = buildHabitatGeoJSON();
+    console.log('[FELT G] habitat-only features:', JSON.parse(r).features.length);
+    return r;
+  }
   let primaryFeatures;
   if (target === 'BBS')         primaryFeatures = JSON.parse(buildSpeciesGeoJSON()).features;
   else if (target === 'MOOSE')  primaryFeatures = JSON.parse(buildMooseGeoJSON()).features;
   else if (target === 'TURTLE') primaryFeatures = JSON.parse(buildTurtleGeoJSON()).features;
   else return JSON.stringify({ type: 'FeatureCollection', features: [] });
   const habitatFeatures = JSON.parse(buildHabitatGeoJSON()).features;
+  console.log('[FELT G] primary features:', primaryFeatures.length, '| habitat features:', habitatFeatures.length);
   return JSON.stringify({ type: 'FeatureCollection', features: [...primaryFeatures, ...habitatFeatures] }, null, 2);
 }
 
@@ -297,28 +303,38 @@ async function _createMap(title, workspaceId) {
 
 async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
   const filename = `${surveyTarget}_OBS_${_todayString()}.geojson`;
+  console.log('[FELT 5] _uploadGeoJSON mapId:', mapId, '| layerName:', layerName, '| filename:', filename, '| geojsonStr length:', geojsonStr.length);
 
-  // Step A — get presigned upload URL from Felt API
-  const feltRes = await fetch(`${FELT_API}/maps/${mapId}/upload`, {
+  // Step A — request presigned upload URL from Felt API
+  console.log('[FELT 6] Step A — POST', `${FELT_API}/maps/${mapId}/layers`);
+  const feltRes = await fetch(`${FELT_API}/maps/${mapId}/layers`, {
     method:  'POST',
     headers: _authHeaders(),
-    body:    JSON.stringify({ name: layerName })
+    body:    JSON.stringify({ name: layerName, file_names: [filename] })
   });
+  console.log('[FELT 7] Step A response status:', feltRes.status);
   if (!feltRes.ok) {
     const text = await feltRes.text();
     throw new Error(`Upload init failed (HTTP ${feltRes.status}): ${text}`);
   }
   const payload = await feltRes.json();
-  const { url, presigned_attributes } = payload;
-  if (!url || !presigned_attributes) {
+  console.log('[FELT 8] Step A payload keys:', Object.keys(payload));
+  // Felt /layers returns { layer_id, presigned_attributes: { url, ...fields } }
+  const layerId           = payload.layer_id;
+  const presignedDetails  = Array.isArray(payload.presigned_attributes)
+    ? payload.presigned_attributes[0]
+    : payload.presigned_attributes;
+  const { url, ...s3Fields } = presignedDetails ?? {};
+  if (!url) {
     throw new Error(
-      `Felt API did not return presigned upload details. Keys: ${Object.keys(payload).join(', ')}`
+      `Felt API did not return a presigned upload URL. Payload keys: ${Object.keys(payload).join(', ')}`
     );
   }
 
   // Step B — POST file directly to S3 presigned URL
+  console.log('[FELT 9] Step B — S3 POST to:', url);
   const formData = new FormData();
-  for (const [k, v] of Object.entries(presigned_attributes)) {
+  for (const [k, v] of Object.entries(s3Fields)) {
     formData.append(k, v);
   }
   // Felt's presigned S3 policy specifies application/octet-stream;
@@ -326,18 +342,39 @@ async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
   formData.append('file', new Blob([geojsonStr], { type: 'application/octet-stream' }), filename);
 
   const s3Res = await fetch(url, { method: 'POST', body: formData });
+  console.log('[FELT 10] Step B S3 response status:', s3Res.status);
   // Accept any 2xx success code (S3 normally returns 204; some configs return 200).
   if (!s3Res.ok) {
     const body = await s3Res.text().catch(() => '(unreadable)');
     throw new Error(`S3 upload failed (HTTP ${s3Res.status}): ${body}`);
   }
+
+  // Step C — notify Felt that the S3 upload is complete (triggers layer processing)
+  if (layerId) {
+    console.log('[FELT 11] Step C — finish_upload POST for layerId:', layerId);
+    const finishRes = await fetch(`${FELT_API}/maps/${mapId}/layers/${layerId}/finish_upload`, {
+      method:  'POST',
+      headers: _authHeaders(),
+      body:    JSON.stringify({ file_names: [filename] })
+    });
+    console.log('[FELT 12] Step C finish_upload response status:', finishRes.status);
+    if (!finishRes.ok) {
+      const text = await finishRes.text().catch(() => '');
+      console.warn('[FELT 12] finish_upload failed (non-fatal):', finishRes.status, text);
+    }
+  } else {
+    console.warn('[FELT 11] No layer_id returned — skipping finish_upload');
+  }
 }
 
 // ── Public entry point ────────────────────────────────────────────────────
 export function uploadToFelt(surveyTarget, onClose) {
-  console.log('[Felt] upload triggered from:', surveyTarget);
+  console.log('[FELT 1] uploadToFelt entry | surveyTarget:', surveyTarget);
+  console.log('[FELT 2] observations | speciesMarkers:', speciesMarkers.length, '| moose:', mooseObservations.length, '| turtle:', turtleObservations.length, '| habitat:', habitatObservations.length);
   const obsCount = _getObsCount(surveyTarget);
+  console.log('[FELT 3] obsCount for target:', obsCount);
   _apiKey = (localStorage.getItem('feltApiKey') || '').trim();
+  console.log('[FELT 4] apiKey present:', !!_apiKey);
   if (!_apiKey) {
     showToast('No Felt API key. Add one in Settings.', 'error');
     return;
