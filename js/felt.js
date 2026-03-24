@@ -321,10 +321,13 @@ async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
   for (const [k, v] of Object.entries(presigned_attributes)) {
     formData.append(k, v);
   }
-  formData.append('file', new Blob([geojsonStr], { type: 'application/geo+json' }), filename);
+  // Felt's presigned S3 policy specifies application/octet-stream;
+  // using any other type causes S3 to reject the upload with HTTP 403.
+  formData.append('file', new Blob([geojsonStr], { type: 'application/octet-stream' }), filename);
 
   const s3Res = await fetch(url, { method: 'POST', body: formData });
-  if (s3Res.status !== 204) {
+  // Accept any 2xx success code (S3 normally returns 204; some configs return 200).
+  if (!s3Res.ok) {
     const body = await s3Res.text().catch(() => '(unreadable)');
     throw new Error(`S3 upload failed (HTTP ${s3Res.status}): ${body}`);
   }
