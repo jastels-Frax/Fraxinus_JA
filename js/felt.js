@@ -44,19 +44,22 @@ function _esc(str) {
 }
 
 function _getObsCount(target) {
-  if (target === 'BBS')     return speciesMarkers.length;
-  if (target === 'MOOSE')   return mooseObservations.length;
-  if (target === 'TURTLE')  return turtleObservations.length;
+  if (target === 'BBS')     return speciesMarkers.length     + habitatObservations.length;
+  if (target === 'MOOSE')   return mooseObservations.length  + habitatObservations.length;
+  if (target === 'TURTLE')  return turtleObservations.length + habitatObservations.length;
   if (target === 'HABITAT') return habitatObservations.length;
   return 0;
 }
 
 function _buildGeoJSON(target) {
-  if (target === 'BBS')     return buildSpeciesGeoJSON();
-  if (target === 'MOOSE')   return buildMooseGeoJSON();
-  if (target === 'TURTLE')  return buildTurtleGeoJSON();
   if (target === 'HABITAT') return buildHabitatGeoJSON();
-  return JSON.stringify({ type: 'FeatureCollection', features: [] });
+  let primaryFeatures;
+  if (target === 'BBS')         primaryFeatures = JSON.parse(buildSpeciesGeoJSON()).features;
+  else if (target === 'MOOSE')  primaryFeatures = JSON.parse(buildMooseGeoJSON()).features;
+  else if (target === 'TURTLE') primaryFeatures = JSON.parse(buildTurtleGeoJSON()).features;
+  else return JSON.stringify({ type: 'FeatureCollection', features: [] });
+  const habitatFeatures = JSON.parse(buildHabitatGeoJSON()).features;
+  return JSON.stringify({ type: 'FeatureCollection', features: [...primaryFeatures, ...habitatFeatures] }, null, 2);
 }
 
 // ── Modal lifecycle ───────────────────────────────────────────────────────
@@ -329,14 +332,15 @@ async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
 
 // ── Public entry point ────────────────────────────────────────────────────
 export function uploadToFelt(surveyTarget, onClose) {
-  console.log('[felt.js] uploadToFelt called. surveyTarget:', surveyTarget, 'obs count:', _getObsCount(surveyTarget));
+  const obsCount = _getObsCount(surveyTarget);
+  console.log('[Felt] uploading', obsCount, 'observations for', surveyTarget);
   _apiKey = (localStorage.getItem('feltApiKey') || '').trim();
   if (!_apiKey) {
     showToast('No Felt API key. Add one in Settings.', 'error');
     return;
   }
 
-  if (_getObsCount(surveyTarget) === 0) {
+  if (obsCount === 0) {
     showToast('No observations to upload.', 'error');
     return;
   }
