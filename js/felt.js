@@ -310,7 +310,7 @@ async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
   const feltRes = await fetch(`${FELT_API}/maps/${mapId}/layers`, {
     method:  'POST',
     headers: _authHeaders(),
-    body:    JSON.stringify([{ name: layerName, file_names: [filename] }])
+    body:    JSON.stringify([{ name: layerName }])
   });
   console.log('[FELT 7] Step A response status:', feltRes.status);
   if (!feltRes.ok) {
@@ -357,7 +357,7 @@ async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
     const finishRes = await fetch(`${FELT_API}/maps/${mapId}/layers/${layerId}/finish_upload`, {
       method:  'POST',
       headers: _authHeaders(),
-      body:    JSON.stringify({ file_names: [filename] })
+      body:    JSON.stringify({})
     });
     console.log('[FELT 12] Step C finish_upload response status:', finishRes.status);
     if (!finishRes.ok) {
