@@ -24,6 +24,7 @@ import {
 
 // ─── Drawer ───────────────────────────────────────────────────────────────
 export function openDrawer() {
+  updateTable();
   document.getElementById('dataDrawer').style.display = 'block';
   document.getElementById('modalBackdrop').style.display = 'block';
   lockMap();

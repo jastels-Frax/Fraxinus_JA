@@ -345,6 +345,8 @@ export function uploadToFelt(surveyTarget, onClose) {
     return;
   }
 
+  console.log('[Felt] surveyType:', surveyTarget, '| obs count:', obsCount, '| speciesMarkers.length:', speciesMarkers.length, '| array ref:', speciesMarkers);
+
   // Build GeoJSON now (synchronously) before any async modal interaction
   _geojsonStr        = _buildGeoJSON(surveyTarget);
   _surveyTarget      = surveyTarget;

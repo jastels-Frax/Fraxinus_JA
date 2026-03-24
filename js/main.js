@@ -69,6 +69,7 @@ async function _launchSurvey(type) {
 }
 
 function _startFreshSurvey(type) {
+  clearInMemoryArrays();  // discard any stale data left by home-screen re-export operations
   resetMetadata(type);    // clear stale fields; preserves surveyor name
   initNewSession(type);
   setActiveSurvey(type);
