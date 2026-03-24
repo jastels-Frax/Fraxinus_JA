@@ -63,11 +63,11 @@ function _buildGeoJSON(target) {
 }
 
 // ── Modal lifecycle ───────────────────────────────────────────────────────
+// feltModal is pre-created in index.html so it is always in the DOM,
+// regardless of whether a survey has been entered yet.
 function _openModal() {
   if (!_overlay) {
-    _overlay = document.createElement('div');
-    _overlay.className = 'felt-overlay';
-    document.body.appendChild(_overlay);
+    _overlay = document.getElementById('feltModal');
     _overlay.addEventListener('click', e => {
       if (e.target === _overlay) _closeModal();
     });
@@ -332,8 +332,8 @@ async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
 
 // ── Public entry point ────────────────────────────────────────────────────
 export function uploadToFelt(surveyTarget, onClose) {
+  console.log('[Felt] upload triggered from:', surveyTarget);
   const obsCount = _getObsCount(surveyTarget);
-  console.log('[Felt] uploading', obsCount, 'observations for', surveyTarget);
   _apiKey = (localStorage.getItem('feltApiKey') || '').trim();
   if (!_apiKey) {
     showToast('No Felt API key. Add one in Settings.', 'error');
