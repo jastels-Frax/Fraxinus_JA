@@ -397,6 +397,8 @@ export function uploadToFelt(surveyTarget, onClose) {
   _selectedWorkspace = '';
   _maps              = [];
 
+  console.log('[FELT 5] opening feltModal');
+  console.log('[FELT 5] feltModal element:', document.getElementById('feltModal'));
   _openModal();
   _renderLoading('Loading workspaces…');
 
@@ -404,6 +406,7 @@ export function uploadToFelt(surveyTarget, onClose) {
     .then(ws => {
       _workspaces = ws;
       if (ws.length > 0) _selectedWorkspace = ws[0].id;
+      console.log('[FELT 6] populating workspace select with', ws?.length, 'workspaces');
       _renderStep1();
     })
     .catch(err => {
