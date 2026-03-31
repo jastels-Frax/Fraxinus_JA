@@ -319,11 +319,10 @@ async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
   }
   const initData = await initRes.json();
   console.log('[FELT 8] full init response:', JSON.stringify(initData));
-  const { layer_id, url, presigned_attributes } = initData;
-  console.log('[FELT 8] layer_id:', layer_id, '| url domain:', url ? new URL(url).hostname : 'MISSING');
+  const { layer_group_id, layer_id, url, presigned_attributes } = initData;
+  console.log('[FELT 8] layer_group_id:', layer_group_id, '| layer_id:', layer_id, '| url domain:', url ? new URL(url).hostname : 'MISSING');
   console.log('[FELT 8] presigned keys:', presigned_attributes ? Object.keys(presigned_attributes) : 'MISSING');
-  if (!url)      throw new Error(`Felt API did not return presigned URL. Full response: ${JSON.stringify(initData)}`);
-  if (!layer_id) throw new Error(`Felt API did not return layer_id. Full response: ${JSON.stringify(initData)}`);
+  if (!url) throw new Error(`Felt API did not return presigned URL. Full response: ${JSON.stringify(initData)}`);
 
   // Step B — S3 multipart POST: presigned fields first, file last, no Content-Type header
   const formData = new FormData();
@@ -337,9 +336,12 @@ async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
     throw new Error(`S3 upload failed (HTTP ${s3Res.status}): ${body}`);
   }
 
-  // Step C — finish_upload (required to trigger Felt layer processing)
-  console.log('[FELT 11] Step C — finish_upload POST for layer_id:', layer_id);
-  const finishRes = await fetch(`${FELT_API}/maps/${mapId}/layers/${layer_id}/finish_upload`, {
+  // Step C — finish_upload: Felt requires layer_group_id in the URL, not layer_id
+  const finishId = layer_group_id ?? layer_id;
+  if (!finishId) throw new Error(`Felt API returned no layer_group_id or layer_id. Response: ${JSON.stringify(initData)}`);
+  const finishUrl = `${FELT_API}/maps/${mapId}/layer_groups/${finishId}/finish_upload`;
+  console.log('[FELT 11] Step C — finish_upload POST:', finishUrl);
+  const finishRes = await fetch(finishUrl, {
     method:  'POST',
     headers: _authHeaders(),
     body:    JSON.stringify({})
