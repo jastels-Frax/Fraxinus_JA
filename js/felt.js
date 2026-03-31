@@ -331,7 +331,7 @@ async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
   console.log('[FELT 9] Step B — S3 POST to:', url, '| FormData keys:', [...formData.keys()]);
   const s3Res = await fetch(url, { method: 'POST', body: formData });
   console.log('[FELT 10] Step B S3 response status:', s3Res.status);
-  if (s3Res.status !== 201) {
+  if (!s3Res.ok) {
     const body = await s3Res.text().catch(() => '(unreadable)');
     throw new Error(`S3 upload failed (HTTP ${s3Res.status}): ${body}`);
   }
