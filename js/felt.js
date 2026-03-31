@@ -336,21 +336,10 @@ async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
     throw new Error(`S3 upload failed (HTTP ${s3Res.status}): ${body}`);
   }
 
-  // Step C — finish_upload: Felt requires layer_group_id in the URL, not layer_id
-  const finishId = layer_group_id ?? layer_id;
-  if (!finishId) throw new Error(`Felt API returned no layer_group_id or layer_id. Response: ${JSON.stringify(initData)}`);
-  const finishUrl = `${FELT_API}/maps/${mapId}/layer_groups/${finishId}/finish_upload`;
-  console.log('[FELT 11] Step C — finish_upload POST:', finishUrl);
-  const finishRes = await fetch(finishUrl, {
-    method:  'POST',
-    headers: _authHeaders(),
-    body:    JSON.stringify({})
-  });
-  const finishText = await finishRes.text().catch(() => '');
-  console.log('[FELT 12] Step C finish_upload status:', finishRes.status, '| body:', finishText);
-  if (!finishRes.ok) {
-    throw new Error(`finish_upload failed (HTTP ${finishRes.status}): ${finishText}`);
-  }
+  // Step C — finish_upload skipped: Felt processes the layer automatically via S3
+  // event notifications triggered by x-amz-meta-feature-flags in the presigned upload.
+  // Both /layers/{id}/finish_upload and /layer_groups/{id}/finish_upload return 404.
+  console.log('[FELT 11] S3 upload complete — layer processing triggered automatically via S3 events | layer_group_id:', layer_group_id);
 }
 
 // ── Public entry point ────────────────────────────────────────────────────
