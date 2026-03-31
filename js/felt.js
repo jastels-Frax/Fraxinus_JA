@@ -317,12 +317,13 @@ async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
     const text = await initRes.text();
     throw new Error(`Upload init failed (HTTP ${initRes.status}): ${text}`);
   }
-  const { layer_id, url, presigned_attributes } = await initRes.json();
+  const initData = await initRes.json();
+  console.log('[FELT 8] full init response:', JSON.stringify(initData));
+  const { layer_id, url, presigned_attributes } = initData;
   console.log('[FELT 8] layer_id:', layer_id, '| url domain:', url ? new URL(url).hostname : 'MISSING');
   console.log('[FELT 8] presigned keys:', presigned_attributes ? Object.keys(presigned_attributes) : 'MISSING');
-  if (!url) {
-    throw new Error(`Felt API did not return a presigned upload URL. layer_id: ${layer_id}`);
-  }
+  if (!url)      throw new Error(`Felt API did not return presigned URL. Full response: ${JSON.stringify(initData)}`);
+  if (!layer_id) throw new Error(`Felt API did not return layer_id. Full response: ${JSON.stringify(initData)}`);
 
   // Step B — S3 multipart POST: presigned fields first, file last, no Content-Type header
   const formData = new FormData();
@@ -343,10 +344,10 @@ async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
     headers: _authHeaders(),
     body:    JSON.stringify({})
   });
-  console.log('[FELT 12] Step C finish_upload response status:', finishRes.status);
+  const finishText = await finishRes.text().catch(() => '');
+  console.log('[FELT 12] Step C finish_upload status:', finishRes.status, '| body:', finishText);
   if (!finishRes.ok) {
-    const text = await finishRes.text().catch(() => '');
-    console.warn('[FELT 12] finish_upload failed (non-fatal):', finishRes.status, text);
+    throw new Error(`finish_upload failed (HTTP ${finishRes.status}): ${finishText}`);
   }
 }
 
