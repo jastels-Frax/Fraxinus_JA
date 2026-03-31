@@ -326,7 +326,10 @@ async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
 
   // Step B — S3 multipart POST: presigned fields first, file last, no Content-Type header
   const formData = new FormData();
-  Object.entries(presigned_attributes).forEach(([k, v]) => formData.append(k, v));
+  // Substitute ${filename} in the S3 key client-side so the stored key is concrete.
+  Object.entries(presigned_attributes).forEach(([k, v]) =>
+    formData.append(k, k === 'key' ? v.replace('${filename}', filename) : v)
+  );
   formData.append('file', new Blob([geojsonStr], { type: 'application/geo+json' }), filename);
   console.log('[FELT 9] Step B — S3 POST to:', url, '| FormData keys:', [...formData.keys()]);
   const s3Res = await fetch(url, { method: 'POST', body: formData });
