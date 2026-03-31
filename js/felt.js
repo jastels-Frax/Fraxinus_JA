@@ -303,36 +303,30 @@ async function _createMap(title, workspaceId) {
 
 async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
   const filename = `${surveyTarget}_OBS_${_todayString()}.geojson`;
-  const fileId   = crypto.randomUUID();
   console.log('[FELT 5] _uploadGeoJSON mapId:', mapId, '| layerName:', layerName, '| filename:', filename, '| geojsonStr length:', geojsonStr.length);
 
   // Step A — request presigned upload URL from Felt API
-  // Body must be an array of file objects; each requires a client-generated "id" (Felt API contract).
-  console.log('[FELT 6] Step A — POST', `${FELT_API}/maps/${mapId}/layers/upload`);
-  const feltRes = await fetch(`${FELT_API}/maps/${mapId}/layers/upload`, {
+  // Confirmed against GPS2026felt/FeltService.ts and Felt Python SDK:
+  //   POST /maps/{id}/upload, body: { name }, response: { url, presigned_attributes, layer_id }
+  console.log('[FELT 6] Step A — POST', `${FELT_API}/maps/${mapId}/upload`);
+  const feltRes = await fetch(`${FELT_API}/maps/${mapId}/upload`, {
     method:  'POST',
     headers: _authHeaders(),
-    body:    JSON.stringify([{ id: fileId, name: filename }])
+    body:    JSON.stringify({ name: layerName })
   });
   console.log('[FELT 7] Step A response status:', feltRes.status);
   if (!feltRes.ok) {
     const text = await feltRes.text();
     throw new Error(`Upload init failed (HTTP ${feltRes.status}): ${text}`);
   }
-  const payloadRaw = await feltRes.json();
-  console.log('[FELT 8] upload init response:', JSON.stringify(payloadRaw));
-  // Response shape: { data: [{ id, attributes: { url, presigned_attributes } }] }
-  // Also handles legacy flat object or bare array from older endpoint variants.
-  const item      = payloadRaw?.data?.[0] ?? (Array.isArray(payloadRaw) ? payloadRaw[0] : payloadRaw);
-  const layerId   = item?.layer_id ?? item?.id;
-  const attrs     = item?.attributes ?? item;
-  const presigned = Array.isArray(attrs?.presigned_attributes)
-    ? attrs.presigned_attributes[0]
-    : attrs?.presigned_attributes;
+  const payload = await feltRes.json();
+  console.log('[FELT 8] upload init response:', JSON.stringify(payload));
+  const layerId   = payload.layer_id;
+  const presigned = payload.presigned_attributes;
   const { url, ...s3Fields } = presigned ?? {};
   if (!url) {
     throw new Error(
-      `Felt API did not return a presigned upload URL. Response: ${JSON.stringify(payloadRaw)}`
+      `Felt API did not return a presigned upload URL. Response: ${JSON.stringify(payload)}`
     );
   }
 
