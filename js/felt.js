@@ -303,14 +303,16 @@ async function _createMap(title, workspaceId) {
 
 async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
   const filename = `${surveyTarget}_OBS_${_todayString()}.geojson`;
+  const fileId   = crypto.randomUUID();
   console.log('[FELT 5] _uploadGeoJSON mapId:', mapId, '| layerName:', layerName, '| filename:', filename, '| geojsonStr length:', geojsonStr.length);
 
   // Step A — request presigned upload URL from Felt API
-  console.log('[FELT 6] Step A — POST', `${FELT_API}/maps/${mapId}/layers`);
-  const feltRes = await fetch(`${FELT_API}/maps/${mapId}/layers`, {
+  // Body must be an array of file objects; each requires a client-generated "id" (Felt API contract).
+  console.log('[FELT 6] Step A — POST', `${FELT_API}/maps/${mapId}/layers/upload`);
+  const feltRes = await fetch(`${FELT_API}/maps/${mapId}/layers/upload`, {
     method:  'POST',
     headers: _authHeaders(),
-    body:    JSON.stringify([{ name: layerName }])
+    body:    JSON.stringify([{ id: fileId, name: filename }])
   });
   console.log('[FELT 7] Step A response status:', feltRes.status);
   if (!feltRes.ok) {
@@ -318,31 +320,30 @@ async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
     throw new Error(`Upload init failed (HTTP ${feltRes.status}): ${text}`);
   }
   const payloadRaw = await feltRes.json();
-  // /layers returns an array when the body was an array; take the first element
-  const payload = Array.isArray(payloadRaw) ? payloadRaw[0] : payloadRaw;
-  console.log('[FELT 8] Step A payload keys:', Object.keys(payload));
-  // Each layer entry has: { layer_id, presigned_attributes: { url, ...fields } }
-  const layerId           = payload.layer_id;
-  const presignedDetails  = Array.isArray(payload.presigned_attributes)
-    ? payload.presigned_attributes[0]
-    : payload.presigned_attributes;
-  const { url, ...s3Fields } = presignedDetails ?? {};
+  console.log('[FELT 8] upload init response:', JSON.stringify(payloadRaw));
+  // Response shape: { data: [{ id, attributes: { url, presigned_attributes } }] }
+  // Also handles legacy flat object or bare array from older endpoint variants.
+  const item      = payloadRaw?.data?.[0] ?? (Array.isArray(payloadRaw) ? payloadRaw[0] : payloadRaw);
+  const layerId   = item?.layer_id ?? item?.id;
+  const attrs     = item?.attributes ?? item;
+  const presigned = Array.isArray(attrs?.presigned_attributes)
+    ? attrs.presigned_attributes[0]
+    : attrs?.presigned_attributes;
+  const { url, ...s3Fields } = presigned ?? {};
   if (!url) {
     throw new Error(
-      `Felt API did not return a presigned upload URL. Payload keys: ${Object.keys(payload).join(', ')}`
+      `Felt API did not return a presigned upload URL. Response: ${JSON.stringify(payloadRaw)}`
     );
   }
 
   // Step B — POST file directly to S3 presigned URL
-  console.log('[FELT 9] Step B — S3 POST to:', url);
+  // Presigned fields must be appended FIRST; file MUST be last (AWS requirement).
   const formData = new FormData();
   for (const [k, v] of Object.entries(s3Fields)) {
     formData.append(k, v);
   }
-  // Felt's presigned S3 policy specifies application/octet-stream;
-  // using any other type causes S3 to reject the upload with HTTP 403.
   formData.append('file', new Blob([geojsonStr], { type: 'application/octet-stream' }), filename);
-
+  console.log('[FELT 9] Step B — S3 POST to:', url, '| FormData keys:', [...formData.keys()]);
   const s3Res = await fetch(url, { method: 'POST', body: formData });
   console.log('[FELT 10] Step B S3 response status:', s3Res.status);
   // Accept any 2xx success code (S3 normally returns 204; some configs return 200).
