@@ -314,7 +314,7 @@ async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
   const feltRes = await fetch(`${FELT_API}/maps/${mapId}/upload`, {
     method:  'POST',
     headers: _authHeaders(),
-    body:    JSON.stringify([{ id: fileId, name: filename }])
+    body:    JSON.stringify({ id: fileId, name: filename })
   });
   console.log('[FELT 7] Step A response status:', feltRes.status);
   if (!feltRes.ok) {
