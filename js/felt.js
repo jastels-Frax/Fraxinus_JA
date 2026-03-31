@@ -305,69 +305,48 @@ async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
   const filename = `${surveyTarget}_OBS_${_todayString()}.geojson`;
   console.log('[FELT 5] _uploadGeoJSON mapId:', mapId, '| layerName:', layerName, '| filename:', filename, '| geojsonStr length:', geojsonStr.length);
 
-  // Step A — request presigned upload URL from Felt API
-  // Felt API requires an array body where each element has a client-generated `id`.
-  //   POST /maps/{id}/upload, body: [{ id, name }]
-  //   Response may be an array or a wrapper object; normalise to item[0].
-  const fileId = crypto.randomUUID();
-  console.log('[FELT 6] Step A — POST', `${FELT_API}/maps/${mapId}/upload`, '| fileId:', fileId);
-  const feltRes = await fetch(`${FELT_API}/maps/${mapId}/upload`, {
+  // Step A — upload init: POST flat object { name } — no id, no array
+  console.log('[FELT 6] Step A — POST', `${FELT_API}/maps/${mapId}/upload`);
+  const initRes = await fetch(`${FELT_API}/maps/${mapId}/upload`, {
     method:  'POST',
-    headers: _authHeaders(),
-    body:    JSON.stringify({ id: fileId, name: filename })
+    headers: { ..._authHeaders(), 'Accept': '*/*' },
+    body:    JSON.stringify({ name: filename })
   });
-  console.log('[FELT 7] Step A response status:', feltRes.status);
-  if (!feltRes.ok) {
-    const text = await feltRes.text();
-    throw new Error(`Upload init failed (HTTP ${feltRes.status}): ${text}`);
+  console.log('[FELT 7] Step A response status:', initRes.status);
+  if (!initRes.ok) {
+    const text = await initRes.text();
+    throw new Error(`Upload init failed (HTTP ${initRes.status}): ${text}`);
   }
-  const raw = await feltRes.json();
-  console.log('[FELT 8] upload init response:', JSON.stringify(raw));
-  // Normalise: handle array [ {...} ], data-wrapper { data: [{...}] }, or flat { ... }
-  const item      = Array.isArray(raw) ? raw[0] : (raw?.data?.[0] ?? raw);
-  const layerId   = item?.layer_id ?? item?.id;
-  const attrs     = item?.attributes ?? item;
-  const presigned = Array.isArray(attrs?.presigned_attributes)
-    ? attrs.presigned_attributes[0]
-    : attrs?.presigned_attributes;
-  const { url, ...s3Fields } = presigned ?? {};
+  const { layer_id, url, presigned_attributes } = await initRes.json();
+  console.log('[FELT 8] layer_id:', layer_id, '| url domain:', url ? new URL(url).hostname : 'MISSING');
+  console.log('[FELT 8] presigned keys:', presigned_attributes ? Object.keys(presigned_attributes) : 'MISSING');
   if (!url) {
-    throw new Error(
-      `Felt API did not return a presigned upload URL. Response: ${JSON.stringify(payload)}`
-    );
+    throw new Error(`Felt API did not return a presigned upload URL. layer_id: ${layer_id}`);
   }
 
-  // Step B — POST file directly to S3 presigned URL
-  // Presigned fields must be appended FIRST; file MUST be last (AWS requirement).
+  // Step B — S3 multipart POST: presigned fields first, file last, no Content-Type header
   const formData = new FormData();
-  for (const [k, v] of Object.entries(s3Fields)) {
-    formData.append(k, v);
-  }
-  formData.append('file', new Blob([geojsonStr], { type: 'application/octet-stream' }), filename);
+  Object.entries(presigned_attributes).forEach(([k, v]) => formData.append(k, v));
+  formData.append('file', new Blob([geojsonStr], { type: 'application/geo+json' }), filename);
   console.log('[FELT 9] Step B — S3 POST to:', url, '| FormData keys:', [...formData.keys()]);
   const s3Res = await fetch(url, { method: 'POST', body: formData });
   console.log('[FELT 10] Step B S3 response status:', s3Res.status);
-  // Accept any 2xx success code (S3 normally returns 204; some configs return 200).
-  if (!s3Res.ok) {
+  if (s3Res.status !== 201) {
     const body = await s3Res.text().catch(() => '(unreadable)');
     throw new Error(`S3 upload failed (HTTP ${s3Res.status}): ${body}`);
   }
 
-  // Step C — notify Felt that the S3 upload is complete (triggers layer processing)
-  if (layerId) {
-    console.log('[FELT 11] Step C — finish_upload POST for layerId:', layerId);
-    const finishRes = await fetch(`${FELT_API}/maps/${mapId}/layers/${layerId}/finish_upload`, {
-      method:  'POST',
-      headers: _authHeaders(),
-      body:    JSON.stringify({})
-    });
-    console.log('[FELT 12] Step C finish_upload response status:', finishRes.status);
-    if (!finishRes.ok) {
-      const text = await finishRes.text().catch(() => '');
-      console.warn('[FELT 12] finish_upload failed (non-fatal):', finishRes.status, text);
-    }
-  } else {
-    console.warn('[FELT 11] No layer_id returned — skipping finish_upload');
+  // Step C — finish_upload (required to trigger Felt layer processing)
+  console.log('[FELT 11] Step C — finish_upload POST for layer_id:', layer_id);
+  const finishRes = await fetch(`${FELT_API}/maps/${mapId}/layers/${layer_id}/finish_upload`, {
+    method:  'POST',
+    headers: _authHeaders(),
+    body:    JSON.stringify({})
+  });
+  console.log('[FELT 12] Step C finish_upload response status:', finishRes.status);
+  if (!finishRes.ok) {
+    const text = await finishRes.text().catch(() => '');
+    console.warn('[FELT 12] finish_upload failed (non-fatal):', finishRes.status, text);
   }
 }
 
