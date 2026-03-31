@@ -306,23 +306,30 @@ async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
   console.log('[FELT 5] _uploadGeoJSON mapId:', mapId, '| layerName:', layerName, '| filename:', filename, '| geojsonStr length:', geojsonStr.length);
 
   // Step A — request presigned upload URL from Felt API
-  // Confirmed against GPS2026felt/FeltService.ts and Felt Python SDK:
-  //   POST /maps/{id}/upload, body: { name }, response: { url, presigned_attributes, layer_id }
-  console.log('[FELT 6] Step A — POST', `${FELT_API}/maps/${mapId}/upload`);
+  // Felt API requires an array body where each element has a client-generated `id`.
+  //   POST /maps/{id}/upload, body: [{ id, name }]
+  //   Response may be an array or a wrapper object; normalise to item[0].
+  const fileId = crypto.randomUUID();
+  console.log('[FELT 6] Step A — POST', `${FELT_API}/maps/${mapId}/upload`, '| fileId:', fileId);
   const feltRes = await fetch(`${FELT_API}/maps/${mapId}/upload`, {
     method:  'POST',
     headers: _authHeaders(),
-    body:    JSON.stringify({ name: layerName })
+    body:    JSON.stringify([{ id: fileId, name: filename }])
   });
   console.log('[FELT 7] Step A response status:', feltRes.status);
   if (!feltRes.ok) {
     const text = await feltRes.text();
     throw new Error(`Upload init failed (HTTP ${feltRes.status}): ${text}`);
   }
-  const payload = await feltRes.json();
-  console.log('[FELT 8] upload init response:', JSON.stringify(payload));
-  const layerId   = payload.layer_id;
-  const presigned = payload.presigned_attributes;
+  const raw = await feltRes.json();
+  console.log('[FELT 8] upload init response:', JSON.stringify(raw));
+  // Normalise: handle array [ {...} ], data-wrapper { data: [{...}] }, or flat { ... }
+  const item      = Array.isArray(raw) ? raw[0] : (raw?.data?.[0] ?? raw);
+  const layerId   = item?.layer_id ?? item?.id;
+  const attrs     = item?.attributes ?? item;
+  const presigned = Array.isArray(attrs?.presigned_attributes)
+    ? attrs.presigned_attributes[0]
+    : attrs?.presigned_attributes;
   const { url, ...s3Fields } = presigned ?? {};
   if (!url) {
     throw new Error(
