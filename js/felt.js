@@ -325,13 +325,13 @@ async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
   if (!url) throw new Error(`Felt API did not return presigned URL. Full response: ${JSON.stringify(initData)}`);
 
   // Step B — S3 multipart POST: presigned fields first, file last, no Content-Type header
+  // MIME type must be application/octet-stream (matches Felt Python SDK behaviour).
+  // ${filename} in the key is substituted server-side by S3 — pass it through as-is.
   const formData = new FormData();
-  // Substitute ${filename} in the S3 key client-side so the stored key is concrete.
-  Object.entries(presigned_attributes).forEach(([k, v]) =>
-    formData.append(k, k === 'key' ? v.replace('${filename}', filename) : v)
-  );
-  formData.append('file', new Blob([geojsonStr], { type: 'application/json' }), filename);
+  Object.entries(presigned_attributes).forEach(([k, v]) => formData.append(k, v));
+  formData.append('file', new Blob([geojsonStr], { type: 'application/octet-stream' }), filename);
   console.log('[FELT 9] Step B — S3 POST to:', url, '| FormData keys:', [...formData.keys()]);
+  console.log('[FELT 9] GeoJSON preview:', geojsonStr.slice(0, 300));
   const s3Res = await fetch(url, { method: 'POST', body: formData });
   console.log('[FELT 10] Step B S3 response status:', s3Res.status);
   if (!s3Res.ok) {
