@@ -330,7 +330,7 @@ async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
   Object.entries(presigned_attributes).forEach(([k, v]) =>
     formData.append(k, k === 'key' ? v.replace('${filename}', filename) : v)
   );
-  formData.append('file', new Blob([geojsonStr], { type: 'application/geo+json' }), filename);
+  formData.append('file', new Blob([geojsonStr], { type: 'application/json' }), filename);
   console.log('[FELT 9] Step B — S3 POST to:', url, '| FormData keys:', [...formData.keys()]);
   const s3Res = await fetch(url, { method: 'POST', body: formData });
   console.log('[FELT 10] Step B S3 response status:', s3Res.status);
