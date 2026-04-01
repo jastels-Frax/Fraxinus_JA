@@ -234,13 +234,12 @@ function _renderStep2() {
       }
 
       uploadBtn.textContent = 'Uploading…';
-      await _uploadGeoJSON(mapId, _geojsonStr, layerName, _surveyTarget);
+      const filename = `${_surveyTarget}_OBS_${_todayString()}.geojson`;
+      const result = await executeFeltUpload(mapId, _apiKey, _geojsonStr, filename, _surveyTarget);
 
       _closeModal();
       showToast(
-        mapUrl
-          ? `Uploaded to Felt — <a href="${_esc(mapUrl)}" target="_blank" rel="noopener">Open map</a>`
-          : 'Uploaded to Felt successfully!',
+        `Uploaded to Felt — <a href="${_esc(result.mapUrl)}" target="_blank" rel="noopener">Open map</a>`,
         'success',
         8000
       );
@@ -301,48 +300,94 @@ async function _createMap(title, workspaceId) {
   return { id: mapId, title: newMap.title ?? title, url: newMap.url ?? '' };
 }
 
-async function _uploadGeoJSON(mapId, geojsonStr, layerName, surveyTarget) {
-  const filename = `${surveyTarget}_OBS_${_todayString()}.geojson`;
-  console.log('[FELT 5] _uploadGeoJSON mapId:', mapId, '| layerName:', layerName, '| filename:', filename, '| geojsonStr length:', geojsonStr.length);
+async function executeFeltUpload(mapId, apiKey, geojsonString,
+                                  filename, surveyType) {
+  // ── STEP 1: Upload init ──────────────────────────────────
+  console.log('[FELT 1] upload init — map:', mapId,
+    'file:', filename);
 
-  // Step A — upload init: POST flat object { name } — no id, no array
-  console.log('[FELT 6] Step A — POST', `${FELT_API}/maps/${mapId}/upload`);
-  const initRes = await fetch(`${FELT_API}/maps/${mapId}/upload`, {
-    method:  'POST',
-    headers: { ..._authHeaders(), 'Accept': '*/*' },
-    body:    JSON.stringify({ name: layerName })
-  });
-  console.log('[FELT 7] Step A response status:', initRes.status);
-  if (!initRes.ok) {
-    const text = await initRes.text();
-    throw new Error(`Upload init failed (HTTP ${initRes.status}): ${text}`);
-  }
-  const initData = await initRes.json();
-  console.log('[FELT 8] full init response:', JSON.stringify(initData));
-  const { layer_group_id, layer_id, url, presigned_attributes } = initData;
-  console.log('[FELT 8] layer_group_id:', layer_group_id, '| layer_id:', layer_id, '| url domain:', url ? new URL(url).hostname : 'MISSING');
-  console.log('[FELT 8] presigned keys:', presigned_attributes ? Object.keys(presigned_attributes) : 'MISSING');
-  if (!url) throw new Error(`Felt API did not return presigned URL. Full response: ${JSON.stringify(initData)}`);
-
-  // Step B — S3 multipart POST: presigned fields first, file last, no Content-Type header
-  const formData = new FormData();
-  Object.entries(presigned_attributes).forEach(([k, v]) =>
-    formData.append(k, k === 'key' ? v.replace('${filename}', filename) : v)
+  const initRes = await fetch(
+    `https://felt.com/api/v2/maps/${mapId}/upload`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'Accept': '*/*'
+      },
+      body: JSON.stringify({ name: filename })
+    }
   );
-  formData.append('file', new Blob([geojsonStr], { type: 'application/json' }), filename);
-  console.log('[FELT 9] Step B — S3 POST to:', url, '| FormData keys:', [...formData.keys()]);
-  console.log('[FELT 9] GeoJSON:', geojsonStr);
-  const s3Res = await fetch(url, { method: 'POST', body: formData });
-  console.log('[FELT 10] Step B S3 response status:', s3Res.status);
-  if (!s3Res.ok) {
-    const body = await s3Res.text().catch(() => '(unreadable)');
-    throw new Error(`S3 upload failed (HTTP ${s3Res.status}): ${body}`);
+
+  if (!initRes.ok) {
+    const err = await initRes.text();
+    console.error('[FELT 1] init failed:', initRes.status, err);
+    throw new Error(
+      `Upload init failed (HTTP ${initRes.status}): ${err}`
+    );
   }
 
-  // Step C — finish_upload skipped: Felt processes the layer automatically via S3
-  // event notifications triggered by x-amz-meta-feature-flags in the presigned upload.
-  // Both /layers/{id}/finish_upload and /layer_groups/{id}/finish_upload return 404.
-  console.log('[FELT 11] S3 upload complete — layer processing triggered automatically via S3 events | layer_group_id:', layer_group_id);
+  const initData = await initRes.json();
+  console.log('[FELT 1] init response:', JSON.stringify(initData));
+
+  const { layer_id, url: s3Url, presigned_attributes } = initData;
+
+  if (!s3Url || !presigned_attributes) {
+    throw new Error(
+      'Upload init response missing url or presigned_attributes: '
+      + JSON.stringify(initData)
+    );
+  }
+
+  // ── STEP 2: S3 upload ────────────────────────────────────
+  console.log('[FELT 2] S3 upload to:', new URL(s3Url).hostname);
+
+  const form = new FormData();
+  Object.entries(presigned_attributes).forEach(([k, v]) => {
+    form.append(k, String(v));
+  });
+  form.append(
+    'file',
+    new Blob([geojsonString], { type: 'application/geo+json' }),
+    filename
+  );
+
+  console.log('[FELT 2] FormData keys:', [...form.keys()]);
+
+  const s3Res = await fetch(s3Url, {
+    method: 'POST',
+    body: form
+    // NO Content-Type header — browser sets multipart boundary
+  });
+
+  console.log('[FELT 3] S3 response:', s3Res.status);
+
+  if (!s3Res.ok) {
+    const err = await s3Res.text().catch(() => '(unreadable)');
+    throw new Error(`S3 upload failed (HTTP ${s3Res.status}): ${err}`);
+  }
+
+  // ── STEP 3: Finish upload ────────────────────────────────
+  const finishRes = await fetch(
+    `https://felt.com/api/v2/maps/${mapId}/layers/${layer_id}/finish_upload`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({})
+    }
+  );
+
+  console.log('[FELT 4] finish upload:', finishRes.status);
+
+  if (!finishRes.ok) {
+    const err = await finishRes.text().catch(() => '');
+    console.warn('[FELT 4] finish_upload failed (non-fatal):', finishRes.status, err);
+  }
+
+  return { layer_id, mapUrl: `https://felt.com/map/${mapId}` };
 }
 
 // ── Public entry point ────────────────────────────────────────────────────
