@@ -68,6 +68,50 @@ function _buildGeoJSON(target) {
   return JSON.stringify({ type: 'FeatureCollection', features: [...primaryFeatures, ...habitatFeatures] }, null, 2);
 }
 
+// ── GeoJSON validation ────────────────────────────────────────────────────
+/**
+ * Returns null if valid, or an error string describing the first problem found.
+ */
+function validateGeoJSON(geojson) {
+  if (!geojson || geojson.type !== 'FeatureCollection') {
+    return `Root is not a FeatureCollection (got type: ${geojson?.type})`;
+  }
+  if (!Array.isArray(geojson.features)) {
+    return 'features is not an array';
+  }
+  if (geojson.features.length === 0) {
+    return 'FeatureCollection has 0 features — nothing to upload';
+  }
+  for (let i = 0; i < geojson.features.length; i++) {
+    const f = geojson.features[i];
+    if (!f || f.type !== 'Feature') {
+      return `features[${i}].type is not "Feature" (got: ${f?.type})`;
+    }
+    if (!f.geometry || f.geometry.type !== 'Point') {
+      return `features[${i}].geometry is not a Point (got: ${f?.geometry?.type})`;
+    }
+    const coords = f.geometry.coordinates;
+    if (!Array.isArray(coords) || coords.length < 2) {
+      return `features[${i}].geometry.coordinates is missing or too short`;
+    }
+    const [lng, lat] = coords;
+    if (!isFinite(lng) || !isFinite(lat)) {
+      return `features[${i}] has non-finite coordinates: [${lng}, ${lat}]`;
+    }
+    if (lat < -90 || lat > 90) {
+      return `features[${i}] latitude out of range (${lat}) — coordinates may be swapped`;
+    }
+    if (lng < -180 || lng > 180) {
+      return `features[${i}] longitude out of range (${lng})`;
+    }
+    // Detect likely lat/lng swap: lng in [-90,90] but lat outside [-90,90]
+    if (Math.abs(lng) <= 90 && Math.abs(lat) > 90) {
+      return `features[${i}] coordinates appear swapped — expected [lng, lat] but got [${lng}, ${lat}]`;
+    }
+  }
+  return null; // valid
+}
+
 // ── Modal lifecycle ───────────────────────────────────────────────────────
 // feltModal is pre-created in index.html so it is always in the DOM,
 // regardless of whether a survey has been entered yet.
@@ -234,6 +278,31 @@ function _renderStep2() {
       }
 
       uploadBtn.textContent = 'Uploading…';
+
+      // ── Pre-upload GeoJSON inspection ─────────────────────────────────
+      let _gj;
+      try {
+        _gj = JSON.parse(_geojsonStr);
+      } catch (parseErr) {
+        throw new Error(`GeoJSON is not valid JSON: ${parseErr.message}`);
+      }
+      console.log('[FELT GEOJSON] type:', _gj.type, '| features:', _gj.features?.length ?? 'n/a');
+      console.log('[FELT GEOJSON] full output:', _geojsonStr);
+      (_gj.features || []).forEach((f, i) => {
+        console.log(
+          `[FELT GEOJSON] feature[${i}]`,
+          'coords:', f.geometry?.coordinates,
+          '| prop keys:', Object.keys(f.properties || {})
+        );
+      });
+
+      // ── Validate before sending ────────────────────────────────────────
+      const _validErr = validateGeoJSON(_gj);
+      if (_validErr) {
+        throw new Error(`GeoJSON validation failed — ${_validErr}`);
+      }
+      // ──────────────────────────────────────────────────────────────────
+
       await executeFeltUpload(mapId, _apiKey, _geojsonStr, layerName);
 
       _closeModal();

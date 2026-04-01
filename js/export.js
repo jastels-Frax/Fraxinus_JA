@@ -32,6 +32,28 @@ function csvRow(vals) {
   return vals.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',');
 }
 
+// Replaces undefined property values with null and strips non-serializable objects
+// (Leaflet LatLng, DOM nodes, functions) so JSON.stringify produces clean output.
+function sanitizeProps(obj) {
+  const out = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === undefined || v === null) { out[k] = null; continue; }
+    if (typeof v === 'function') { out[k] = null; continue; }
+    if (typeof v === 'object') {
+      // Leaflet LatLng has lat + lng
+      if ('lat' in v && 'lng' in v) { out[k] = null; continue; }
+      // DOM nodes
+      if (typeof v.nodeType === 'number') { out[k] = null; continue; }
+      // Leaflet markers / layers have _leaflet_id
+      if ('_leaflet_id' in v) { out[k] = null; continue; }
+      // Arrays are fine (e.g. criteria list)
+      if (!Array.isArray(v)) { out[k] = null; continue; }
+    }
+    out[k] = v;
+  }
+  return out;
+}
+
 // Works for both live observations (Leaflet marker) and snapshot observations (plain latlng).
 function getLoc(obs) {
   if (obs.latlng?.lat != null && isFinite(obs.latlng.lat) && isFinite(obs.latlng.lng)) return obs.latlng;
@@ -67,7 +89,7 @@ export function buildSpeciesGeoJSON() {
     return {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [lng, lat] },
-      properties: {
+      properties: sanitizeProps({
         PROJECT_ID: m.projectID, POINT_ID: m.pointID, OBSERVER: m.observer,
         SURVEY_TYPE: m.surveyType, SURVEY_LENGTH: m.surveyLength,
         WIND: m.wind, WIND_DIR: m.windDir, TEMP_C: m.tempC,
@@ -75,7 +97,7 @@ export function buildSpeciesGeoJSON() {
         SPECIES: m.code, COUNT: m.count, RANGE: m.range, BEARING: m.bearing,
         PASS_HT: m.passHt, FLIGHT_DIR: m.flightDir,
         NOTE: m.note, TIMESTAMP: m.timestamp, BREEDING: m.breeding
-      }
+      })
     };
   });
   return JSON.stringify({ type: 'FeatureCollection', features }, null, 2);
@@ -150,13 +172,13 @@ export function buildMooseGeoJSON() {
     return {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [lng, lat] },
-      properties: {
+      properties: sanitizeProps({
         PROJECT_ID: o.projectID, TRANSECT_ID: o.transectID, OBSERVER: o.observer,
         SURVEY_DATE: o.surveyDate, START_TIME: o.startTime, END_TIME: o.endTime,
         VISIBILITY: o.visibility, SNOW_COVER: o.snowCover, TEMP_C: o.tempC, WIND_SPEED: o.windSpeed,
         SPECIES: o.species, OBSERVATION_TYPE: o.obsType, HABITAT: o.habitat,
         PHOTO_REF: o.photoRef, NOTE: o.note, OBS_TIMESTAMP: o.timestamp
-      }
+      })
     };
   });
   return JSON.stringify({ type: 'FeatureCollection', features }, null, 2);
@@ -226,7 +248,7 @@ export function buildTurtleGeoJSON() {
     return {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [lng, lat] },
-      properties: {
+      properties: sanitizeProps({
         PROJECT_ID: o.projectID, SITE_NAME: o.siteName, OBSERVER: o.observer,
         SURVEY_DATE: o.surveyDate, START_TIME: o.startTime, END_TIME: o.endTime,
         WATER_TEMP_C: o.waterTemp, AIR_TEMP_C: o.airTemp,
@@ -234,7 +256,7 @@ export function buildTurtleGeoJSON() {
         SPECIES: o.species || '',
         SEX: o.sex, AGE_CLASS: o.ageClass, ACTIVITY: o.activity, HABITAT: o.habitat,
         PHOTO_ID: o.photoID, NOTE: o.note, OBS_TIMESTAMP: o.timestamp
-      }
+      })
     };
   });
   return JSON.stringify({ type: 'FeatureCollection', features }, null, 2);
@@ -306,7 +328,7 @@ export function buildHabitatGeoJSON() {
     return {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [lng, lat] },
-      properties: {
+      properties: sanitizeProps({
         SURVEY_TYPE:  o.surveyType,
         FEATURE_TYPE: o.featureType,
         CRITERIA_MET: (o.criteria || []).join(' | '),
@@ -315,7 +337,7 @@ export function buildHabitatGeoJSON() {
         PHOTO_REF:    o.photoRef,
         NOTE:         o.note,
         TIMESTAMP:    o.timestamp
-      }
+      })
     };
   });
   return JSON.stringify({ type: 'FeatureCollection', features }, null, 2);
