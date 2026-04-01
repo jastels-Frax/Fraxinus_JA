@@ -34,8 +34,11 @@ function csvRow(vals) {
 
 // Works for both live observations (Leaflet marker) and snapshot observations (plain latlng).
 function getLoc(obs) {
-  if (obs.latlng?.lat != null) return obs.latlng;
-  if (obs.marker?.getLatLng) return obs.marker.getLatLng();
+  if (obs.latlng?.lat != null && isFinite(obs.latlng.lat) && isFinite(obs.latlng.lng)) return obs.latlng;
+  if (obs.marker?.getLatLng) {
+    const ll = obs.marker.getLatLng();
+    if (isFinite(ll.lat) && isFinite(ll.lng)) return ll;
+  }
   return null;
 }
 
