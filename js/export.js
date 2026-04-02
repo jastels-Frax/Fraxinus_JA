@@ -37,7 +37,7 @@ function csvRow(vals) {
 function sanitizeProps(obj) {
   const out = {};
   for (const [k, v] of Object.entries(obj)) {
-    if (v === undefined || v === null) { out[k] = null; continue; }
+    if (v === undefined || v === null || v === '') { out[k] = null; continue; }
     if (typeof v === 'function') { out[k] = null; continue; }
     if (typeof v === 'object') {
       // Leaflet LatLng has lat + lng
