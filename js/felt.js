@@ -448,6 +448,42 @@ async function executeFeltUpload(mapId, apiKey, geojsonStr, layerName) {
   console.log('[FELT UPLOAD] complete ✓');
 }
 
+// ── Console test helper ───────────────────────────────────────────────────
+// Upload a hardcoded single-point GeoJSON to isolate whether the issue is
+// content vs. upload mechanics. Call from the browser console:
+//   feltTestUpload('YOUR_MAP_ID')
+window.feltTestUpload = async function feltTestUpload(mapId) {
+  const apiKey = (localStorage.getItem('feltApiKey') || '').trim();
+  if (!apiKey) { console.error('[FELT TEST] no API key in localStorage'); return; }
+  if (!mapId)  { console.error('[FELT TEST] usage: feltTestUpload("<map_id>")'); return; }
+
+  const minimalGeoJSON = JSON.stringify({
+    type: 'FeatureCollection',
+    features: [{
+      type: 'Feature',
+      geometry: {
+        type: 'Point',
+        coordinates: [-63.5752, 44.6488]   // Halifax, NS — known valid lng,lat
+      },
+      properties: {
+        NAME: 'Test Point',
+        SURVEY_TYPE: 'TEST',
+        COUNT: 1
+      }
+    }]
+  });
+
+  console.log('[FELT TEST] uploading minimal 1-point GeoJSON to map:', mapId);
+  console.log('[FELT TEST] geojson:', minimalGeoJSON);
+  try {
+    await executeFeltUpload(mapId, apiKey, minimalGeoJSON, 'felt_test_minimal');
+    console.log('[FELT TEST] ✅ Felt accepted the minimal GeoJSON — upload pipeline is fine, issue is in buildGeoJSON()');
+  } catch (err) {
+    console.error('[FELT TEST] ❌ Minimal GeoJSON rejected:', err.message);
+    console.error('[FELT TEST] Issue is in the upload pipeline itself, NOT in buildGeoJSON()');
+  }
+};
+
 // ── Public entry point ────────────────────────────────────────────────────
 export function uploadToFelt(surveyTarget, onClose) {
   console.log('[FELT 1] uploadToFelt entry | surveyTarget:', surveyTarget);
