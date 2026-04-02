@@ -102,8 +102,8 @@ export function saveMooseObservation() {
   // Read current metadata from live-bound globals
   const pid = G.mooseProjectID,   tid = G.mooseTransectID, obs = G.mooseObserver;
   const sd  = G.mooseSurveyDate,  st  = G.mooseStartTime,  et  = G.mooseEndTime;
-  const vis = G.mooseVisibility,  sc  = G.mooseSnowCover,   tc  = G.mooseTempC;
-  const ws  = G.mooseWindSpeed;
+  const vis = G.mooseVisibility,  sc  = G.mooseSnowCover || null,  tc  = G.mooseTempC || null;
+  const ws  = G.mooseWindSpeed || null;
 
   const obsRecord = {
     projectID:  pid,

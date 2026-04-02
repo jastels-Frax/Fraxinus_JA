@@ -54,6 +54,14 @@ function sanitizeProps(obj) {
   return out;
 }
 
+// Converts user-entered numeric fields to Number or null.
+// Prevents empty strings from reaching Felt as type-ambiguous values.
+function numOrNull(v) {
+  if (v === '' || v == null) return null;
+  const n = Number(v);
+  return isFinite(n) ? n : null;
+}
+
 // Works for both live observations (Leaflet marker) and snapshot observations (plain latlng).
 // Handles all coordinate storage formats that may appear across survey types.
 function getLoc(obs) {
@@ -115,8 +123,8 @@ export function buildSpeciesGeoJSON() {
       geometry: { type: 'Point', coordinates: [lng, lat] },
       properties: sanitizeProps({
         PROJECT_ID: m.projectID, POINT_ID: m.pointID, OBSERVER: m.observer,
-        SURVEY_TYPE: m.surveyType, SURVEY_LENGTH: m.surveyLength,
-        WIND: m.wind, WIND_DIR: m.windDir, TEMP_C: m.tempC,
+        SURVEY_TYPE: m.surveyType, SURVEY_LENGTH: numOrNull(m.surveyLength),
+        WIND: m.wind, WIND_DIR: m.windDir, TEMP_C: numOrNull(m.tempC),
         PRECIP: m.precip, SITE_HABITAT: m.siteHabitat,
         SPECIES: m.code, COUNT: m.count, RANGE: m.range, BEARING: m.bearing,
         PASS_HT: m.passHt, FLIGHT_DIR: m.flightDir,
@@ -205,8 +213,8 @@ export function buildMooseGeoJSON() {
         PROJECT_ID: o.projectID, TRANSECT_ID: o.transectID, OBSERVER: o.observer,
         SURVEY_DATE: o.surveyDate, START_TIME: o.startTime, END_TIME: o.endTime,
         VISIBILITY: o.visibility,
-        SNOW_COVER: (o.snowCover !== '' && o.snowCover != null) ? Number(o.snowCover) : null,
-        TEMP_C: o.tempC, WIND_SPEED: o.windSpeed,
+        SNOW_COVER: numOrNull(o.snowCover),
+        TEMP_C: numOrNull(o.tempC), WIND_SPEED: numOrNull(o.windSpeed),
         SPECIES: o.species, OBSERVATION_TYPE: o.obsType, HABITAT: o.habitat,
         PHOTO_REF: o.photoRef, NOTE: o.note, OBS_TIMESTAMP: o.timestamp
       })
@@ -287,7 +295,7 @@ export function buildTurtleGeoJSON() {
       properties: sanitizeProps({
         PROJECT_ID: o.projectID, SITE_NAME: o.siteName, OBSERVER: o.observer,
         SURVEY_DATE: o.surveyDate, START_TIME: o.startTime, END_TIME: o.endTime,
-        WATER_TEMP_C: o.waterTemp, AIR_TEMP_C: o.airTemp,
+        WATER_TEMP_C: numOrNull(o.waterTemp), AIR_TEMP_C: numOrNull(o.airTemp),
         WATER_LEVEL: o.waterLevel, WEATHER: o.weather,
         SPECIES: o.species || '',
         SEX: o.sex, AGE_CLASS: o.ageClass, ACTIVITY: o.activity, HABITAT: o.habitat,
