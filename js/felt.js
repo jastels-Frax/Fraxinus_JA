@@ -21,7 +21,9 @@ const SURVEY_EMOJI = { BBS: '🐦', MOOSE: '🦌', TURTLE: '🐢', HABITAT: '�
 
 // ── Module-level state ────────────────────────────────────────────────────
 let _overlay           = null;
-let _geojsonStr        = '';
+let _primaryGeoJSONStr = '';
+let _habitatGeoJSONStr = '';
+let _habitatCount      = 0;
 let _surveyTarget      = '';
 let _onClose           = null;
 let _apiKey            = '';
@@ -51,43 +53,11 @@ function _getObsCount(target) {
   return 0;
 }
 
-function _buildGeoJSON(target) {
-  console.log('[FELT G] _buildGeoJSON target:', target);
-
-  if (target === 'HABITAT') {
-    const r = buildHabitatGeoJSON();
-    console.log('[FELT G] habitat-only features:', JSON.parse(r).features.length);
-    return r;
-  }
-
-  let primaryFeatures = [];
-  if (target === 'BBS')         primaryFeatures = JSON.parse(buildSpeciesGeoJSON()).features;
-  else if (target === 'MOOSE')  primaryFeatures = JSON.parse(buildMooseGeoJSON()).features;
-  else if (target === 'TURTLE') primaryFeatures = JSON.parse(buildTurtleGeoJSON()).features;
-
-  const habitatFeatures = JSON.parse(buildHabitatGeoJSON()).features;
-
-  // Tag each feature with TYPE so Felt can distinguish observation types
-  primaryFeatures.forEach(f => { f.properties = { TYPE: target,    ...f.properties }; });
-  habitatFeatures.forEach(f => { f.properties = { TYPE: 'HABITAT', ...f.properties }; });
-
-  const allFeatures = [...primaryFeatures, ...habitatFeatures];
-
-  if (allFeatures.length === 0) {
-    return JSON.stringify({ type: 'FeatureCollection', features: [] }, null, 2);
-  }
-
-  // Normalise schema: every feature must have every key (null for missing).
-  // Felt requires a consistent schema across all features in a layer.
-  const allKeys = new Set();
-  allFeatures.forEach(f => Object.keys(f.properties || {}).forEach(k => allKeys.add(k)));
-  allFeatures.forEach(f => allKeys.forEach(k => { if (!(k in f.properties)) f.properties[k] = null; }));
-
-  console.log('[FELT G] primary features:', primaryFeatures.length,
-    '| habitat features:', habitatFeatures.length,
-    '| unified schema keys:', allKeys.size);
-
-  return JSON.stringify({ type: 'FeatureCollection', features: allFeatures }, null, 2);
+function _buildPrimaryGeoJSON(target) {
+  if (target === 'BBS')    return buildSpeciesGeoJSON();
+  if (target === 'MOOSE')  return buildMooseGeoJSON();
+  if (target === 'TURTLE') return buildTurtleGeoJSON();
+  return JSON.stringify({ type: 'FeatureCollection', features: [] });
 }
 
 // ── GeoJSON validation ────────────────────────────────────────────────────
@@ -299,33 +269,39 @@ function _renderStep2() {
         mapUrl = _maps.find(m => m.id === mapId)?.url ?? '';
       }
 
-      uploadBtn.textContent = 'Uploading…';
+      // ── Upload primary observations ──────────────────────────────────
+      if (_surveyTarget === 'HABITAT') {
+        // HABITAT-only upload: use the habitat GeoJSON as the single layer
+        const habitatObj = JSON.parse(_habitatGeoJSONStr);
+        const habitatErr = validateGeoJSON(habitatObj);
+        if (habitatErr) throw new Error(`Habitat GeoJSON invalid: ${habitatErr}`);
+        console.log('[FELT GEOJSON] habitat features:', habitatObj.features.length);
+        console.log('[FELT GEOJSON] sample:', JSON.stringify(habitatObj.features[0]));
+        uploadBtn.textContent = 'Uploading…';
+        await executeFeltUpload(mapId, _apiKey, _habitatGeoJSONStr, layerName);
+      } else {
+        // Primary survey: upload observations layer, then habitat layer separately
+        const primaryObj = JSON.parse(_primaryGeoJSONStr);
+        const primaryErr = validateGeoJSON(primaryObj);
+        if (primaryErr) throw new Error(`Primary GeoJSON invalid: ${primaryErr}`);
+        console.log('[FELT GEOJSON] primary features:', primaryObj.features.length);
+        console.log('[FELT GEOJSON] sample:', JSON.stringify(primaryObj.features[0]));
+        uploadBtn.textContent = 'Uploading observations…';
+        await executeFeltUpload(mapId, _apiKey, _primaryGeoJSONStr, layerName);
+        console.log('[FELT] primary upload complete ✓');
 
-      // ── Pre-upload GeoJSON inspection ─────────────────────────────────
-      let _gj;
-      try {
-        _gj = JSON.parse(_geojsonStr);
-      } catch (parseErr) {
-        throw new Error(`GeoJSON is not valid JSON: ${parseErr.message}`);
+        // ── Upload habitat layer separately (only if observations exist) ─
+        if (_habitatCount > 0) {
+          const habitatObj = JSON.parse(_habitatGeoJSONStr);
+          if (habitatObj.features.length > 0) {
+            const habitatLayerName = layerName + ' — Habitat';
+            console.log('[FELT GEOJSON] habitat features:', habitatObj.features.length);
+            uploadBtn.textContent = 'Uploading habitat data…';
+            await executeFeltUpload(mapId, _apiKey, _habitatGeoJSONStr, habitatLayerName);
+            console.log('[FELT] habitat upload complete ✓');
+          }
+        }
       }
-      console.log('[FELT GEOJSON] type:', _gj.type, '| features:', _gj.features?.length ?? 'n/a');
-      console.log('[FELT GEOJSON] full output:', _geojsonStr);
-      (_gj.features || []).forEach((f, i) => {
-        console.log(
-          `[FELT GEOJSON] feature[${i}]`,
-          'coords:', f.geometry?.coordinates,
-          '| prop keys:', Object.keys(f.properties || {})
-        );
-      });
-
-      // ── Validate before sending ────────────────────────────────────────
-      const _validErr = validateGeoJSON(_gj);
-      if (_validErr) {
-        throw new Error(`GeoJSON validation failed — ${_validErr}`);
-      }
-      // ──────────────────────────────────────────────────────────────────
-
-      await executeFeltUpload(mapId, _apiKey, _geojsonStr, layerName);
 
       _closeModal();
       const feltMapUrl = mapUrl || `https://felt.com/map/${mapId}`;
@@ -449,7 +425,7 @@ async function executeFeltUpload(mapId, apiKey, geojsonStr, layerName) {
   }
   formData.append(
     'file',
-    new Blob([geojsonStr], { type: 'application/geo+json' }),
+    new Blob([geojsonStr], { type: 'application/octet-stream' }),
     fileName
   );
 
@@ -531,8 +507,14 @@ export function uploadToFelt(surveyTarget, onClose) {
   console.log('[Felt] surveyType:', surveyTarget, '| obs count:', obsCount, '| speciesMarkers.length:', speciesMarkers.length, '| array ref:', speciesMarkers);
 
   // Build GeoJSON now (synchronously) before any async modal interaction
-  _geojsonStr        = _buildGeoJSON(surveyTarget);
+  _primaryGeoJSONStr = _surveyTarget === 'HABITAT' ? '' : _buildPrimaryGeoJSON(surveyTarget);
+  _habitatGeoJSONStr = buildHabitatGeoJSON();
+  _habitatCount      = habitatObservations.length;
   _surveyTarget      = surveyTarget;
+
+  const pCount = surveyTarget === 'HABITAT' ? 0 : JSON.parse(_primaryGeoJSONStr).features.length;
+  const hCount = JSON.parse(_habitatGeoJSONStr).features.length;
+  console.log('[FELT G] primary features:', pCount, '| habitat features:', hCount);
   _onClose           = onClose || null;
   _workspaces        = [];
   _selectedWorkspace = '';
