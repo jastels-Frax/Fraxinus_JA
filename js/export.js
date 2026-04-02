@@ -55,12 +55,31 @@ function sanitizeProps(obj) {
 }
 
 // Works for both live observations (Leaflet marker) and snapshot observations (plain latlng).
+// Handles all coordinate storage formats that may appear across survey types.
 function getLoc(obs) {
-  if (obs.latlng?.lat != null && isFinite(obs.latlng.lat) && isFinite(obs.latlng.lng)) return obs.latlng;
-  if (obs.marker?.getLatLng) {
-    const ll = obs.marker.getLatLng();
-    if (isFinite(ll.lat) && isFinite(ll.lng)) return ll;
+  // Format 1: Leaflet LatLng or plain {lat, lng}  (primary storage format)
+  if (obs.latlng != null) {
+    const lat = obs.latlng.lat      ?? obs.latlng.latitude;
+    const lng = obs.latlng.lng      ?? obs.latlng.longitude;
+    if (isFinite(lat) && isFinite(lng)) return { lat, lng };
   }
+  // Format 2: GeolocationCoordinates stored directly on obs {latitude, longitude}
+  if (obs.latitude != null && obs.longitude != null) {
+    const lat = obs.latitude,  lng = obs.longitude;
+    if (isFinite(lat) && isFinite(lng)) return { lat, lng };
+  }
+  // Format 3: flat lat/lng stored directly on obs
+  if (obs.lat != null && obs.lng != null) {
+    if (isFinite(obs.lat) && isFinite(obs.lng)) return { lat: obs.lat, lng: obs.lng };
+  }
+  // Format 4: live Leaflet marker fallback
+  if (obs.marker?.getLatLng) {
+    const ml = obs.marker.getLatLng();
+    if (isFinite(ml.lat) && isFinite(ml.lng)) return { lat: ml.lat, lng: ml.lng };
+  }
+  console.error('[getLoc] no valid coordinates found for obs:', JSON.stringify({
+    latlng: obs.latlng, hasMarker: !!obs.marker, keys: Object.keys(obs)
+  }));
   return null;
 }
 
@@ -84,6 +103,11 @@ export function exportSpeciesCSV() {
 }
 
 export function buildSpeciesGeoJSON() {
+  console.log('[buildSpeciesGeoJSON] total obs:', speciesMarkers.length);
+  speciesMarkers.slice(0, 3).forEach((m, i) => {
+    const loc = getLoc(m);
+    console.log(`[buildSpeciesGeoJSON] obs[${i}] getLoc:`, loc, '| latlng:', JSON.stringify(m.latlng));
+  });
   const features = speciesMarkers.filter(m => getLoc(m)).map(m => {
     const { lat, lng } = getLoc(m);
     return {
@@ -167,6 +191,11 @@ export function exportMooseCSV() {
 }
 
 export function buildMooseGeoJSON() {
+  console.log('[buildMooseGeoJSON] total obs:', mooseObservations.length);
+  mooseObservations.forEach((o, i) => {
+    const loc = getLoc(o);
+    console.log(`[buildMooseGeoJSON] obs[${i}] getLoc:`, loc, '| latlng stored as:', JSON.stringify(o.latlng));
+  });
   const features = mooseObservations.filter(o => getLoc(o)).map(o => {
     const { lat, lng } = getLoc(o);
     return {
@@ -243,6 +272,11 @@ export function exportTurtleCSV() {
 }
 
 export function buildTurtleGeoJSON() {
+  console.log('[buildTurtleGeoJSON] total obs:', turtleObservations.length);
+  turtleObservations.forEach((o, i) => {
+    const loc = getLoc(o);
+    console.log(`[buildTurtleGeoJSON] obs[${i}] getLoc:`, loc, '| latlng stored as:', JSON.stringify(o.latlng));
+  });
   const features = turtleObservations.filter(o => getLoc(o)).map(o => {
     const { lat, lng } = getLoc(o);
     return {

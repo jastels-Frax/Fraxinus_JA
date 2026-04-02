@@ -223,8 +223,19 @@ export function saveHabitatObservation() {
     return;
   }
 
-  const survey    = G.activeSurvey;
-  const latlng    = habitatCurrentLatLng;
+  const survey = G.activeSurvey;
+
+  // Normalise to plain {lat, lng} regardless of whether source was Leaflet LatLng,
+  // GeolocationCoordinates {latitude, longitude}, or an array [lat, lng].
+  const rawLL  = habitatCurrentLatLng;
+  const latlng = {
+    lat: rawLL.lat ?? rawLL.latitude  ?? rawLL[0],
+    lng: rawLL.lng ?? rawLL.longitude ?? rawLL[1]
+  };
+  if (!isFinite(latlng.lat) || !isFinite(latlng.lng)) {
+    alert('Invalid GPS coordinates — please try again.');
+    return;
+  }
   const timestamp = new Date().toLocaleString();
   const index     = habitatObservations.length;
   const colour    = MARKER_COLOUR[survey] || '#7c3aed';

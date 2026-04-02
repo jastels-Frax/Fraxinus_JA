@@ -68,7 +68,17 @@ export function saveTurtleObservation() {
     return;
   }
 
-  const latlng    = turtleCurrentLatLng;
+  // Normalise to plain {lat, lng} regardless of whether source was Leaflet LatLng,
+  // GeolocationCoordinates {latitude, longitude}, or an array [lat, lng].
+  const rawLL  = turtleCurrentLatLng;
+  const latlng = {
+    lat: rawLL.lat ?? rawLL.latitude  ?? rawLL[0],
+    lng: rawLL.lng ?? rawLL.longitude ?? rawLL[1]
+  };
+  if (!isFinite(latlng.lat) || !isFinite(latlng.lng)) {
+    alert('Invalid GPS coordinates — please try again.');
+    return;
+  }
   const timestamp = new Date().toLocaleString();
   const index     = turtleObservations.length;
 

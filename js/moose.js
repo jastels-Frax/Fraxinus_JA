@@ -67,7 +67,17 @@ export function saveMooseObservation() {
     return;
   }
 
-  const latlng    = mooseCurrentLatLng;
+  // Normalise to plain {lat, lng} regardless of whether source was Leaflet LatLng,
+  // GeolocationCoordinates {latitude, longitude}, or an array [lat, lng].
+  const rawLL  = mooseCurrentLatLng;
+  const latlng = {
+    lat: rawLL.lat ?? rawLL.latitude  ?? rawLL[0],
+    lng: rawLL.lng ?? rawLL.longitude ?? rawLL[1]
+  };
+  if (!isFinite(latlng.lat) || !isFinite(latlng.lng)) {
+    alert('Invalid GPS coordinates — please try again.');
+    return;
+  }
   const timestamp = new Date().toLocaleString();
   const index     = mooseObservations.length;
 
