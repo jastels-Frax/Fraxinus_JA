@@ -53,19 +53,41 @@ function _getObsCount(target) {
 
 function _buildGeoJSON(target) {
   console.log('[FELT G] _buildGeoJSON target:', target);
+
   if (target === 'HABITAT') {
     const r = buildHabitatGeoJSON();
     console.log('[FELT G] habitat-only features:', JSON.parse(r).features.length);
     return r;
   }
-  let primaryFeatures;
+
+  let primaryFeatures = [];
   if (target === 'BBS')         primaryFeatures = JSON.parse(buildSpeciesGeoJSON()).features;
   else if (target === 'MOOSE')  primaryFeatures = JSON.parse(buildMooseGeoJSON()).features;
   else if (target === 'TURTLE') primaryFeatures = JSON.parse(buildTurtleGeoJSON()).features;
-  else return JSON.stringify({ type: 'FeatureCollection', features: [] });
+
   const habitatFeatures = JSON.parse(buildHabitatGeoJSON()).features;
-  console.log('[FELT G] primary features:', primaryFeatures.length, '| habitat features:', habitatFeatures.length);
-  return JSON.stringify({ type: 'FeatureCollection', features: [...primaryFeatures, ...habitatFeatures] }, null, 2);
+
+  // Tag each feature with TYPE so Felt can distinguish observation types
+  primaryFeatures.forEach(f => { f.properties = { TYPE: target,    ...f.properties }; });
+  habitatFeatures.forEach(f => { f.properties = { TYPE: 'HABITAT', ...f.properties }; });
+
+  const allFeatures = [...primaryFeatures, ...habitatFeatures];
+
+  if (allFeatures.length === 0) {
+    return JSON.stringify({ type: 'FeatureCollection', features: [] }, null, 2);
+  }
+
+  // Normalise schema: every feature must have every key (null for missing).
+  // Felt requires a consistent schema across all features in a layer.
+  const allKeys = new Set();
+  allFeatures.forEach(f => Object.keys(f.properties || {}).forEach(k => allKeys.add(k)));
+  allFeatures.forEach(f => allKeys.forEach(k => { if (!(k in f.properties)) f.properties[k] = null; }));
+
+  console.log('[FELT G] primary features:', primaryFeatures.length,
+    '| habitat features:', habitatFeatures.length,
+    '| unified schema keys:', allKeys.size);
+
+  return JSON.stringify({ type: 'FeatureCollection', features: allFeatures }, null, 2);
 }
 
 // ── GeoJSON validation ────────────────────────────────────────────────────

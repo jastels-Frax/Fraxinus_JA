@@ -204,7 +204,9 @@ export function buildMooseGeoJSON() {
       properties: sanitizeProps({
         PROJECT_ID: o.projectID, TRANSECT_ID: o.transectID, OBSERVER: o.observer,
         SURVEY_DATE: o.surveyDate, START_TIME: o.startTime, END_TIME: o.endTime,
-        VISIBILITY: o.visibility, SNOW_COVER: o.snowCover, TEMP_C: o.tempC, WIND_SPEED: o.windSpeed,
+        VISIBILITY: o.visibility,
+        SNOW_COVER: (o.snowCover !== '' && o.snowCover != null) ? Number(o.snowCover) : null,
+        TEMP_C: o.tempC, WIND_SPEED: o.windSpeed,
         SPECIES: o.species, OBSERVATION_TYPE: o.obsType, HABITAT: o.habitat,
         PHOTO_REF: o.photoRef, NOTE: o.note, OBS_TIMESTAMP: o.timestamp
       })
