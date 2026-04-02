@@ -62,6 +62,13 @@ function numOrNull(v) {
   return isFinite(n) ? n : null;
 }
 
+// Converts an empty string to null, passes non-empty strings through unchanged.
+// Prevents "" from reaching Felt as a type-ambiguous value in GeoJSON properties.
+function strOrNull(v) {
+  if (v === '' || v == null) return null;
+  return String(v);
+}
+
 // Works for both live observations (Leaflet marker) and snapshot observations (plain latlng).
 // Handles all coordinate storage formats that may appear across survey types.
 function getLoc(obs) {
@@ -122,13 +129,17 @@ export function buildSpeciesGeoJSON() {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [lng, lat] },
       properties: sanitizeProps({
-        PROJECT_ID: m.projectID, POINT_ID: m.pointID, OBSERVER: m.observer,
-        SURVEY_TYPE: m.surveyType, SURVEY_LENGTH: numOrNull(m.surveyLength),
-        WIND: m.wind, WIND_DIR: m.windDir, TEMP_C: numOrNull(m.tempC),
-        PRECIP: m.precip, SITE_HABITAT: m.siteHabitat,
-        SPECIES: m.code, COUNT: m.count, RANGE: m.range, BEARING: m.bearing,
-        PASS_HT: m.passHt, FLIGHT_DIR: m.flightDir,
-        NOTE: m.note, TIMESTAMP: m.timestamp, BREEDING: m.breeding
+        PROJECT_ID:    strOrNull(m.projectID),  POINT_ID:   strOrNull(m.pointID),
+        OBSERVER:      strOrNull(m.observer),   SURVEY_TYPE: strOrNull(m.surveyType),
+        SURVEY_LENGTH: numOrNull(m.surveyLength),
+        WIND:          strOrNull(m.wind),       WIND_DIR:    strOrNull(m.windDir),
+        TEMP_C:        numOrNull(m.tempC),      PRECIP:      strOrNull(m.precip),
+        SITE_HABITAT:  strOrNull(m.siteHabitat),
+        SPECIES:       strOrNull(m.code),       COUNT:       m.count,
+        RANGE:         m.range,                 BEARING:     m.bearing,
+        PASS_HT:       strOrNull(m.passHt),     FLIGHT_DIR:  strOrNull(m.flightDir),
+        NOTE:          strOrNull(m.note),       TIMESTAMP:   strOrNull(m.timestamp),
+        BREEDING:      strOrNull(m.breeding)
       })
     };
   });
@@ -210,13 +221,15 @@ export function buildMooseGeoJSON() {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [lng, lat] },
       properties: sanitizeProps({
-        PROJECT_ID: o.projectID, TRANSECT_ID: o.transectID, OBSERVER: o.observer,
-        SURVEY_DATE: o.surveyDate, START_TIME: o.startTime, END_TIME: o.endTime,
-        VISIBILITY: o.visibility,
-        SNOW_COVER: numOrNull(o.snowCover),
-        TEMP_C: numOrNull(o.tempC), WIND_SPEED: numOrNull(o.windSpeed),
-        SPECIES: o.species, OBSERVATION_TYPE: o.obsType, HABITAT: o.habitat,
-        PHOTO_REF: o.photoRef, NOTE: o.note, OBS_TIMESTAMP: o.timestamp
+        PROJECT_ID:       strOrNull(o.projectID),  TRANSECT_ID:      strOrNull(o.transectID),
+        OBSERVER:         strOrNull(o.observer),   SURVEY_DATE:      strOrNull(o.surveyDate),
+        START_TIME:       strOrNull(o.startTime),  END_TIME:         strOrNull(o.endTime),
+        VISIBILITY:       strOrNull(o.visibility),
+        SNOW_COVER:       numOrNull(o.snowCover),
+        TEMP_C:           numOrNull(o.tempC),      WIND_SPEED:       numOrNull(o.windSpeed),
+        SPECIES:          strOrNull(o.species),    OBSERVATION_TYPE: strOrNull(o.obsType),
+        HABITAT:          strOrNull(o.habitat),    PHOTO_REF:        strOrNull(o.photoRef),
+        NOTE:             strOrNull(o.note),       OBS_TIMESTAMP:    strOrNull(o.timestamp)
       })
     };
   });
@@ -293,13 +306,15 @@ export function buildTurtleGeoJSON() {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [lng, lat] },
       properties: sanitizeProps({
-        PROJECT_ID: o.projectID, SITE_NAME: o.siteName, OBSERVER: o.observer,
-        SURVEY_DATE: o.surveyDate, START_TIME: o.startTime, END_TIME: o.endTime,
-        WATER_TEMP_C: numOrNull(o.waterTemp), AIR_TEMP_C: numOrNull(o.airTemp),
-        WATER_LEVEL: o.waterLevel, WEATHER: o.weather,
-        SPECIES: o.species || '',
-        SEX: o.sex, AGE_CLASS: o.ageClass, ACTIVITY: o.activity, HABITAT: o.habitat,
-        PHOTO_ID: o.photoID, NOTE: o.note, OBS_TIMESTAMP: o.timestamp
+        PROJECT_ID:    strOrNull(o.projectID),  SITE_NAME:    strOrNull(o.siteName),
+        OBSERVER:      strOrNull(o.observer),   SURVEY_DATE:  strOrNull(o.surveyDate),
+        START_TIME:    strOrNull(o.startTime),  END_TIME:     strOrNull(o.endTime),
+        WATER_TEMP_C:  numOrNull(o.waterTemp),  AIR_TEMP_C:   numOrNull(o.airTemp),
+        WATER_LEVEL:   strOrNull(o.waterLevel), WEATHER:      strOrNull(o.weather),
+        SPECIES:       strOrNull(o.species),    SEX:          strOrNull(o.sex),
+        AGE_CLASS:     strOrNull(o.ageClass),   ACTIVITY:     strOrNull(o.activity),
+        HABITAT:       strOrNull(o.habitat),    PHOTO_ID:     strOrNull(o.photoID),
+        NOTE:          strOrNull(o.note),       OBS_TIMESTAMP: strOrNull(o.timestamp)
       })
     };
   });
@@ -373,14 +388,14 @@ export function buildHabitatGeoJSON() {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [lng, lat] },
       properties: sanitizeProps({
-        SURVEY_TYPE:  o.surveyType,
-        FEATURE_TYPE: o.featureType,
-        CRITERIA_MET: (o.criteria || []).join(' | '),
-        CONDITION:    o.condition,
-        SIZE_EXTENT:  o.size,
-        PHOTO_REF:    o.photoRef,
-        NOTE:         o.note,
-        TIMESTAMP:    o.timestamp
+        SURVEY_TYPE:  strOrNull(o.surveyType),
+        FEATURE_TYPE: strOrNull(o.featureType),
+        CRITERIA_MET: (o.criteria || []).join(' | ') || null,
+        CONDITION:    strOrNull(o.condition),
+        SIZE_EXTENT:  strOrNull(o.size),
+        PHOTO_REF:    strOrNull(o.photoRef),
+        NOTE:         strOrNull(o.note),
+        TIMESTAMP:    strOrNull(o.timestamp)
       })
     };
   });
