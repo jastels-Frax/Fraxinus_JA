@@ -441,7 +441,11 @@ async function executeFeltUpload(mapId, apiKey, geojsonStr, layerName) {
   // presigned_attributes fields MUST be appended before the file (AWS rule)
   const formData = new FormData();
   for (const [k, v] of Object.entries(presigned_attributes)) {
-    formData.append(k, v);
+    // Felt's presigned key contains "${filename}" as a literal placeholder —
+    // substitute it with the actual filename before sending to S3.
+    const resolved = typeof v === 'string' ? v.replace('${filename}', fileName) : v;
+    if (k === 'key') console.log('[FELT UPLOAD] resolved S3 key:', resolved);
+    formData.append(k, resolved);
   }
   formData.append(
     'file',
