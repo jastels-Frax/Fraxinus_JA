@@ -69,6 +69,13 @@ function strOrNull(v) {
   return String(v);
 }
 
+// Combines date + time into an ISO-like datetime string, or null if either is missing.
+// Prevents bare HH:MM values reaching Felt, which rejects them as unparseable time types.
+function dateTimeOrNull(date, time) {
+  if (!date || !time) return null;
+  return `${date}T${time}`;
+}
+
 // Works for both live observations (Leaflet marker) and snapshot observations (plain latlng).
 // Handles all coordinate storage formats that may appear across survey types.
 function getLoc(obs) {
@@ -193,7 +200,7 @@ ${pmarks}
 export function exportMooseCSV() {
   const date    = todayString();
   const headers = [
-    'PROJECT_ID','TRANSECT_ID','OBSERVER','SURVEY_DATE','START_TIME','END_TIME',
+    'PROJECT_ID','TRANSECT_ID','OBSERVER','SURVEY_DATE','SURVEY_START','SURVEY_END',
     'VISIBILITY','SNOW_COVER','TEMP_C','WIND_SPEED',
     'SPECIES','OBSERVATION_TYPE','HABITAT','PHOTO_REF',
     'LAT','LNG','NOTE','OBS_TIMESTAMP'
@@ -223,7 +230,8 @@ export function buildMooseGeoJSON() {
       properties: sanitizeProps({
         PROJECT_ID:       strOrNull(o.projectID),  TRANSECT_ID:      strOrNull(o.transectID),
         OBSERVER:         strOrNull(o.observer),   SURVEY_DATE:      strOrNull(o.surveyDate),
-        START_TIME:       strOrNull(o.startTime),  END_TIME:         strOrNull(o.endTime),
+        SURVEY_START:     dateTimeOrNull(o.surveyDate, o.startTime),
+        SURVEY_END:       dateTimeOrNull(o.surveyDate, o.endTime),
         VISIBILITY:       strOrNull(o.visibility),
         SNOW_COVER:       numOrNull(o.snowCover),
         TEMP_C:           numOrNull(o.tempC),      WIND_SPEED:       numOrNull(o.windSpeed),
@@ -277,7 +285,7 @@ ${pmarks}
 export function exportTurtleCSV() {
   const date    = todayString();
   const headers = [
-    'PROJECT_ID','SITE_NAME','OBSERVER','SURVEY_DATE','START_TIME','END_TIME',
+    'PROJECT_ID','SITE_NAME','OBSERVER','SURVEY_DATE','SURVEY_START','SURVEY_END',
     'WATER_TEMP_C','AIR_TEMP_C','WATER_LEVEL','WEATHER',
     'SPECIES','SEX','AGE_CLASS','ACTIVITY','HABITAT',
     'PHOTO_ID','LAT','LNG','NOTE','OBS_TIMESTAMP'
@@ -308,7 +316,8 @@ export function buildTurtleGeoJSON() {
       properties: sanitizeProps({
         PROJECT_ID:    strOrNull(o.projectID),  SITE_NAME:    strOrNull(o.siteName),
         OBSERVER:      strOrNull(o.observer),   SURVEY_DATE:  strOrNull(o.surveyDate),
-        START_TIME:    strOrNull(o.startTime),  END_TIME:     strOrNull(o.endTime),
+        SURVEY_START:  dateTimeOrNull(o.surveyDate, o.startTime),
+        SURVEY_END:    dateTimeOrNull(o.surveyDate, o.endTime),
         WATER_TEMP_C:  numOrNull(o.waterTemp),  AIR_TEMP_C:   numOrNull(o.airTemp),
         WATER_LEVEL:   strOrNull(o.waterLevel), WEATHER:      strOrNull(o.weather),
         SPECIES:       strOrNull(o.species),    SEX:          strOrNull(o.sex),
