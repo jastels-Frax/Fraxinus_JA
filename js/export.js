@@ -111,12 +111,14 @@ export function exportSpeciesCSV() {
   const headers = [
     'PROJECT_ID','POINT_ID','OBSERVER','SURVEY_TYPE','SURVEY_LENGTH',
     'WIND','WIND_DIR','TEMP_C','PRECIP','SITE_HABITAT',
+    'SURVEY_LAT','SURVEY_LNG',
     'SPECIES','COUNT','RANGE','BEARING','PASS_HT','FLIGHT_DIR',
     'NOTE','TIMESTAMP','BREEDING'
   ];
   const rows = [headers, ...speciesMarkers.map(m => [
     m.projectID, m.pointID, m.observer, m.surveyType, m.surveyLength,
     m.wind, m.windDir, m.tempC, m.precip, m.siteHabitat,
+    m.surveyLat, m.surveyLng,
     m.code, m.count, m.range, m.bearing, m.passHt, m.flightDir,
     m.note, m.timestamp, m.breeding
   ])];
@@ -142,6 +144,7 @@ export function buildSpeciesGeoJSON() {
         WIND:          strOrNull(m.wind),       WIND_DIR:    strOrNull(m.windDir),
         TEMP_C:        numOrNull(m.tempC),      PRECIP:      strOrNull(m.precip),
         SITE_HABITAT:  strOrNull(m.siteHabitat),
+        SURVEY_LAT:    numOrNull(m.surveyLat),  SURVEY_LNG:  numOrNull(m.surveyLng),
         SPECIES:       strOrNull(m.code),       COUNT:       m.count,
         RANGE:         m.range,                 BEARING:     m.bearing,
         PASS_HT:       strOrNull(m.passHt),     FLIGHT_DIR:  strOrNull(m.flightDir),

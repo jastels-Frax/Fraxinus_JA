@@ -82,8 +82,10 @@ export function syncToIndexedDB() {
     range:       m.range,
     bearing:     m.bearing,
     timestamp:   m.timestamp,
-    passHt:      m.passHt  || '',
-    flightDir:   m.flightDir || ''
+    passHt:      m.passHt    || '',
+    flightDir:   m.flightDir || '',
+    surveyLat:   m.surveyLat || '',
+    surveyLng:   m.surveyLng || ''
   }));
 }
 

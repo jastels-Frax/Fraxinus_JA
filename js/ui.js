@@ -13,7 +13,7 @@ import { syncToIndexedDB, syncMooseToIndexedDB, syncTurtleToIndexedDB } from './
 import {
   activeSurvey,
   projectID, pointID, observer, surveyType, surveyLength,
-  wind, windDir, tempC, precip, siteHabitat, setSurveyMetadata,
+  wind, windDir, tempC, precip, siteHabitat, surveyLat, surveyLng, setSurveyMetadata,
   mooseProjectID, mooseObserver, mooseTransectID, mooseSurveyDate,
   mooseStartTime, mooseEndTime, mooseVisibility, mooseSnowCover,
   mooseTempC, mooseWindSpeed, mooseNotes, setMooseMetadata,
@@ -51,6 +51,12 @@ export function openSurveyModal() {
 export function closeSurveyModal() {
   const survey = activeSurvey;
   if (survey === 'BBS') {
+    const newSurveyLat = _val('surveyLatInput');
+    const newSurveyLng = _val('surveyLngInput');
+    if (!newSurveyLat || !newSurveyLng) {
+      alert('Please capture a GPS location before saving the survey metadata.');
+      return;
+    }
     setSurveyMetadata({
       projectID:   _val('projectIDInput'),
       observer:    _val('observerInput'),
@@ -61,7 +67,9 @@ export function closeSurveyModal() {
       windDir:     _val('windDirInput'),
       tempC:       _val('tempCInput'),
       precip:      _val('precipInput'),
-      siteHabitat: _val('siteHabitatInput')
+      siteHabitat: _val('siteHabitatInput'),
+      surveyLat:   newSurveyLat,
+      surveyLng:   newSurveyLng
     });
   } else if (survey === 'MOOSE') {
     const snap = {
@@ -121,6 +129,13 @@ export function injectSurveyModal() {
         <input type="text" id="observerInput" />
         <label>Survey Point ID:</label>
         <input type="text" id="pointIDInput" />
+        <label>Survey Location: <span style="color:red;">*</span></label>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <input type="text" id="surveyLocationDisplay" readonly placeholder="No GPS fix yet…" style="flex:1;" />
+          <button type="button" id="getSurveyGPSBtn" onclick="getSurveyGPS()" style="background:#333333; border:1px solid #d6d6d6; color:#ffffff; border-radius:8px; padding:5px 10px;">Get GPS</button>
+        </div>
+        <input type="hidden" id="surveyLatInput" />
+        <input type="hidden" id="surveyLngInput" />
         <label>Survey Length (min):</label>
         <input type="number" id="surveyLengthInput" />
         <label>Wind Speed:</label>
@@ -233,6 +248,11 @@ function prefillSurveyModal() {
     _setVal('tempCInput',       tempC);
     _setVal('precipInput',      precip);
     _setVal('siteHabitatInput', siteHabitat);
+    if (surveyLat && surveyLng) {
+      _setVal('surveyLatInput',        surveyLat);
+      _setVal('surveyLngInput',        surveyLng);
+      _setVal('surveyLocationDisplay', `${parseFloat(surveyLat).toFixed(6)}, ${parseFloat(surveyLng).toFixed(6)}`);
+    }
   } else if (survey === 'MOOSE') {
     _setVal('mooseProjectIDInput',    mooseProjectID);
     _setVal('mooseObserverInput',     mooseObserver);
@@ -556,6 +576,31 @@ export function initTimerBindings() {
   if (resetBtn) resetBtn.addEventListener('click', resetSurveyTimer);
   resetSurveyTimer();
 }
+
+// ─── BBS Survey GPS Capture ───────────────────────────────────────────────
+window.getSurveyGPS = function () {
+  if (!navigator.geolocation) {
+    alert('Geolocation is not supported by this browser.');
+    return;
+  }
+  const btn = document.getElementById('getSurveyGPSBtn');
+  if (btn) btn.textContent = 'Locating…';
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = pos.coords.latitude.toFixed(6);
+      const lng = pos.coords.longitude.toFixed(6);
+      _setVal('surveyLatInput',        lat);
+      _setVal('surveyLngInput',        lng);
+      _setVal('surveyLocationDisplay', `${lat}, ${lng}`);
+      if (btn) btn.textContent = 'Get GPS';
+    },
+    err => {
+      alert('GPS error: ' + err.message);
+      if (btn) btn.textContent = 'Get GPS';
+    },
+    { enableHighAccuracy: true, timeout: 15000 }
+  );
+};
 
 // ─── Global Bindings ──────────────────────────────────────────────────────
 window.closeSurveyModal      = closeSurveyModal;

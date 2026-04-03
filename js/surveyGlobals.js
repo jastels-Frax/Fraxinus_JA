@@ -15,7 +15,8 @@ export function setCurrentSessionId(id) { currentSessionId = id; }
 // ─── Metadata snapshot / restore helpers ──────────────────────────────────
 export function getMetadataSnapshot() {
   if (activeSurvey === 'BBS') return {
-    projectID, pointID, observer, surveyLength, wind, windDir, tempC, precip, siteHabitat
+    projectID, pointID, observer, surveyLength, wind, windDir, tempC, precip, siteHabitat,
+    surveyLat, surveyLng
   };
   if (activeSurvey === 'MOOSE') return {
     mooseProjectID, mooseObserver, mooseTransectID, mooseSurveyDate,
@@ -67,6 +68,8 @@ export let windDir      = localStorage.getItem('windDir')      || '';
 export let tempC        = localStorage.getItem('tempC')        || '';
 export let precip       = localStorage.getItem('precip')       || '';
 export let siteHabitat  = localStorage.getItem('siteHabitat')  || '';
+export let surveyLat    = localStorage.getItem('surveyLat')    || '';
+export let surveyLng    = localStorage.getItem('surveyLng')    || '';
 
 export function setSurveyMetadata(data) {
   projectID    = data.projectID    || '';
@@ -79,6 +82,8 @@ export function setSurveyMetadata(data) {
   tempC        = data.tempC        || '';
   precip       = data.precip       || '';
   siteHabitat  = data.siteHabitat  || '';
+  surveyLat    = data.surveyLat    || '';
+  surveyLng    = data.surveyLng    || '';
   localStorage.setItem('projectID',    projectID);
   localStorage.setItem('pointID',      pointID);
   localStorage.setItem('observer',     observer);
@@ -89,6 +94,8 @@ export function setSurveyMetadata(data) {
   localStorage.setItem('tempC',        tempC);
   localStorage.setItem('precip',       precip);
   localStorage.setItem('siteHabitat',  siteHabitat);
+  localStorage.setItem('surveyLat',    surveyLat);
+  localStorage.setItem('surveyLng',    surveyLng);
 }
 
 // ─── Moose Metadata ────────────────────────────────────────────────────────

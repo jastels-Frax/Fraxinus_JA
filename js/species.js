@@ -7,7 +7,8 @@ import { closeModal, currentLatLng } from './modal.js';
 import { map, observerLocation } from './map.js';
 import {
   projectID, pointID, observer, surveyType,
-  surveyLength, wind, windDir, tempC, precip, siteHabitat
+  surveyLength, wind, windDir, tempC, precip, siteHabitat,
+  surveyLat, surveyLng
 } from './surveyGlobals.js';
 
 // ─── Species Search Autocomplete ──────────────────────────────────────────
@@ -96,6 +97,7 @@ export function saveSpeciesObservation() {
     code: species.code, name: species.name, soci: species.soci,
     latlng, observer, pointID, projectID, surveyType,
     surveyLength, wind, windDir, tempC, precip, siteHabitat,
+    surveyLat, surveyLng,
     count, breeding, note, passHt, flightDir,
     marker, label,
     range: Math.round(dist), bearing: Math.round(angle),
