@@ -375,7 +375,9 @@ function _renderMooseTable(drawer) {
         <table>
           <thead><tr>
             <th>Project ID</th><th>Transect ID</th><th>Observer</th>
-            <th>Survey Date</th><th>Species</th><th>Obs. Type</th>
+            <th>Survey Date</th><th>Start Time</th><th>End Time</th>
+            <th>Visibility</th><th>Snow Cover</th><th>Temp °C</th>
+            <th>Wind Speed</th><th>Species</th><th>Obs. Type</th>
             <th>Habitat</th><th>Photo Ref</th><th>Note</th>
             <th>Timestamp</th><th>Actions</th>
           </tr></thead>
@@ -389,6 +391,9 @@ function _renderMooseTable(drawer) {
     tr.innerHTML = `
       <td>${obs.projectID||''}</td><td>${obs.transectID||''}</td>
       <td>${obs.observer||''}</td><td>${obs.surveyDate||''}</td>
+      <td>${obs.startTime||''}</td><td>${obs.endTime||''}</td>
+      <td>${obs.visibility||''}</td><td>${obs.snowCover||''}</td>
+      <td>${obs.tempC||''}</td><td>${obs.windSpeed||''}</td>
       <td>${obs.species||''}</td><td>${obs.obsType||''}</td>
       <td>${obs.habitat||''}</td><td>${obs.photoRef||''}</td>
       <td>${obs.note||''}</td><td>${obs.timestamp||''}</td>
@@ -418,11 +423,12 @@ function _renderTurtleTable(drawer) {
         <table>
           <thead><tr>
             <th>Project ID</th><th>Site Name</th><th>Observer</th>
-            <th>Survey Date</th><th>Obs. Type</th><th>Activity</th>
-            <th>Habitat</th><th>Sex</th><th>Age</th>
-            <th>Carapace (mm)</th><th>Condition</th><th>Basking</th>
-            <th>Substrate</th><th>Photo ID</th><th>Note</th>
-            <th>Timestamp</th><th>Actions</th>
+            <th>Survey Date</th><th>Start Time</th><th>End Time</th>
+            <th>Water Temp °C</th><th>Air Temp °C</th>
+            <th>Water Level</th><th>Weather</th>
+            <th>Species</th><th>Sex</th><th>Age Class</th>
+            <th>Activity</th><th>Habitat</th><th>Photo ID</th>
+            <th>Note</th><th>Timestamp</th><th>Actions</th>
           </tr></thead>
           <tbody id="obsTableBody"></tbody>
         </table>
@@ -434,11 +440,12 @@ function _renderTurtleTable(drawer) {
     tr.innerHTML = `
       <td>${obs.projectID||''}</td><td>${obs.siteName||''}</td>
       <td>${obs.observer||''}</td><td>${obs.surveyDate||''}</td>
-      <td>${obs.obsType||''}</td><td>${obs.activity||''}</td>
-      <td>${obs.habitat||''}</td><td>${obs.sex||''}</td>
-      <td>${obs.ageClass||''}</td><td>${obs.carapaceLength||''}</td>
-      <td>${obs.condition||''}</td><td>${obs.basking||''}</td>
-      <td>${obs.substrate||''}</td><td>${obs.photoID||''}</td>
+      <td>${obs.startTime||''}</td><td>${obs.endTime||''}</td>
+      <td>${obs.waterTemp||''}</td><td>${obs.airTemp||''}</td>
+      <td>${obs.waterLevel||''}</td><td>${obs.weather||''}</td>
+      <td>${obs.species||''}</td><td>${obs.sex||''}</td>
+      <td>${obs.ageClass||''}</td><td>${obs.activity||''}</td>
+      <td>${obs.habitat||''}</td><td>${obs.photoID||''}</td>
       <td>${obs.note||''}</td><td>${obs.timestamp||''}</td>
       <td>
         <button onclick="zoomToTurtleMarker(${i})">🔍</button>
@@ -467,8 +474,9 @@ function _appendHabitatSection(drawer) {
     <div style="overflow-x:auto;">
       <table>
         <thead><tr>
-          <th>Survey Type</th><th>Observer</th><th>Survey ID</th>
-          <th>Feature Type</th><th>Criteria Met</th>
+          <th>Survey Type</th><th>Project ID</th><th>Survey ID</th>
+          <th>Observer</th><th>Feature Type</th><th>Criteria Met</th>
+          <th>Condition</th><th>Photo Ref</th>
           <th>Note</th><th>Timestamp</th><th>Actions</th>
         </tr></thead>
         <tbody id="habitatTableBody"></tbody>
@@ -481,10 +489,13 @@ function _appendHabitatSection(drawer) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${obs.surveyType  ||''}</td>
-      <td>${obs.observer    ||''}</td>
+      <td>${obs.projectID   ||''}</td>
       <td>${sid}</td>
+      <td>${obs.observer    ||''}</td>
       <td>${obs.featureType ||''}</td>
       <td>${(obs.criteria||[]).join(', ')||''}</td>
+      <td>${obs.condition   ||''}</td>
+      <td>${obs.photoRef    ||''}</td>
       <td>${obs.note        ||''}</td>
       <td>${obs.timestamp   ||''}</td>
       <td>
