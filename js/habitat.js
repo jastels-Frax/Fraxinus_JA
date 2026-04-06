@@ -298,9 +298,11 @@ export function saveHabitatObservation() {
   }).addTo(map);
 
   const obsRecord = {
-    surveyType: survey,
+    surveyType: G.activeSurvey,
     ..._getActiveMeta(),
     featureType, criteria,
+    condition: '',
+    size: '',
     photoRef, note,
     latlng, timestamp, marker, label
   };

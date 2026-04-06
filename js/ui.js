@@ -474,7 +474,7 @@ function _appendHabitatSection(drawer) {
     <div style="overflow-x:auto;">
       <table>
         <thead><tr>
-          <th>Survey Type</th><th>Project ID</th><th>Point ID</th>
+          <th>Survey Type</th><th>Project ID</th><th>Survey ID</th>
           <th>Observer</th><th>Survey Length</th><th>Wind</th>
           <th>Wind Dir</th><th>Temp °C</th><th>Precip</th>
           <th>Site Habitat</th><th>Survey Location</th>
