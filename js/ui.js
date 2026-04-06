@@ -474,8 +474,11 @@ function _appendHabitatSection(drawer) {
     <div style="overflow-x:auto;">
       <table>
         <thead><tr>
-          <th>Survey Type</th><th>Project ID</th><th>Survey ID</th>
-          <th>Observer</th><th>Feature Type</th><th>Criteria Met</th>
+          <th>Survey Type</th><th>Project ID</th><th>Point ID</th>
+          <th>Observer</th><th>Survey Length</th><th>Wind</th>
+          <th>Wind Dir</th><th>Temp °C</th><th>Precip</th>
+          <th>Site Habitat</th><th>Survey Location</th>
+          <th>Feature Type</th><th>Criteria Met</th>
           <th>Condition</th><th>Photo Ref</th>
           <th>Note</th><th>Timestamp</th><th>Actions</th>
         </tr></thead>
@@ -488,19 +491,28 @@ function _appendHabitatSection(drawer) {
     const sid = obs.pointID || obs.transectID || obs.siteName || '';
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${obs.surveyType  ||''}</td>
-      <td>${obs.projectID   ||''}</td>
-      <td>${sid}</td>
-      <td>${obs.observer    ||''}</td>
-      <td>${obs.featureType ||''}</td>
-      <td>${(obs.criteria||[]).join(', ')||''}</td>
-      <td>${obs.condition   ||''}</td>
-      <td>${obs.photoRef    ||''}</td>
-      <td>${obs.note        ||''}</td>
-      <td>${obs.timestamp   ||''}</td>
+      <td>${obs.surveyType   ||''}</td>
+      <td>${obs.projectID    ||''}</td>
+      <td>${obs.pointID || obs.transectID || obs.siteName ||''}</td>
+      <td>${obs.observer     ||''}</td>
+      <td>${obs.surveyLength ||''}</td>
+      <td>${obs.wind         ||''}</td>
+      <td>${obs.windDir      ||''}</td>
+      <td>${obs.tempC        ||''}</td>
+      <td>${obs.precip       ||''}</td>
+      <td>${obs.siteHabitat  ||''}</td>
+      <td>${obs.surveyLat && obs.surveyLng
+        ? parseFloat(obs.surveyLat).toFixed(4) + ', ' + parseFloat(obs.surveyLng).toFixed(4)
+        : ''}</td>
+      <td>${obs.featureType  ||''}</td>
+      <td>${(obs.criteria    ||[]).join(', ')||''}</td>
+      <td>${obs.condition    ||''}</td>
+      <td>${obs.photoRef     ||''}</td>
+      <td>${obs.note         ||''}</td>
+      <td>${obs.timestamp    ||''}</td>
       <td>
-        <button onclick="zoomToHabitatMarker(${i})">🔍</button>
-        <button onclick="deleteHabitatMarker(${i})" style="color:red;">❌</button>
+        <button onclick="window.zoomToHabitatMarker(${i})">🔍</button>
+        <button onclick="window.deleteHabitatMarker(${i})" style="color:red;">❌</button>
       </td>`;
     tbody.appendChild(tr);
   });
