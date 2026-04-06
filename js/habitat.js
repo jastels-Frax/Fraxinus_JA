@@ -202,6 +202,49 @@ window.habitatFeatureTypeChange = function () {
 };
 
 // ─── Save Observation ─────────────────────────────────────────────────────
+function _getActiveMeta() {
+  const t = G.activeSurvey;
+  if (t === 'BBS') return {
+    projectID:        G.projectID,
+    pointID:          G.pointID,
+    observer:         G.observer,
+    surveyType_label: G.surveyType,
+    surveyLength:     G.surveyLength,
+    wind:             G.wind,
+    windDir:          G.windDir,
+    tempC:            G.tempC,
+    precip:           G.precip,
+    siteHabitat:      G.siteHabitat,
+    surveyLat:        G.surveyLat,
+    surveyLng:        G.surveyLng
+  };
+  if (t === 'MOOSE') return {
+    projectID:  G.mooseProjectID,
+    transectID: G.mooseTransectID,
+    observer:   G.mooseObserver,
+    surveyDate: G.mooseSurveyDate,
+    startTime:  G.mooseStartTime,
+    endTime:    G.mooseEndTime,
+    visibility: G.mooseVisibility,
+    snowCover:  G.mooseSnowCover,
+    tempC:      G.mooseTempC,
+    windSpeed:  G.mooseWindSpeed
+  };
+  if (t === 'TURTLE') return {
+    projectID:  G.turtleProjectID,
+    siteName:   G.turtleSiteName,
+    observer:   G.turtleObserver,
+    surveyDate: G.turtleSurveyDate,
+    startTime:  G.turtleStartTime,
+    endTime:    G.turtleEndTime,
+    waterTemp:  G.turtleWaterTemp,
+    airTemp:    G.turtleAirTemp,
+    waterLevel: G.turtleWaterLevel,
+    weather:    G.turtleWeather
+  };
+  return {};
+}
+
 export function saveHabitatObservation() {
   const sel         = document.getElementById('habitatFeatureTypeInput');
   const featureType = sel?.value === 'Other'
@@ -255,7 +298,9 @@ export function saveHabitatObservation() {
   }).addTo(map);
 
   const obsRecord = {
-    surveyType: survey, featureType, criteria,
+    surveyType: survey,
+    ..._getActiveMeta(),
+    featureType, criteria,
     photoRef, note,
     latlng, timestamp, marker, label
   };

@@ -322,7 +322,8 @@ function _renderBBSTable(drawer) {
             <th>Project ID</th><th>Point ID</th><th>Observer</th>
             <th>Survey Type</th><th>Survey Length</th><th>Wind</th>
             <th>Wind Dir</th><th>Temp °C</th><th>Precip</th>
-            <th>Site Habitat</th><th>Species</th><th>Count</th>
+            <th>Site Habitat</th><th>Survey Location</th>
+            <th>Species</th><th>Count</th>
             <th>Range</th><th>Bearing</th><th>Pass Ht</th>
             <th>Flight Dir</th><th>Note</th><th>Timestamp</th>
             <th>Breeding</th><th>Actions</th>
@@ -340,6 +341,9 @@ function _renderBBSTable(drawer) {
       <td>${obs.surveyLength||''}</td><td>${obs.wind||''}</td>
       <td>${obs.windDir||''}</td><td>${obs.tempC||''}</td>
       <td>${obs.precip||''}</td><td>${obs.siteHabitat||''}</td>
+      <td>${obs.surveyLat && obs.surveyLng
+        ? parseFloat(obs.surveyLat).toFixed(4) + ', ' + parseFloat(obs.surveyLng).toFixed(4)
+        : ''}</td>
       <td>${obs.code||''}</td><td>${obs.count||''}</td>
       <td>${obs.range||''}</td><td>${obs.bearing||''}</td>
       <td>${obs.passHt||''}</td><td>${obs.flightDir||''}</td>
@@ -463,9 +467,9 @@ function _appendHabitatSection(drawer) {
     <div style="overflow-x:auto;">
       <table>
         <thead><tr>
-          <th>Feature Type</th><th>Criteria Met</th><th>Condition</th>
-          <th>Size/Extent</th><th>Photo Ref</th><th>Note</th>
-          <th>Timestamp</th><th>Actions</th>
+          <th>Survey Type</th><th>Observer</th><th>Survey ID</th>
+          <th>Feature Type</th><th>Criteria Met</th>
+          <th>Note</th><th>Timestamp</th><th>Actions</th>
         </tr></thead>
         <tbody id="habitatTableBody"></tbody>
       </table>
@@ -473,15 +477,16 @@ function _appendHabitatSection(drawer) {
   drawer.appendChild(section);
   const tbody = section.querySelector('#habitatTableBody');
   habitatObservations.forEach((obs, i) => {
+    const sid = obs.pointID || obs.transectID || obs.siteName || '';
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${obs.featureType||''}</td>
+      <td>${obs.surveyType  ||''}</td>
+      <td>${obs.observer    ||''}</td>
+      <td>${sid}</td>
+      <td>${obs.featureType ||''}</td>
       <td>${(obs.criteria||[]).join(', ')||''}</td>
-      <td>${obs.condition||''}</td>
-      <td>${obs.size||''}</td>
-      <td>${obs.photoRef||''}</td>
-      <td>${obs.note||''}</td>
-      <td>${obs.timestamp||''}</td>
+      <td>${obs.note        ||''}</td>
+      <td>${obs.timestamp   ||''}</td>
       <td>
         <button onclick="zoomToHabitatMarker(${i})">🔍</button>
         <button onclick="deleteHabitatMarker(${i})" style="color:red;">❌</button>

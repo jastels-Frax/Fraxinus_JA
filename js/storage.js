@@ -242,17 +242,16 @@ export async function loadTurtleObservations() {
 // ─── Habitat Observations ─────────────────────────────────────────────────
 export function syncHabitatToIndexedDB() {
   if (!db) { openDatabase().then(() => syncHabitatToIndexedDB()); return; }
-  syncStore('habitatObservations', habitatObservations, o => ({
-    surveyType:  o.surveyType,
-    featureType: o.featureType,
-    criteria:    o.criteria     || [],
-    condition:   o.condition    || '',
-    size:        o.size         || '',
-    photoRef:    o.photoRef     || '',
-    note:        o.note         || '',
-    latlng:      { lat: o.latlng.lat, lng: o.latlng.lng },
-    timestamp:   o.timestamp
-  }));
+  syncStore('habitatObservations', habitatObservations, o => {
+    const record = {};
+    for (const [k, v] of Object.entries(o)) {
+      if (k === 'marker' || k === 'label') continue;
+      if (v && typeof v === 'object' && !Array.isArray(v) &&
+          ('_leaflet_id' in v || '_events' in v)) continue;
+      record[k] = v;
+    }
+    return record;
+  });
 }
 
 export async function loadHabitatObservations() {

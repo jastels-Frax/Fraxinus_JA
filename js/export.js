@@ -379,16 +379,60 @@ ${pmarks}
 export function exportHabitatCSV() {
   const date    = todayString();
   const headers = [
-    'SURVEY_TYPE','FEATURE_TYPE','CRITERIA_MET','CONDITION',
-    'SIZE_EXTENT','PHOTO_REF','LAT','LNG','NOTE','TIMESTAMP'
+    'SURVEY_TYPE','FEATURE_TYPE','CRITERIA_MET',
+    'CONDITION','SIZE_EXTENT','PHOTO_REF',
+    'PROJECT_ID','OBSERVER',
+    // BBS-specific
+    'POINT_ID','SURVEY_LENGTH','WIND','WIND_DIR',
+    'TEMP_C','PRECIP','SITE_HABITAT','SURVEY_LAT','SURVEY_LNG',
+    // Moose-specific
+    'TRANSECT_ID','SURVEY_DATE','SURVEY_START','SURVEY_END',
+    'VISIBILITY','SNOW_COVER','WIND_SPEED',
+    // Turtle-specific
+    'SITE_NAME','WATER_TEMP_C','AIR_TEMP_C',
+    'WATER_LEVEL','WEATHER',
+    // Common
+    'LAT','LNG','NOTE','TIMESTAMP'
   ];
-  const rows = [headers, ...habitatObservations.map(o => [
-    o.surveyType, o.featureType,
-    (o.criteria || []).join(' | '),
-    o.condition, o.size, o.photoRef,
-    o.latlng?.lat ?? '', o.latlng?.lng ?? '',
-    o.note, o.timestamp
-  ])];
+  const rows = [headers, ...habitatObservations.map(o => {
+    const loc     = getLoc(o);
+    const isBBS   = o.surveyType === 'BBS';
+    const isMoose = o.surveyType === 'MOOSE';
+    const isTurtle= o.surveyType === 'TURTLE';
+    return [
+      o.surveyType, o.featureType,
+      (o.criteria || []).join(' | '),
+      o.condition || '', o.size || '', o.photoRef || '',
+      o.projectID  || '', o.observer || '',
+      // BBS
+      isBBS ? (o.pointID      || '') : '',
+      isBBS ? (o.surveyLength || '') : '',
+      isBBS ? (o.wind         || '') : '',
+      isBBS ? (o.windDir      || '') : '',
+      isBBS ? (o.tempC        || '') : '',
+      isBBS ? (o.precip       || '') : '',
+      isBBS ? (o.siteHabitat  || '') : '',
+      isBBS ? (o.surveyLat    || '') : '',
+      isBBS ? (o.surveyLng    || '') : '',
+      // Moose
+      isMoose ? (o.transectID || '') : '',
+      (isMoose || isTurtle) ? (o.surveyDate || '') : '',
+      (isMoose || isTurtle) ? (o.surveyDate && o.startTime ? `${o.surveyDate}T${o.startTime}` : '') : '',
+      (isMoose || isTurtle) ? (o.surveyDate && o.endTime   ? `${o.surveyDate}T${o.endTime}`   : '') : '',
+      isMoose ? (o.visibility || '') : '',
+      isMoose ? (o.snowCover  || '') : '',
+      isMoose ? (o.windSpeed  || '') : '',
+      // Turtle
+      isTurtle ? (o.siteName   || '') : '',
+      isTurtle ? (o.waterTemp  || '') : '',
+      isTurtle ? (o.airTemp    || '') : '',
+      isTurtle ? (o.waterLevel || '') : '',
+      isTurtle ? (o.weather    || '') : '',
+      // Common
+      loc ? loc.lat : '', loc ? loc.lng : '',
+      o.note || '', o.timestamp || ''
+    ];
+  })];
   const csv = rows.map(csvRow).join('\n');
   triggerDownload(csv, `HABITAT_OBS_${date}_csv.csv`, 'text/csv');
 }
@@ -407,7 +451,44 @@ export function buildHabitatGeoJSON() {
         SIZE_EXTENT:  strOrNull(o.size),
         PHOTO_REF:    strOrNull(o.photoRef),
         NOTE:         strOrNull(o.note),
-        TIMESTAMP:    strOrNull(o.timestamp)
+        TIMESTAMP:    strOrNull(o.timestamp),
+        ...(o.surveyType === 'BBS' ? {
+          PROJECT_ID:    strOrNull(o.projectID),
+          POINT_ID:      strOrNull(o.pointID),
+          OBSERVER:      strOrNull(o.observer),
+          SURVEY_LENGTH: numOrNull(o.surveyLength),
+          WIND:          strOrNull(o.wind),
+          WIND_DIR:      strOrNull(o.windDir),
+          TEMP_C:        numOrNull(o.tempC),
+          PRECIP:        strOrNull(o.precip),
+          SITE_HABITAT:  strOrNull(o.siteHabitat),
+          SURVEY_LAT:    numOrNull(o.surveyLat),
+          SURVEY_LNG:    numOrNull(o.surveyLng)
+        } : {}),
+        ...(o.surveyType === 'MOOSE' ? {
+          PROJECT_ID:   strOrNull(o.projectID),
+          TRANSECT_ID:  strOrNull(o.transectID),
+          OBSERVER:     strOrNull(o.observer),
+          SURVEY_DATE:  strOrNull(o.surveyDate),
+          SURVEY_START: dateTimeOrNull(o.surveyDate, o.startTime),
+          SURVEY_END:   dateTimeOrNull(o.surveyDate, o.endTime),
+          VISIBILITY:   strOrNull(o.visibility),
+          SNOW_COVER:   numOrNull(o.snowCover),
+          TEMP_C:       numOrNull(o.tempC),
+          WIND_SPEED:   numOrNull(o.windSpeed)
+        } : {}),
+        ...(o.surveyType === 'TURTLE' ? {
+          PROJECT_ID:   strOrNull(o.projectID),
+          SITE_NAME:    strOrNull(o.siteName),
+          OBSERVER:     strOrNull(o.observer),
+          SURVEY_DATE:  strOrNull(o.surveyDate),
+          SURVEY_START: dateTimeOrNull(o.surveyDate, o.startTime),
+          SURVEY_END:   dateTimeOrNull(o.surveyDate, o.endTime),
+          WATER_TEMP_C: numOrNull(o.waterTemp),
+          AIR_TEMP_C:   numOrNull(o.airTemp),
+          WATER_LEVEL:  strOrNull(o.waterLevel),
+          WEATHER:      strOrNull(o.weather)
+        } : {})
       })
     };
   });
