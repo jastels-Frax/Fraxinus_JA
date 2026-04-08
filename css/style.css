@@ -27,6 +27,12 @@ html, body {
   font-size: 16px;
 }
 
+@media (max-width: 640px) {
+  html, body {
+    font-size: 18px;
+  }
+}
+
 body {
   touch-action: none;
 }
@@ -1135,11 +1141,11 @@ body {
 .toast {
   background: #2c2c2c;
   color: #f0f0f0;
-  padding: 10px 16px;
+  padding: 12px 18px;
   border-radius: 8px;
   border-left: 4px solid #3a3a3a;
-  font-size: 0.88rem;
-  max-width: 340px;
+  font-size: 0.95rem;
+  max-width: 380px;
   opacity: 0;
   transition: opacity 0.3s;
   pointer-events: auto;
@@ -1149,6 +1155,12 @@ body {
 
 .toast.show   { opacity: 1; }
 .toast-success { border-left-color: #2d6b2d; }
+.toast.toast-success {
+  padding: 14px 20px;
+  font-size: 1.05rem;
+  max-width: 400px;
+  border-left-width: 6px;
+}
 .toast-error   { border-left-color: #8b1a1a; }
 .toast-info    { border-left-color: #1a3a5a; }
 .toast a       { color: #7fc97f; }
