@@ -1,6 +1,12 @@
 // js/export.js — Multi-survey CSV / GeoJSON / KML export
 
 import { speciesMarkers, mooseObservations, turtleObservations, habitatObservations } from './storageData.js';
+import {
+  surveySubmittedAt, surveyResubmittedAt, setSurveyMetadata, getMetadataSnapshot,
+  mooseSubmittedAt, mooseResubmittedAt, setMooseMetadata,
+  turtleSubmittedAt, turtleResubmittedAt, setTurtleMetadata
+} from './surveyGlobals.js';
+import { syncToIndexedDB, syncMooseToIndexedDB, syncTurtleToIndexedDB, syncHabitatToIndexedDB } from './storage.js';
 
 // ─── Utilities ────────────────────────────────────────────────────────────
 function todayString() {
@@ -105,28 +111,96 @@ function getLoc(obs) {
   return null;
 }
 
+// ─── Submission Timestamp ─────────────────────────────────────────────────
+// Called at the top of every export/build function. On first offload sets
+// submittedAt; on subsequent offloads sets resubmittedAt. Stamps every
+// in-memory record for the survey type so the fields appear in all exports.
+export function stampOffload(type) {
+  const now = new Date().toLocaleString();
+  const snap = getMetadataSnapshot();
+
+  if (type === 'BBS') {
+    const isFirst = !surveySubmittedAt;
+    setSurveyMetadata({
+      ...snap,
+      surveySubmittedAt:   isFirst ? now : surveySubmittedAt,
+      surveyResubmittedAt: isFirst ? ''  : now
+    });
+    speciesMarkers.forEach(m => {
+      m.surveySubmittedAt   = isFirst ? now : m.surveySubmittedAt || now;
+      m.surveyResubmittedAt = isFirst ? ''  : now;
+    });
+    syncToIndexedDB();
+
+  } else if (type === 'MOOSE') {
+    const isFirst = !mooseSubmittedAt;
+    setMooseMetadata({
+      ...snap,
+      mooseSubmittedAt:   isFirst ? now : mooseSubmittedAt,
+      mooseResubmittedAt: isFirst ? ''  : now
+    });
+    mooseObservations.forEach(o => {
+      o.mooseSubmittedAt   = isFirst ? now : o.mooseSubmittedAt || now;
+      o.mooseResubmittedAt = isFirst ? ''  : now;
+    });
+    syncMooseToIndexedDB();
+
+  } else if (type === 'TURTLE') {
+    const isFirst = !turtleSubmittedAt;
+    setTurtleMetadata({
+      ...snap,
+      turtleSubmittedAt:   isFirst ? now : turtleSubmittedAt,
+      turtleResubmittedAt: isFirst ? ''  : now
+    });
+    turtleObservations.forEach(o => {
+      o.turtleSubmittedAt   = isFirst ? now : o.turtleSubmittedAt || now;
+      o.turtleResubmittedAt = isFirst ? ''  : now;
+    });
+    syncTurtleToIndexedDB();
+
+  } else if (type === 'HABITAT') {
+    // Stamp each habitat record individually using its own surveyType
+    habitatObservations.forEach(o => {
+      const key  = o.surveyType; // 'BBS' | 'MOOSE' | 'TURTLE'
+      const saKey = key === 'BBS' ? 'surveySubmittedAt'  : key === 'MOOSE' ? 'mooseSubmittedAt'  : 'turtleSubmittedAt';
+      const raKey = key === 'BBS' ? 'surveyResubmittedAt': key === 'MOOSE' ? 'mooseResubmittedAt': 'turtleResubmittedAt';
+      if (!o[saKey]) {
+        o[saKey] = now;
+        o[raKey] = '';
+      } else {
+        o[raKey] = now;
+      }
+    });
+    syncHabitatToIndexedDB();
+  }
+}
+
 // ─── BBS Exports ──────────────────────────────────────────────────────────
 export function exportSpeciesCSV() {
+  stampOffload('BBS');
   const date    = todayString();
   const headers = [
     'PROJECT_ID','POINT_ID','OBSERVER','SURVEY_TYPE','SURVEY_LENGTH',
     'WIND','WIND_DIR','TEMP_C','PRECIP','SITE_HABITAT',
     'SURVEY_LAT','SURVEY_LNG',
     'SPECIES','COUNT','RANGE','BEARING','PASS_HT','FLIGHT_DIR',
-    'NOTE','TIMESTAMP','BREEDING'
+    'NOTE','TIMESTAMP','BREEDING',
+    'SUBMITTED_AT','RESUBMITTED_AT'
   ];
   const rows = [headers, ...speciesMarkers.map(m => [
     m.projectID, m.pointID, m.observer, m.surveyType, m.surveyLength,
     m.wind, m.windDir, m.tempC, m.precip, m.siteHabitat,
     m.surveyLat, m.surveyLng,
     m.code, m.count, m.range, m.bearing, m.passHt, m.flightDir,
-    m.note, m.timestamp, m.breeding
+    m.note, m.timestamp, m.breeding,
+    m.surveySubmittedAt || '', m.surveyResubmittedAt || ''
   ])];
   const csv = rows.map(csvRow).join('\n');
   triggerDownload(csv, `BBS_OBS_${date}_csv.csv`, 'text/csv');
 }
 
 export function buildSpeciesGeoJSON() {
+  stampOffload('BBS');
   console.log('[buildSpeciesGeoJSON] total obs:', speciesMarkers.length);
   speciesMarkers.slice(0, 3).forEach((m, i) => {
     const loc = getLoc(m);
@@ -148,8 +222,10 @@ export function buildSpeciesGeoJSON() {
         SPECIES:       strOrNull(m.code),       COUNT:       m.count,
         RANGE:         m.range,                 BEARING:     m.bearing,
         PASS_HT:       strOrNull(m.passHt),     FLIGHT_DIR:  strOrNull(m.flightDir),
-        NOTE:          strOrNull(m.note),       TIMESTAMP:   strOrNull(m.timestamp),
-        BREEDING:      strOrNull(m.breeding)
+        NOTE:             strOrNull(m.note),       TIMESTAMP:        strOrNull(m.timestamp),
+        BREEDING:         strOrNull(m.breeding),
+        SUBMITTED_AT:     strOrNull(m.surveySubmittedAt),
+        RESUBMITTED_AT:   strOrNull(m.surveyResubmittedAt)
       })
     };
   });
@@ -161,6 +237,7 @@ export function exportSpeciesGeoJSON() {
 }
 
 export function exportSpeciesKML() {
+  stampOffload('BBS');
   const date   = todayString();
   const marks  = speciesMarkers.filter(m => getLoc(m));
   const pmarks = marks.map(m => {
@@ -185,7 +262,9 @@ export function exportSpeciesKML() {
 <b>Pass Ht:</b> ${m.passHt || ''}<br/>
 <b>Flight Dir:</b> ${m.flightDir || ''}<br/>
 <b>Note:</b> ${m.note || ''}<br/>
-<b>Timestamp:</b> ${m.timestamp || ''}
+<b>Timestamp:</b> ${m.timestamp || ''}<br/>
+<b>Submitted:</b> ${m.surveySubmittedAt || ''}<br/>
+<b>Resubmitted:</b> ${m.surveyResubmittedAt || ''}
     ]]></description>
     <Point><coordinates>${lng},${lat},0</coordinates></Point>
   </Placemark>`;
@@ -201,25 +280,29 @@ ${pmarks}
 
 // ─── Moose Exports ────────────────────────────────────────────────────────
 export function exportMooseCSV() {
+  stampOffload('MOOSE');
   const date    = todayString();
   const headers = [
     'PROJECT_ID','TRANSECT_ID','OBSERVER','SURVEY_DATE','SURVEY_START','SURVEY_END',
     'VISIBILITY','SNOW_COVER','TEMP_C','WIND_SPEED',
     'SPECIES','OBSERVATION_TYPE','HABITAT','PHOTO_REF',
-    'LAT','LNG','NOTE','OBS_TIMESTAMP'
+    'LAT','LNG','NOTE','OBS_TIMESTAMP',
+    'SUBMITTED_AT','RESUBMITTED_AT'
   ];
   const rows = [headers, ...mooseObservations.map(o => [
     o.projectID, o.transectID, o.observer, o.surveyDate, o.startTime, o.endTime,
     o.visibility, o.snowCover, o.tempC, o.windSpeed,
     o.species, o.obsType, o.habitat, o.photoRef,
     o.latlng?.lat ?? '', o.latlng?.lng ?? '',
-    o.note, o.timestamp
+    o.note, o.timestamp,
+    o.mooseSubmittedAt || '', o.mooseResubmittedAt || ''
   ])];
   const csv = rows.map(csvRow).join('\n');
   triggerDownload(csv, `MOOSE_OBS_${date}_csv.csv`, 'text/csv');
 }
 
 export function buildMooseGeoJSON() {
+  stampOffload('MOOSE');
   console.log('[buildMooseGeoJSON] total obs:', mooseObservations.length);
   mooseObservations.forEach((o, i) => {
     const loc = getLoc(o);
@@ -240,7 +323,9 @@ export function buildMooseGeoJSON() {
         TEMP_C:           numOrNull(o.tempC),      WIND_SPEED:       numOrNull(o.windSpeed),
         SPECIES:          strOrNull(o.species),    OBSERVATION_TYPE: strOrNull(o.obsType),
         HABITAT:          strOrNull(o.habitat),    PHOTO_REF:        strOrNull(o.photoRef),
-        NOTE:             strOrNull(o.note),       OBS_TIMESTAMP:    strOrNull(o.timestamp)
+        NOTE:             strOrNull(o.note),       OBS_TIMESTAMP:    strOrNull(o.timestamp),
+        SUBMITTED_AT:     strOrNull(o.mooseSubmittedAt),
+        RESUBMITTED_AT:   strOrNull(o.mooseResubmittedAt)
       })
     };
   });
@@ -252,6 +337,7 @@ export function exportMooseGeoJSON() {
 }
 
 export function exportMooseKML() {
+  stampOffload('MOOSE');
   const date  = todayString();
   const marks = mooseObservations.filter(o => getLoc(o));
   const pmarks = marks.map(o => {
@@ -270,7 +356,9 @@ export function exportMooseKML() {
 <b>Temp:</b> ${o.tempC || ''}<br/>
 <b>Photo Ref:</b> ${o.photoRef || ''}<br/>
 <b>Note:</b> ${o.note || ''}<br/>
-<b>Timestamp:</b> ${o.timestamp || ''}
+<b>Timestamp:</b> ${o.timestamp || ''}<br/>
+<b>Submitted:</b> ${o.mooseSubmittedAt || ''}<br/>
+<b>Resubmitted:</b> ${o.mooseResubmittedAt || ''}
     ]]></description>
     <Point><coordinates>${lng},${lat},0</coordinates></Point>
   </Placemark>`;
@@ -286,12 +374,14 @@ ${pmarks}
 
 // ─── Turtle Exports ───────────────────────────────────────────────────────
 export function exportTurtleCSV() {
+  stampOffload('TURTLE');
   const date    = todayString();
   const headers = [
     'PROJECT_ID','SITE_NAME','OBSERVER','SURVEY_DATE','SURVEY_START','SURVEY_END',
     'WATER_TEMP_C','AIR_TEMP_C','WATER_LEVEL','WEATHER',
     'SPECIES','SEX','AGE_CLASS','ACTIVITY','HABITAT',
-    'PHOTO_ID','LAT','LNG','NOTE','OBS_TIMESTAMP'
+    'PHOTO_ID','LAT','LNG','NOTE','OBS_TIMESTAMP',
+    'SUBMITTED_AT','RESUBMITTED_AT'
   ];
   const rows = [headers, ...turtleObservations.map(o => [
     o.projectID, o.siteName, o.observer, o.surveyDate, o.startTime, o.endTime,
@@ -299,13 +389,15 @@ export function exportTurtleCSV() {
     o.species || '', o.sex, o.ageClass, o.activity, o.habitat,
     o.photoID,
     o.latlng?.lat ?? '', o.latlng?.lng ?? '',
-    o.note, o.timestamp
+    o.note, o.timestamp,
+    o.turtleSubmittedAt || '', o.turtleResubmittedAt || ''
   ])];
   const csv = rows.map(csvRow).join('\n');
   triggerDownload(csv, `TURTLE_OBS_${date}_csv.csv`, 'text/csv');
 }
 
 export function buildTurtleGeoJSON() {
+  stampOffload('TURTLE');
   console.log('[buildTurtleGeoJSON] total obs:', turtleObservations.length);
   turtleObservations.forEach((o, i) => {
     const loc = getLoc(o);
@@ -326,7 +418,9 @@ export function buildTurtleGeoJSON() {
         SPECIES:       strOrNull(o.species),    SEX:          strOrNull(o.sex),
         AGE_CLASS:     strOrNull(o.ageClass),   ACTIVITY:     strOrNull(o.activity),
         HABITAT:       strOrNull(o.habitat),    PHOTO_ID:     strOrNull(o.photoID),
-        NOTE:          strOrNull(o.note),       OBS_TIMESTAMP: strOrNull(o.timestamp)
+        NOTE:           strOrNull(o.note),       OBS_TIMESTAMP:  strOrNull(o.timestamp),
+        SUBMITTED_AT:   strOrNull(o.turtleSubmittedAt),
+        RESUBMITTED_AT: strOrNull(o.turtleResubmittedAt)
       })
     };
   });
@@ -338,6 +432,7 @@ export function exportTurtleGeoJSON() {
 }
 
 export function exportTurtleKML() {
+  stampOffload('TURTLE');
   const date  = todayString();
   const marks = turtleObservations.filter(o => getLoc(o));
   const pmarks = marks.map(o => {
@@ -361,7 +456,9 @@ export function exportTurtleKML() {
 <b>Water Level:</b> ${o.waterLevel || ''}<br/>
 <b>Weather:</b> ${o.weather || ''}<br/>
 <b>Note:</b> ${o.note || ''}<br/>
-<b>Timestamp:</b> ${o.timestamp || ''}
+<b>Timestamp:</b> ${o.timestamp || ''}<br/>
+<b>Submitted:</b> ${o.turtleSubmittedAt || ''}<br/>
+<b>Resubmitted:</b> ${o.turtleResubmittedAt || ''}
     ]]></description>
     <Point><coordinates>${lng},${lat},0</coordinates></Point>
   </Placemark>`;
@@ -377,6 +474,7 @@ ${pmarks}
 
 // ─── Habitat / Feature Exports ────────────────────────────────────────────
 export function exportHabitatCSV() {
+  stampOffload('HABITAT');
   const date    = todayString();
   const headers = [
     'SURVEY_TYPE','FEATURE_TYPE','CRITERIA_MET',
@@ -392,7 +490,7 @@ export function exportHabitatCSV() {
     'SITE_NAME','WATER_TEMP_C','AIR_TEMP_C',
     'WATER_LEVEL','WEATHER',
     // Common
-    'LAT','LNG','NOTE','TIMESTAMP'
+    'LAT','LNG','NOTE','TIMESTAMP','SUBMITTED_AT','RESUBMITTED_AT'
   ];
   const rows = [headers, ...habitatObservations.map(o => {
     const loc     = getLoc(o);
@@ -430,7 +528,10 @@ export function exportHabitatCSV() {
       isTurtle ? (o.weather    || '') : '',
       // Common
       loc ? loc.lat : '', loc ? loc.lng : '',
-      o.note || '', o.timestamp || ''
+      o.note || '', o.timestamp || '',
+      // Submission
+      (o.surveySubmittedAt || o.mooseSubmittedAt || o.turtleSubmittedAt || ''),
+      (o.surveyResubmittedAt || o.mooseResubmittedAt || o.turtleResubmittedAt || '')
     ];
   })];
   const csv = rows.map(csvRow).join('\n');
@@ -438,6 +539,7 @@ export function exportHabitatCSV() {
 }
 
 export function buildHabitatGeoJSON() {
+  stampOffload('HABITAT');
   const features = habitatObservations.filter(o => getLoc(o)).map(o => {
     const { lat, lng } = getLoc(o);
     return {
@@ -450,8 +552,10 @@ export function buildHabitatGeoJSON() {
         CONDITION:    strOrNull(o.condition),
         SIZE_EXTENT:  strOrNull(o.size),
         PHOTO_REF:    strOrNull(o.photoRef),
-        NOTE:         strOrNull(o.note),
-        TIMESTAMP:    strOrNull(o.timestamp),
+        NOTE:           strOrNull(o.note),
+        TIMESTAMP:      strOrNull(o.timestamp),
+        SUBMITTED_AT:   strOrNull(o.surveySubmittedAt || o.mooseSubmittedAt || o.turtleSubmittedAt),
+        RESUBMITTED_AT: strOrNull(o.surveyResubmittedAt || o.mooseResubmittedAt || o.turtleResubmittedAt),
         ...(o.surveyType === 'BBS' ? {
           PROJECT_ID:    strOrNull(o.projectID),
           POINT_ID:      strOrNull(o.pointID),
@@ -500,6 +604,7 @@ export function exportHabitatGeoJSON() {
 }
 
 export function exportHabitatKML() {
+  stampOffload('HABITAT');
   const date  = todayString();
   const marks = habitatObservations.filter(o => getLoc(o));
   const pmarks = marks.map(o => {
@@ -515,7 +620,9 @@ export function exportHabitatKML() {
 <b>Size/Extent:</b> ${o.size || ''}<br/>
 <b>Photo Ref:</b> ${o.photoRef || ''}<br/>
 <b>Note:</b> ${o.note || ''}<br/>
-<b>Timestamp:</b> ${o.timestamp || ''}
+<b>Timestamp:</b> ${o.timestamp || ''}<br/>
+<b>Submitted:</b> ${o.surveySubmittedAt || o.mooseSubmittedAt || o.turtleSubmittedAt || ''}<br/>
+<b>Resubmitted:</b> ${o.surveyResubmittedAt || o.mooseResubmittedAt || o.turtleResubmittedAt || ''}
     ]]></description>
     <Point><coordinates>${lng},${lat},0</coordinates></Point>
   </Placemark>`;

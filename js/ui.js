@@ -326,7 +326,7 @@ function _renderBBSTable(drawer) {
             <th>Species</th><th>Count</th>
             <th>Range</th><th>Bearing</th><th>Pass Ht</th>
             <th>Flight Dir</th><th>Note</th><th>Timestamp</th>
-            <th>Breeding</th><th>Actions</th>
+            <th>Breeding</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
           </tr></thead>
           <tbody id="obsTableBody"></tbody>
         </table>
@@ -349,6 +349,8 @@ function _renderBBSTable(drawer) {
       <td>${obs.passHt||''}</td><td>${obs.flightDir||''}</td>
       <td>${obs.note||''}</td><td>${obs.timestamp||''}</td>
       <td>${obs.breeding||''}</td>
+      <td>${obs.surveySubmittedAt||''}</td>
+      <td>${obs.surveyResubmittedAt||''}</td>
       <td>
         <button onclick="zoomToMarker(${i})">🔍</button>
         <button onclick="deleteMarker(${i})" style="color:red;">❌</button>
@@ -379,7 +381,7 @@ function _renderMooseTable(drawer) {
             <th>Visibility</th><th>Snow Cover</th><th>Temp °C</th>
             <th>Wind Speed</th><th>Species</th><th>Obs. Type</th>
             <th>Habitat</th><th>Photo Ref</th><th>Note</th>
-            <th>Timestamp</th><th>Actions</th>
+            <th>Timestamp</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
           </tr></thead>
           <tbody id="obsTableBody"></tbody>
         </table>
@@ -397,6 +399,8 @@ function _renderMooseTable(drawer) {
       <td>${obs.species||''}</td><td>${obs.obsType||''}</td>
       <td>${obs.habitat||''}</td><td>${obs.photoRef||''}</td>
       <td>${obs.note||''}</td><td>${obs.timestamp||''}</td>
+      <td>${obs.mooseSubmittedAt||''}</td>
+      <td>${obs.mooseResubmittedAt||''}</td>
       <td>
         <button onclick="zoomToMooseMarker(${i})">🔍</button>
         <button onclick="deleteMooseMarker(${i})" style="color:red;">❌</button>
@@ -428,7 +432,7 @@ function _renderTurtleTable(drawer) {
             <th>Water Level</th><th>Weather</th>
             <th>Species</th><th>Sex</th><th>Age Class</th>
             <th>Activity</th><th>Habitat</th><th>Photo ID</th>
-            <th>Note</th><th>Timestamp</th><th>Actions</th>
+            <th>Note</th><th>Timestamp</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
           </tr></thead>
           <tbody id="obsTableBody"></tbody>
         </table>
@@ -447,6 +451,8 @@ function _renderTurtleTable(drawer) {
       <td>${obs.ageClass||''}</td><td>${obs.activity||''}</td>
       <td>${obs.habitat||''}</td><td>${obs.photoID||''}</td>
       <td>${obs.note||''}</td><td>${obs.timestamp||''}</td>
+      <td>${obs.turtleSubmittedAt||''}</td>
+      <td>${obs.turtleResubmittedAt||''}</td>
       <td>
         <button onclick="zoomToTurtleMarker(${i})">🔍</button>
         <button onclick="deleteTurtleMarker(${i})" style="color:red;">❌</button>
@@ -468,7 +474,7 @@ function _appendHabitatSection(drawer, surveyType) {
       <th>Survey Length</th><th>Wind</th><th>Wind Dir</th><th>Temp °C</th>
       <th>Precip</th><th>Site Habitat</th><th>Survey Location</th>
       <th>Feature Type</th><th>Criteria Met</th><th>Condition</th>
-      <th>Photo Ref</th><th>Note</th><th>Timestamp</th><th>Actions</th>
+      <th>Photo Ref</th><th>Note</th><th>Timestamp</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
     </tr>`;
   } else if (surveyType === 'MOOSE') {
     theadHTML = `<tr>
@@ -476,7 +482,7 @@ function _appendHabitatSection(drawer, surveyType) {
       <th>Survey Date</th><th>Start Time</th><th>End Time</th>
       <th>Visibility</th><th>Snow Cover</th><th>Temp °C</th><th>Wind Speed</th>
       <th>Feature Type</th><th>Criteria Met</th><th>Condition</th>
-      <th>Photo Ref</th><th>Note</th><th>Timestamp</th><th>Actions</th>
+      <th>Photo Ref</th><th>Note</th><th>Timestamp</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
     </tr>`;
   } else {
     theadHTML = `<tr>
@@ -484,7 +490,7 @@ function _appendHabitatSection(drawer, surveyType) {
       <th>Survey Date</th><th>Start Time</th><th>End Time</th>
       <th>Water Temp °C</th><th>Air Temp °C</th><th>Water Level</th><th>Weather</th>
       <th>Feature Type</th><th>Criteria Met</th><th>Condition</th>
-      <th>Photo Ref</th><th>Note</th><th>Timestamp</th><th>Actions</th>
+      <th>Photo Ref</th><th>Note</th><th>Timestamp</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
     </tr>`;
   }
 
@@ -521,6 +527,8 @@ function _appendHabitatSection(drawer, surveyType) {
       <td>${obs.photoRef    ||''}</td>
       <td>${obs.note        ||''}</td>
       <td>${obs.timestamp   ||''}</td>
+      <td>${obs.surveySubmittedAt || obs.mooseSubmittedAt || obs.turtleSubmittedAt ||''}</td>
+      <td>${obs.surveyResubmittedAt || obs.mooseResubmittedAt || obs.turtleResubmittedAt ||''}</td>
       ${acts}`;
     if (surveyType === 'BBS') {
       tr.innerHTML = `

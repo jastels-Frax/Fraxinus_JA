@@ -84,8 +84,10 @@ export function syncToIndexedDB() {
     timestamp:   m.timestamp,
     passHt:      m.passHt    || '',
     flightDir:   m.flightDir || '',
-    surveyLat:   m.surveyLat || '',
-    surveyLng:   m.surveyLng || ''
+    surveyLat:           m.surveyLat           || '',
+    surveyLng:           m.surveyLng           || '',
+    surveySubmittedAt:   m.surveySubmittedAt   || '',
+    surveyResubmittedAt: m.surveyResubmittedAt || ''
   }));
 }
 
@@ -141,10 +143,12 @@ export function syncMooseToIndexedDB() {
     species:      o.species,
     obsType:      o.obsType,
     habitat:      o.habitat,
-    photoRef:     o.photoRef   || '',
-    note:         o.note       || '',
-    latlng:       { lat: o.latlng.lat, lng: o.latlng.lng },
-    timestamp:    o.timestamp
+    photoRef:           o.photoRef          || '',
+    note:               o.note              || '',
+    latlng:             { lat: o.latlng.lat, lng: o.latlng.lng },
+    timestamp:          o.timestamp,
+    mooseSubmittedAt:   o.mooseSubmittedAt   || '',
+    mooseResubmittedAt: o.mooseResubmittedAt || ''
   }));
 }
 
@@ -201,8 +205,10 @@ export function syncTurtleToIndexedDB() {
     habitat:    o.habitat  || '',
     photoID:    o.photoID  || '',
     note:       o.note     || '',
-    latlng:     { lat: o.latlng.lat, lng: o.latlng.lng },
-    timestamp:  o.timestamp
+    latlng:              { lat: o.latlng.lat, lng: o.latlng.lng },
+    timestamp:           o.timestamp,
+    turtleSubmittedAt:   o.turtleSubmittedAt   || '',
+    turtleResubmittedAt: o.turtleResubmittedAt || ''
   }));
 }
 
