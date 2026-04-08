@@ -86,6 +86,8 @@ export function syncToIndexedDB() {
     flightDir:   m.flightDir || '',
     surveyLat:           m.surveyLat           || '',
     surveyLng:           m.surveyLng           || '',
+    surveyStartTime:     m.surveyStartTime     || '',
+    surveyEndTime:       m.surveyEndTime       || '',
     surveySubmittedAt:   m.surveySubmittedAt   || '',
     surveyResubmittedAt: m.surveyResubmittedAt || ''
   }));

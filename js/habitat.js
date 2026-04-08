@@ -216,7 +216,9 @@ function _getActiveMeta() {
     precip:           G.precip,
     siteHabitat:      G.siteHabitat,
     surveyLat:        G.surveyLat,
-    surveyLng:        G.surveyLng
+    surveyLng:        G.surveyLng,
+    surveyStartTime:  G.surveyStartTime,
+    surveyEndTime:    G.surveyEndTime
   };
   if (t === 'MOOSE') return {
     projectID:  G.mooseProjectID,

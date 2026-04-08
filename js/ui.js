@@ -13,7 +13,8 @@ import { syncToIndexedDB, syncMooseToIndexedDB, syncTurtleToIndexedDB } from './
 import {
   activeSurvey,
   projectID, pointID, observer, surveyType, surveyLength,
-  wind, windDir, tempC, precip, siteHabitat, surveyLat, surveyLng, setSurveyMetadata,
+  wind, windDir, tempC, precip, siteHabitat, surveyLat, surveyLng,
+  surveyStartTime, surveyEndTime, setSurveyMetadata, getMetadataSnapshot,
   mooseProjectID, mooseObserver, mooseTransectID, mooseSurveyDate,
   mooseStartTime, mooseEndTime, mooseVisibility, mooseSnowCover,
   mooseTempC, mooseWindSpeed, mooseNotes, setMooseMetadata,
@@ -68,8 +69,10 @@ export function closeSurveyModal() {
       tempC:       _val('tempCInput'),
       precip:      _val('precipInput'),
       siteHabitat: _val('siteHabitatInput'),
-      surveyLat:   newSurveyLat,
-      surveyLng:   newSurveyLng
+      surveyLat:        newSurveyLat,
+      surveyLng:        newSurveyLng,
+      surveyStartTime:  surveyStartTime,
+      surveyEndTime:    surveyEndTime
     });
   } else if (survey === 'MOOSE') {
     const snap = {
@@ -138,6 +141,10 @@ export function injectSurveyModal() {
         <input type="hidden" id="surveyLngInput" />
         <label>Survey Length (min):</label>
         <input type="number" id="surveyLengthInput" />
+        <label>Start Time: <span style="font-size:0.8em; color:#888;">(auto-filled when timer starts)</span></label>
+        <input type="text" id="surveyStartTimeDisplay" readonly style="background:#1a1a1a; color:#aaa;" />
+        <label>End Time: <span style="font-size:0.8em; color:#888;">(auto-filled when timer ends)</span></label>
+        <input type="text" id="surveyEndTimeDisplay" readonly style="background:#1a1a1a; color:#aaa;" />
         <label>Wind Speed:</label>
         <input type="text" id="windInput" />
         <label>Wind Direction:</label>
@@ -253,6 +260,8 @@ function prefillSurveyModal() {
       _setVal('surveyLngInput',        surveyLng);
       _setVal('surveyLocationDisplay', `${parseFloat(surveyLat).toFixed(6)}, ${parseFloat(surveyLng).toFixed(6)}`);
     }
+    _setVal('surveyStartTimeDisplay', surveyStartTime);
+    _setVal('surveyEndTimeDisplay',   surveyEndTime);
   } else if (survey === 'MOOSE') {
     _setVal('mooseProjectIDInput',    mooseProjectID);
     _setVal('mooseObserverInput',     mooseObserver);
@@ -323,6 +332,7 @@ function _renderBBSTable(drawer) {
             <th>Survey Type</th><th>Survey Length</th><th>Wind</th>
             <th>Wind Dir</th><th>Temp °C</th><th>Precip</th>
             <th>Site Habitat</th><th>Survey Location</th>
+            <th>Start Time</th><th>End Time</th>
             <th>Species</th><th>Count</th>
             <th>Range</th><th>Bearing</th><th>Pass Ht</th>
             <th>Flight Dir</th><th>Note</th><th>Timestamp</th>
@@ -344,6 +354,7 @@ function _renderBBSTable(drawer) {
       <td>${obs.surveyLat && obs.surveyLng
         ? parseFloat(obs.surveyLat).toFixed(4) + ', ' + parseFloat(obs.surveyLng).toFixed(4)
         : ''}</td>
+      <td>${obs.surveyStartTime||''}</td><td>${obs.surveyEndTime||''}</td>
       <td>${obs.code||''}</td><td>${obs.count||''}</td>
       <td>${obs.range||''}</td><td>${obs.bearing||''}</td>
       <td>${obs.passHt||''}</td><td>${obs.flightDir||''}</td>
@@ -473,6 +484,7 @@ function _appendHabitatSection(drawer, surveyType) {
       <th>Survey Type</th><th>Project ID</th><th>Point ID</th><th>Observer</th>
       <th>Survey Length</th><th>Wind</th><th>Wind Dir</th><th>Temp °C</th>
       <th>Precip</th><th>Site Habitat</th><th>Survey Location</th>
+      <th>Start Time</th><th>End Time</th>
       <th>Feature Type</th><th>Criteria Met</th><th>Condition</th>
       <th>Photo Ref</th><th>Note</th><th>Timestamp</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
     </tr>`;
@@ -545,6 +557,8 @@ function _appendHabitatSection(drawer, surveyType) {
         <td>${obs.surveyLat && obs.surveyLng
           ? parseFloat(obs.surveyLat).toFixed(4) + ', ' + parseFloat(obs.surveyLng).toFixed(4)
           : ''}</td>
+        <td>${obs.surveyStartTime||''}</td>
+        <td>${obs.surveyEndTime  ||''}</td>
         ${tail}`;
     } else if (surveyType === 'MOOSE') {
       tr.innerHTML = `
@@ -630,6 +644,15 @@ function startSurveyTimer() {
       surveyTotalSeconds     = minsInput * 60;
       surveyRemainingSeconds = surveyTotalSeconds;
     }
+    // Fresh start (full timer, not a resume after pause) — capture start time
+    if (surveyRemainingSeconds === surveyTotalSeconds) {
+      const now = new Date().toTimeString().slice(0, 5);
+      setSurveyMetadata({ ...getMetadataSnapshot(), surveyStartTime: now, surveyEndTime: '' });
+      const startEl = document.getElementById('surveyStartTimeDisplay');
+      const endEl   = document.getElementById('surveyEndTimeDisplay');
+      if (startEl) startEl.value = now;
+      if (endEl)   endEl.value   = '';
+    }
     surveyTimerInterval = setInterval(() => {
       if (surveyRemainingSeconds > 0) {
         surveyRemainingSeconds--;
@@ -637,6 +660,10 @@ function startSurveyTimer() {
       } else {
         clearInterval(surveyTimerInterval);
         surveyTimerInterval = null;
+        const now = new Date().toTimeString().slice(0, 5);
+        setSurveyMetadata({ ...getMetadataSnapshot(), surveyEndTime: now });
+        const endEl = document.getElementById('surveyEndTimeDisplay');
+        if (endEl) endEl.value = now;
         alert('Survey complete!');
       }
     }, 1000);

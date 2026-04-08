@@ -2,6 +2,7 @@
 
 import { speciesMarkers, mooseObservations, turtleObservations, habitatObservations } from './storageData.js';
 import {
+  surveyStartTime, surveyEndTime,
   surveySubmittedAt, surveyResubmittedAt, setSurveyMetadata, getMetadataSnapshot,
   mooseSubmittedAt, mooseResubmittedAt, setMooseMetadata,
   turtleSubmittedAt, turtleResubmittedAt, setTurtleMetadata
@@ -182,7 +183,7 @@ export function exportSpeciesCSV() {
   const headers = [
     'PROJECT_ID','POINT_ID','OBSERVER','SURVEY_TYPE','SURVEY_LENGTH',
     'WIND','WIND_DIR','TEMP_C','PRECIP','SITE_HABITAT',
-    'SURVEY_LAT','SURVEY_LNG',
+    'SURVEY_LAT','SURVEY_LNG','START_TIME','END_TIME',
     'SPECIES','COUNT','RANGE','BEARING','PASS_HT','FLIGHT_DIR',
     'NOTE','TIMESTAMP','BREEDING',
     'SUBMITTED_AT','RESUBMITTED_AT'
@@ -190,7 +191,7 @@ export function exportSpeciesCSV() {
   const rows = [headers, ...speciesMarkers.map(m => [
     m.projectID, m.pointID, m.observer, m.surveyType, m.surveyLength,
     m.wind, m.windDir, m.tempC, m.precip, m.siteHabitat,
-    m.surveyLat, m.surveyLng,
+    m.surveyLat, m.surveyLng, m.surveyStartTime || '', m.surveyEndTime || '',
     m.code, m.count, m.range, m.bearing, m.passHt, m.flightDir,
     m.note, m.timestamp, m.breeding,
     m.surveySubmittedAt || '', m.surveyResubmittedAt || ''
@@ -219,6 +220,7 @@ export function buildSpeciesGeoJSON() {
         TEMP_C:        numOrNull(m.tempC),      PRECIP:      strOrNull(m.precip),
         SITE_HABITAT:  strOrNull(m.siteHabitat),
         SURVEY_LAT:    numOrNull(m.surveyLat),  SURVEY_LNG:  numOrNull(m.surveyLng),
+        START_TIME:    strOrNull(m.surveyStartTime), END_TIME: strOrNull(m.surveyEndTime),
         SPECIES:       strOrNull(m.code),       COUNT:       m.count,
         RANGE:         m.range,                 BEARING:     m.bearing,
         PASS_HT:       strOrNull(m.passHt),     FLIGHT_DIR:  strOrNull(m.flightDir),
@@ -257,6 +259,8 @@ export function exportSpeciesKML() {
 <b>Temp:</b> ${m.tempC || ''}<br/>
 <b>Precip:</b> ${m.precip || ''}<br/>
 <b>Habitat:</b> ${m.siteHabitat || ''}<br/>
+<b>Start Time:</b> ${m.surveyStartTime || ''}<br/>
+<b>End Time:</b> ${m.surveyEndTime || ''}<br/>
 <b>Range:</b> ${m.range || ''}<br/>
 <b>Bearing:</b> ${m.bearing || ''}<br/>
 <b>Pass Ht:</b> ${m.passHt || ''}<br/>
@@ -482,7 +486,7 @@ export function exportHabitatCSV() {
     'PROJECT_ID','OBSERVER',
     // BBS-specific
     'POINT_ID','SURVEY_LENGTH','WIND','WIND_DIR',
-    'TEMP_C','PRECIP','SITE_HABITAT','SURVEY_LAT','SURVEY_LNG',
+    'TEMP_C','PRECIP','SITE_HABITAT','SURVEY_LAT','SURVEY_LNG','START_TIME','END_TIME',
     // Moose-specific
     'TRANSECT_ID','SURVEY_DATE','SURVEY_START','SURVEY_END',
     'VISIBILITY','SNOW_COVER','WIND_SPEED',
@@ -510,8 +514,10 @@ export function exportHabitatCSV() {
       isBBS ? (o.tempC        || '') : '',
       isBBS ? (o.precip       || '') : '',
       isBBS ? (o.siteHabitat  || '') : '',
-      isBBS ? (o.surveyLat    || '') : '',
-      isBBS ? (o.surveyLng    || '') : '',
+      isBBS ? (o.surveyLat        || '') : '',
+      isBBS ? (o.surveyLng        || '') : '',
+      isBBS ? (o.surveyStartTime  || '') : '',
+      isBBS ? (o.surveyEndTime    || '') : '',
       // Moose
       isMoose ? (o.transectID || '') : '',
       (isMoose || isTurtle) ? (o.surveyDate || '') : '',
@@ -567,7 +573,9 @@ export function buildHabitatGeoJSON() {
           PRECIP:        strOrNull(o.precip),
           SITE_HABITAT:  strOrNull(o.siteHabitat),
           SURVEY_LAT:    numOrNull(o.surveyLat),
-          SURVEY_LNG:    numOrNull(o.surveyLng)
+          SURVEY_LNG:    numOrNull(o.surveyLng),
+          START_TIME:    strOrNull(o.surveyStartTime),
+          END_TIME:      strOrNull(o.surveyEndTime)
         } : {}),
         ...(o.surveyType === 'MOOSE' ? {
           PROJECT_ID:   strOrNull(o.projectID),
@@ -621,7 +629,7 @@ export function exportHabitatKML() {
 <b>Photo Ref:</b> ${o.photoRef || ''}<br/>
 <b>Note:</b> ${o.note || ''}<br/>
 <b>Timestamp:</b> ${o.timestamp || ''}<br/>
-<b>Submitted:</b> ${o.surveySubmittedAt || o.mooseSubmittedAt || o.turtleSubmittedAt || ''}<br/>
+${o.surveyType === 'BBS' ? `<b>Start Time:</b> ${o.surveyStartTime || ''}<br/><b>End Time:</b> ${o.surveyEndTime || ''}<br/>` : ''}<b>Submitted:</b> ${o.surveySubmittedAt || o.mooseSubmittedAt || o.turtleSubmittedAt || ''}<br/>
 <b>Resubmitted:</b> ${o.surveyResubmittedAt || o.mooseResubmittedAt || o.turtleResubmittedAt || ''}
     ]]></description>
     <Point><coordinates>${lng},${lat},0</coordinates></Point>
