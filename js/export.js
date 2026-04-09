@@ -183,15 +183,15 @@ export function exportSpeciesCSV() {
   const headers = [
     'PROJECT_ID','POINT_ID','OBSERVER','SURVEY_TYPE','SURVEY_LENGTH',
     'WIND','WIND_DIR','TEMP_C','PRECIP','SITE_HABITAT',
-    'SURVEY_LAT','SURVEY_LNG','START_TIME','END_TIME',
+    'SURVEY_LAT','SURVEY_LNG','SURVEY_START',
     'SPECIES','COUNT','RANGE','BEARING','PASS_HT','FLIGHT_DIR',
-    'NOTE','TIMESTAMP','BREEDING',
+    'NOTE','OBS_TIMESTAMP','BREEDING',
     'SUBMITTED_AT','RESUBMITTED_AT'
   ];
   const rows = [headers, ...speciesMarkers.map(m => [
     m.projectID, m.pointID, m.observer, m.surveyType, m.surveyLength,
     m.wind, m.windDir, m.tempC, m.precip, m.siteHabitat,
-    m.surveyLat, m.surveyLng, m.surveyStartTime || '', m.surveyEndTime || '',
+    m.surveyLat, m.surveyLng, m.surveyStartTime || '',
     m.code, m.count, m.range, m.bearing, m.passHt, m.flightDir,
     m.note, m.timestamp, m.breeding,
     m.surveySubmittedAt || '', m.surveyResubmittedAt || ''
@@ -220,12 +220,12 @@ export function buildSpeciesGeoJSON() {
         TEMP_C:        numOrNull(m.tempC),      PRECIP:      strOrNull(m.precip),
         SITE_HABITAT:  strOrNull(m.siteHabitat),
         SURVEY_LAT:    numOrNull(m.surveyLat),  SURVEY_LNG:  numOrNull(m.surveyLng),
-        START_TIME:    strOrNull(m.surveyStartTime), END_TIME: strOrNull(m.surveyEndTime),
+        SURVEY_START:  strOrNull(m.surveyStartTime),
         SPECIES:       strOrNull(m.code),       COUNT:       m.count,
         RANGE:         m.range,                 BEARING:     m.bearing,
         PASS_HT:       strOrNull(m.passHt),     FLIGHT_DIR:  strOrNull(m.flightDir),
-        NOTE:             strOrNull(m.note),       TIMESTAMP:        strOrNull(m.timestamp),
-        BREEDING:         strOrNull(m.breeding),
+        NOTE:          strOrNull(m.note),        OBS_TIMESTAMP: strOrNull(m.timestamp),
+        BREEDING:      strOrNull(m.breeding),
         SUBMITTED_AT:     strOrNull(m.surveySubmittedAt),
         RESUBMITTED_AT:   strOrNull(m.surveyResubmittedAt)
       })
@@ -259,14 +259,13 @@ export function exportSpeciesKML() {
 <b>Temp:</b> ${m.tempC || ''}<br/>
 <b>Precip:</b> ${m.precip || ''}<br/>
 <b>Habitat:</b> ${m.siteHabitat || ''}<br/>
-<b>Start Time:</b> ${m.surveyStartTime || ''}<br/>
-<b>End Time:</b> ${m.surveyEndTime || ''}<br/>
+<b>Survey Start:</b> ${m.surveyStartTime || ''}<br/>
 <b>Range:</b> ${m.range || ''}<br/>
 <b>Bearing:</b> ${m.bearing || ''}<br/>
 <b>Pass Ht:</b> ${m.passHt || ''}<br/>
 <b>Flight Dir:</b> ${m.flightDir || ''}<br/>
 <b>Note:</b> ${m.note || ''}<br/>
-<b>Timestamp:</b> ${m.timestamp || ''}<br/>
+<b>Obs. Timestamp:</b> ${m.timestamp || ''}<br/>
 <b>Submitted:</b> ${m.surveySubmittedAt || ''}<br/>
 <b>Resubmitted:</b> ${m.surveyResubmittedAt || ''}
     ]]></description>
@@ -287,14 +286,14 @@ export function exportMooseCSV() {
   stampOffload('MOOSE');
   const date    = todayString();
   const headers = [
-    'PROJECT_ID','TRANSECT_ID','OBSERVER','SURVEY_DATE','SURVEY_START','SURVEY_END',
+    'PROJECT_ID','TRANSECT_ID','OBSERVER','SURVEY_DATE','SURVEY_START',
     'VISIBILITY','SNOW_COVER','TEMP_C','WIND_SPEED',
     'SPECIES','OBSERVATION_TYPE','HABITAT','PHOTO_REF',
     'LAT','LNG','NOTE','OBS_TIMESTAMP',
     'SUBMITTED_AT','RESUBMITTED_AT'
   ];
   const rows = [headers, ...mooseObservations.map(o => [
-    o.projectID, o.transectID, o.observer, o.surveyDate, o.startTime, o.endTime,
+    o.projectID, o.transectID, o.observer, o.surveyDate, o.startTime,
     o.visibility, o.snowCover, o.tempC, o.windSpeed,
     o.species, o.obsType, o.habitat, o.photoRef,
     o.latlng?.lat ?? '', o.latlng?.lng ?? '',
@@ -321,7 +320,6 @@ export function buildMooseGeoJSON() {
         PROJECT_ID:       strOrNull(o.projectID),  TRANSECT_ID:      strOrNull(o.transectID),
         OBSERVER:         strOrNull(o.observer),   SURVEY_DATE:      strOrNull(o.surveyDate),
         SURVEY_START:     dateTimeOrNull(o.surveyDate, o.startTime),
-        SURVEY_END:       dateTimeOrNull(o.surveyDate, o.endTime),
         VISIBILITY:       strOrNull(o.visibility),
         SNOW_COVER:       numOrNull(o.snowCover),
         TEMP_C:           numOrNull(o.tempC),      WIND_SPEED:       numOrNull(o.windSpeed),
@@ -381,14 +379,14 @@ export function exportTurtleCSV() {
   stampOffload('TURTLE');
   const date    = todayString();
   const headers = [
-    'PROJECT_ID','SITE_NAME','OBSERVER','SURVEY_DATE','SURVEY_START','SURVEY_END',
+    'PROJECT_ID','SITE_NAME','OBSERVER','SURVEY_DATE','SURVEY_START',
     'WATER_TEMP_C','AIR_TEMP_C','WATER_LEVEL','WEATHER',
     'SPECIES','SEX','AGE_CLASS','ACTIVITY','HABITAT',
     'PHOTO_ID','LAT','LNG','NOTE','OBS_TIMESTAMP',
     'SUBMITTED_AT','RESUBMITTED_AT'
   ];
   const rows = [headers, ...turtleObservations.map(o => [
-    o.projectID, o.siteName, o.observer, o.surveyDate, o.startTime, o.endTime,
+    o.projectID, o.siteName, o.observer, o.surveyDate, o.startTime,
     o.waterTemp, o.airTemp, o.waterLevel, o.weather,
     o.species || '', o.sex, o.ageClass, o.activity, o.habitat,
     o.photoID,
@@ -416,7 +414,6 @@ export function buildTurtleGeoJSON() {
         PROJECT_ID:    strOrNull(o.projectID),  SITE_NAME:    strOrNull(o.siteName),
         OBSERVER:      strOrNull(o.observer),   SURVEY_DATE:  strOrNull(o.surveyDate),
         SURVEY_START:  dateTimeOrNull(o.surveyDate, o.startTime),
-        SURVEY_END:    dateTimeOrNull(o.surveyDate, o.endTime),
         WATER_TEMP_C:  numOrNull(o.waterTemp),  AIR_TEMP_C:   numOrNull(o.airTemp),
         WATER_LEVEL:   strOrNull(o.waterLevel), WEATHER:      strOrNull(o.weather),
         SPECIES:       strOrNull(o.species),    SEX:          strOrNull(o.sex),
@@ -486,15 +483,15 @@ export function exportHabitatCSV() {
     'PROJECT_ID','OBSERVER',
     // BBS-specific
     'POINT_ID','SURVEY_LENGTH','WIND','WIND_DIR',
-    'TEMP_C','PRECIP','SITE_HABITAT','SURVEY_LAT','SURVEY_LNG','START_TIME','END_TIME',
+    'TEMP_C','PRECIP','SITE_HABITAT','SURVEY_LAT','SURVEY_LNG','SURVEY_START',
     // Moose-specific
-    'TRANSECT_ID','SURVEY_DATE','SURVEY_START','SURVEY_END',
+    'TRANSECT_ID','SURVEY_DATE','SURVEY_START',
     'VISIBILITY','SNOW_COVER','WIND_SPEED',
     // Turtle-specific
     'SITE_NAME','WATER_TEMP_C','AIR_TEMP_C',
     'WATER_LEVEL','WEATHER',
     // Common
-    'LAT','LNG','NOTE','TIMESTAMP','SUBMITTED_AT','RESUBMITTED_AT'
+    'LAT','LNG','NOTE','OBS_TIMESTAMP','SUBMITTED_AT','RESUBMITTED_AT'
   ];
   const rows = [headers, ...habitatObservations.map(o => {
     const loc     = getLoc(o);
@@ -514,15 +511,13 @@ export function exportHabitatCSV() {
       isBBS ? (o.tempC        || '') : '',
       isBBS ? (o.precip       || '') : '',
       isBBS ? (o.siteHabitat  || '') : '',
-      isBBS ? (o.surveyLat        || '') : '',
-      isBBS ? (o.surveyLng        || '') : '',
-      isBBS ? (o.surveyStartTime  || '') : '',
-      isBBS ? (o.surveyEndTime    || '') : '',
+      isBBS ? (o.surveyLat       || '') : '',
+      isBBS ? (o.surveyLng       || '') : '',
+      isBBS ? (o.surveyStartTime || '') : '',
       // Moose
       isMoose ? (o.transectID || '') : '',
       (isMoose || isTurtle) ? (o.surveyDate || '') : '',
       (isMoose || isTurtle) ? (o.surveyDate && o.startTime ? `${o.surveyDate}T${o.startTime}` : '') : '',
-      (isMoose || isTurtle) ? (o.surveyDate && o.endTime   ? `${o.surveyDate}T${o.endTime}`   : '') : '',
       isMoose ? (o.visibility || '') : '',
       isMoose ? (o.snowCover  || '') : '',
       isMoose ? (o.windSpeed  || '') : '',
@@ -534,7 +529,7 @@ export function exportHabitatCSV() {
       isTurtle ? (o.weather    || '') : '',
       // Common
       loc ? loc.lat : '', loc ? loc.lng : '',
-      o.note || '', o.timestamp || '',
+      o.note || '', o.timestamp,
       // Submission
       (o.surveySubmittedAt || o.mooseSubmittedAt || o.turtleSubmittedAt || ''),
       (o.surveyResubmittedAt || o.mooseResubmittedAt || o.turtleResubmittedAt || '')
@@ -559,7 +554,7 @@ export function buildHabitatGeoJSON() {
         SIZE_EXTENT:  strOrNull(o.size),
         PHOTO_REF:    strOrNull(o.photoRef),
         NOTE:           strOrNull(o.note),
-        TIMESTAMP:      strOrNull(o.timestamp),
+        OBS_TIMESTAMP:  strOrNull(o.timestamp),
         SUBMITTED_AT:   strOrNull(o.surveySubmittedAt || o.mooseSubmittedAt || o.turtleSubmittedAt),
         RESUBMITTED_AT: strOrNull(o.surveyResubmittedAt || o.mooseResubmittedAt || o.turtleResubmittedAt),
         ...(o.surveyType === 'BBS' ? {
@@ -574,8 +569,7 @@ export function buildHabitatGeoJSON() {
           SITE_HABITAT:  strOrNull(o.siteHabitat),
           SURVEY_LAT:    numOrNull(o.surveyLat),
           SURVEY_LNG:    numOrNull(o.surveyLng),
-          START_TIME:    strOrNull(o.surveyStartTime),
-          END_TIME:      strOrNull(o.surveyEndTime)
+          SURVEY_START:  strOrNull(o.surveyStartTime)
         } : {}),
         ...(o.surveyType === 'MOOSE' ? {
           PROJECT_ID:   strOrNull(o.projectID),
@@ -583,7 +577,6 @@ export function buildHabitatGeoJSON() {
           OBSERVER:     strOrNull(o.observer),
           SURVEY_DATE:  strOrNull(o.surveyDate),
           SURVEY_START: dateTimeOrNull(o.surveyDate, o.startTime),
-          SURVEY_END:   dateTimeOrNull(o.surveyDate, o.endTime),
           VISIBILITY:   strOrNull(o.visibility),
           SNOW_COVER:   numOrNull(o.snowCover),
           TEMP_C:       numOrNull(o.tempC),
@@ -595,7 +588,6 @@ export function buildHabitatGeoJSON() {
           OBSERVER:     strOrNull(o.observer),
           SURVEY_DATE:  strOrNull(o.surveyDate),
           SURVEY_START: dateTimeOrNull(o.surveyDate, o.startTime),
-          SURVEY_END:   dateTimeOrNull(o.surveyDate, o.endTime),
           WATER_TEMP_C: numOrNull(o.waterTemp),
           AIR_TEMP_C:   numOrNull(o.airTemp),
           WATER_LEVEL:  strOrNull(o.waterLevel),
@@ -629,7 +621,7 @@ export function exportHabitatKML() {
 <b>Photo Ref:</b> ${o.photoRef || ''}<br/>
 <b>Note:</b> ${o.note || ''}<br/>
 <b>Timestamp:</b> ${o.timestamp || ''}<br/>
-${o.surveyType === 'BBS' ? `<b>Start Time:</b> ${o.surveyStartTime || ''}<br/><b>End Time:</b> ${o.surveyEndTime || ''}<br/>` : ''}<b>Submitted:</b> ${o.surveySubmittedAt || o.mooseSubmittedAt || o.turtleSubmittedAt || ''}<br/>
+${o.surveyType === 'BBS' ? `<b>Survey Start:</b> ${o.surveyStartTime || ''}<br/>` : ''}<b>Submitted:</b> ${o.surveySubmittedAt || o.mooseSubmittedAt || o.turtleSubmittedAt || ''}<br/>
 <b>Resubmitted:</b> ${o.surveyResubmittedAt || o.mooseResubmittedAt || o.turtleResubmittedAt || ''}
     ]]></description>
     <Point><coordinates>${lng},${lat},0</coordinates></Point>

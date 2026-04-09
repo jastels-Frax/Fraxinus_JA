@@ -332,10 +332,10 @@ function _renderBBSTable(drawer) {
             <th>Survey Type</th><th>Survey Length</th><th>Wind</th>
             <th>Wind Dir</th><th>Temp °C</th><th>Precip</th>
             <th>Site Habitat</th><th>Survey Location</th>
-            <th>Start Time</th><th>End Time</th>
+            <th>Survey Start</th>
             <th>Species</th><th>Count</th>
             <th>Range</th><th>Bearing</th><th>Pass Ht</th>
-            <th>Flight Dir</th><th>Note</th><th>Timestamp</th>
+            <th>Flight Dir</th><th>Note</th><th>Obs. Timestamp</th>
             <th>Breeding</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
           </tr></thead>
           <tbody id="obsTableBody"></tbody>
@@ -354,7 +354,7 @@ function _renderBBSTable(drawer) {
       <td>${obs.surveyLat && obs.surveyLng
         ? parseFloat(obs.surveyLat).toFixed(4) + ', ' + parseFloat(obs.surveyLng).toFixed(4)
         : ''}</td>
-      <td>${obs.surveyStartTime||''}</td><td>${obs.surveyEndTime||''}</td>
+      <td>${obs.surveyStartTime||''}</td>
       <td>${obs.code||''}</td><td>${obs.count||''}</td>
       <td>${obs.range||''}</td><td>${obs.bearing||''}</td>
       <td>${obs.passHt||''}</td><td>${obs.flightDir||''}</td>
@@ -388,11 +388,11 @@ function _renderMooseTable(drawer) {
         <table>
           <thead><tr>
             <th>Project ID</th><th>Transect ID</th><th>Observer</th>
-            <th>Survey Date</th><th>Start Time</th><th>End Time</th>
+            <th>Survey Date</th><th>Survey Start</th>
             <th>Visibility</th><th>Snow Cover</th><th>Temp °C</th>
             <th>Wind Speed</th><th>Species</th><th>Obs. Type</th>
             <th>Habitat</th><th>Photo Ref</th><th>Note</th>
-            <th>Timestamp</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
+            <th>Obs. Timestamp</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
           </tr></thead>
           <tbody id="obsTableBody"></tbody>
         </table>
@@ -404,7 +404,7 @@ function _renderMooseTable(drawer) {
     tr.innerHTML = `
       <td>${obs.projectID||''}</td><td>${obs.transectID||''}</td>
       <td>${obs.observer||''}</td><td>${obs.surveyDate||''}</td>
-      <td>${obs.startTime||''}</td><td>${obs.endTime||''}</td>
+      <td>${obs.startTime||''}</td>
       <td>${obs.visibility||''}</td><td>${obs.snowCover||''}</td>
       <td>${obs.tempC||''}</td><td>${obs.windSpeed||''}</td>
       <td>${obs.species||''}</td><td>${obs.obsType||''}</td>
@@ -438,12 +438,12 @@ function _renderTurtleTable(drawer) {
         <table>
           <thead><tr>
             <th>Project ID</th><th>Site Name</th><th>Observer</th>
-            <th>Survey Date</th><th>Start Time</th><th>End Time</th>
+            <th>Survey Date</th><th>Survey Start</th>
             <th>Water Temp °C</th><th>Air Temp °C</th>
             <th>Water Level</th><th>Weather</th>
             <th>Species</th><th>Sex</th><th>Age Class</th>
             <th>Activity</th><th>Habitat</th><th>Photo ID</th>
-            <th>Note</th><th>Timestamp</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
+            <th>Note</th><th>Obs. Timestamp</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
           </tr></thead>
           <tbody id="obsTableBody"></tbody>
         </table>
@@ -455,7 +455,7 @@ function _renderTurtleTable(drawer) {
     tr.innerHTML = `
       <td>${obs.projectID||''}</td><td>${obs.siteName||''}</td>
       <td>${obs.observer||''}</td><td>${obs.surveyDate||''}</td>
-      <td>${obs.startTime||''}</td><td>${obs.endTime||''}</td>
+      <td>${obs.startTime||''}</td>
       <td>${obs.waterTemp||''}</td><td>${obs.airTemp||''}</td>
       <td>${obs.waterLevel||''}</td><td>${obs.weather||''}</td>
       <td>${obs.species||''}</td><td>${obs.sex||''}</td>
@@ -484,25 +484,25 @@ function _appendHabitatSection(drawer, surveyType) {
       <th>Survey Type</th><th>Project ID</th><th>Point ID</th><th>Observer</th>
       <th>Survey Length</th><th>Wind</th><th>Wind Dir</th><th>Temp °C</th>
       <th>Precip</th><th>Site Habitat</th><th>Survey Location</th>
-      <th>Start Time</th><th>End Time</th>
+      <th>Survey Start</th>
       <th>Feature Type</th><th>Criteria Met</th><th>Condition</th>
-      <th>Photo Ref</th><th>Note</th><th>Timestamp</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
+      <th>Photo Ref</th><th>Note</th><th>Obs. Timestamp</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
     </tr>`;
   } else if (surveyType === 'MOOSE') {
     theadHTML = `<tr>
       <th>Survey Type</th><th>Project ID</th><th>Transect ID</th><th>Observer</th>
-      <th>Survey Date</th><th>Start Time</th><th>End Time</th>
+      <th>Survey Date</th><th>Survey Start</th>
       <th>Visibility</th><th>Snow Cover</th><th>Temp °C</th><th>Wind Speed</th>
       <th>Feature Type</th><th>Criteria Met</th><th>Condition</th>
-      <th>Photo Ref</th><th>Note</th><th>Timestamp</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
+      <th>Photo Ref</th><th>Note</th><th>Obs. Timestamp</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
     </tr>`;
   } else {
     theadHTML = `<tr>
       <th>Survey Type</th><th>Project ID</th><th>Site Name</th><th>Observer</th>
-      <th>Survey Date</th><th>Start Time</th><th>End Time</th>
+      <th>Survey Date</th><th>Survey Start</th>
       <th>Water Temp °C</th><th>Air Temp °C</th><th>Water Level</th><th>Weather</th>
       <th>Feature Type</th><th>Criteria Met</th><th>Condition</th>
-      <th>Photo Ref</th><th>Note</th><th>Timestamp</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
+      <th>Photo Ref</th><th>Note</th><th>Obs. Timestamp</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
     </tr>`;
   }
 
@@ -558,7 +558,6 @@ function _appendHabitatSection(drawer, surveyType) {
           ? parseFloat(obs.surveyLat).toFixed(4) + ', ' + parseFloat(obs.surveyLng).toFixed(4)
           : ''}</td>
         <td>${obs.surveyStartTime||''}</td>
-        <td>${obs.surveyEndTime  ||''}</td>
         ${tail}`;
     } else if (surveyType === 'MOOSE') {
       tr.innerHTML = `
@@ -568,7 +567,6 @@ function _appendHabitatSection(drawer, surveyType) {
         <td>${obs.observer    ||''}</td>
         <td>${obs.surveyDate  ||''}</td>
         <td>${obs.startTime   ||''}</td>
-        <td>${obs.endTime     ||''}</td>
         <td>${obs.visibility  ||''}</td>
         <td>${obs.snowCover   ||''}</td>
         <td>${obs.tempC       ||''}</td>
@@ -582,7 +580,6 @@ function _appendHabitatSection(drawer, surveyType) {
         <td>${obs.observer    ||''}</td>
         <td>${obs.surveyDate  ||''}</td>
         <td>${obs.startTime   ||''}</td>
-        <td>${obs.endTime     ||''}</td>
         <td>${obs.waterTemp   ||''}</td>
         <td>${obs.airTemp     ||''}</td>
         <td>${obs.waterLevel  ||''}</td>
