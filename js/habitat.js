@@ -205,44 +205,50 @@ window.habitatFeatureTypeChange = function () {
 function _getActiveMeta() {
   const t = G.activeSurvey;
   if (t === 'BBS') return {
-    projectID:        G.projectID,
-    pointID:          G.pointID,
-    observer:         G.observer,
-    surveyType_label: G.surveyType,
-    surveyLength:     G.surveyLength,
-    wind:             G.wind,
-    windDir:          G.windDir,
-    tempC:            G.tempC,
-    precip:           G.precip,
-    siteHabitat:      G.siteHabitat,
-    surveyLat:        G.surveyLat,
-    surveyLng:        G.surveyLng,
-    surveyStartTime:  localStorage.getItem('surveyStartTime') || '',
-    surveyEndTime:    localStorage.getItem('surveyEndTime')   || ''
+    projectID:           G.projectID,
+    pointID:             G.pointID,
+    observer:            G.observer,
+    surveyType_label:    G.surveyType,
+    surveyLength:        G.surveyLength,
+    wind:                G.wind,
+    windDir:             G.windDir,
+    tempC:               G.tempC,
+    precip:              G.precip,
+    siteHabitat:         G.siteHabitat,
+    surveyLat:           G.surveyLat,
+    surveyLng:           G.surveyLng,
+    surveyStartTime:     localStorage.getItem('surveyStartTime') || '',
+    surveyEndTime:       localStorage.getItem('surveyEndTime')   || '',
+    surveySubmittedAt:   G.surveySubmittedAt   || '',
+    surveyResubmittedAt: G.surveyResubmittedAt || ''
   };
   if (t === 'MOOSE') return {
-    projectID:  G.mooseProjectID,
-    transectID: G.mooseTransectID,
-    observer:   G.mooseObserver,
-    surveyDate: G.mooseSurveyDate,
-    startTime:  localStorage.getItem('mooseStartTime') || '',
-    endTime:    localStorage.getItem('mooseEndTime')   || '',
-    visibility: G.mooseVisibility,
-    snowCover:  G.mooseSnowCover,
-    tempC:      G.mooseTempC,
-    windSpeed:  G.mooseWindSpeed
+    projectID:          G.mooseProjectID,
+    transectID:         G.mooseTransectID,
+    observer:           G.mooseObserver,
+    surveyDate:         G.mooseSurveyDate,
+    startTime:          localStorage.getItem('mooseStartTime') || '',
+    endTime:            localStorage.getItem('mooseEndTime')   || '',
+    visibility:         G.mooseVisibility,
+    snowCover:          G.mooseSnowCover,
+    tempC:              G.mooseTempC,
+    windSpeed:          G.mooseWindSpeed,
+    mooseSubmittedAt:   G.mooseSubmittedAt   || '',
+    mooseResubmittedAt: G.mooseResubmittedAt || ''
   };
   if (t === 'TURTLE') return {
-    projectID:  G.turtleProjectID,
-    siteName:   G.turtleSiteName,
-    observer:   G.turtleObserver,
-    surveyDate: G.turtleSurveyDate,
-    startTime:  localStorage.getItem('turtleStartTime') || '',
-    endTime:    localStorage.getItem('turtleEndTime')   || '',
-    waterTemp:  G.turtleWaterTemp,
-    airTemp:    G.turtleAirTemp,
-    waterLevel: G.turtleWaterLevel,
-    weather:    G.turtleWeather
+    projectID:           G.turtleProjectID,
+    siteName:            G.turtleSiteName,
+    observer:            G.turtleObserver,
+    surveyDate:          G.turtleSurveyDate,
+    startTime:           localStorage.getItem('turtleStartTime') || '',
+    endTime:             localStorage.getItem('turtleEndTime')   || '',
+    waterTemp:           G.turtleWaterTemp,
+    airTemp:             G.turtleAirTemp,
+    waterLevel:          G.turtleWaterLevel,
+    weather:             G.turtleWeather,
+    turtleSubmittedAt:   G.turtleSubmittedAt   || '',
+    turtleResubmittedAt: G.turtleResubmittedAt || ''
   };
   return {};
 }

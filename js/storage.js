@@ -315,14 +315,6 @@ export async function loadHabitatObservations() {
   const store = tx.objectStore('habitatObservations');
   const req   = store.getAll();
   req.onsuccess = () => {
-    req.result.forEach(r => {
-      if (!('surveySubmittedAt'   in r)) r.surveySubmittedAt   = '';
-      if (!('surveyResubmittedAt' in r)) r.surveyResubmittedAt = '';
-      if (!('mooseSubmittedAt'    in r)) r.mooseSubmittedAt    = '';
-      if (!('mooseResubmittedAt'  in r)) r.mooseResubmittedAt  = '';
-      if (!('turtleSubmittedAt'   in r)) r.turtleSubmittedAt   = '';
-      if (!('turtleResubmittedAt' in r)) r.turtleResubmittedAt = '';
-    });
     const MARKER_COLOUR = { BBS: '#7c3aed', MOOSE: '#b45309', TURTLE: '#0d9488' };
     req.result.forEach((data, index) => {
       const latlng = L.latLng(data.latlng.lat, data.latlng.lng);
@@ -343,6 +335,27 @@ export async function loadHabitatObservations() {
       marker.bindPopup(popup);
       habitatObservations.push({ ...data, latlng, marker, label: labelMarker });
     });
+    // Backfill missing fields by survey type; use localStorage for time values
+    // so old records pick up the current session's start/end times.
+    habitatObservations.forEach(o => {
+      if (o.surveyType === 'BBS') {
+        if (!('surveySubmittedAt'   in o)) o.surveySubmittedAt   = '';
+        if (!('surveyResubmittedAt' in o)) o.surveyResubmittedAt = '';
+        if (!('surveyStartTime'     in o)) o.surveyStartTime = localStorage.getItem('surveyStartTime')  || '';
+        if (!('surveyEndTime'       in o)) o.surveyEndTime   = localStorage.getItem('surveyEndTime')    || '';
+      } else if (o.surveyType === 'MOOSE') {
+        if (!('mooseSubmittedAt'   in o)) o.mooseSubmittedAt   = '';
+        if (!('mooseResubmittedAt' in o)) o.mooseResubmittedAt = '';
+        if (!('startTime'          in o)) o.startTime = localStorage.getItem('mooseStartTime') || '';
+        if (!('endTime'            in o)) o.endTime   = localStorage.getItem('mooseEndTime')   || '';
+      } else if (o.surveyType === 'TURTLE') {
+        if (!('turtleSubmittedAt'   in o)) o.turtleSubmittedAt   = '';
+        if (!('turtleResubmittedAt' in o)) o.turtleResubmittedAt = '';
+        if (!('startTime'           in o)) o.startTime = localStorage.getItem('turtleStartTime') || '';
+        if (!('endTime'             in o)) o.endTime   = localStorage.getItem('turtleEndTime')   || '';
+      }
+    });
+    syncHabitatToIndexedDB();
     updateTable();
   };
   req.onerror = e => console.error('Error loading habitat observations:', e.target.error);

@@ -135,6 +135,14 @@ export function stampOffload(type) {
       }
     });
     syncToIndexedDB();
+    habitatObservations.filter(o => o.surveyType === 'BBS').forEach(o => {
+      if (!o.surveySubmittedAt) {
+        o.surveySubmittedAt = now;
+      } else {
+        o.surveyResubmittedAt = now;
+      }
+    });
+    syncHabitatToIndexedDB();
 
   } else if (type === 'MOOSE') {
     const isFirst = !mooseSubmittedAt;
@@ -151,6 +159,14 @@ export function stampOffload(type) {
       }
     });
     syncMooseToIndexedDB();
+    habitatObservations.filter(o => o.surveyType === 'MOOSE').forEach(o => {
+      if (!o.mooseSubmittedAt) {
+        o.mooseSubmittedAt = now;
+      } else {
+        o.mooseResubmittedAt = now;
+      }
+    });
+    syncHabitatToIndexedDB();
 
   } else if (type === 'TURTLE') {
     const isFirst = !turtleSubmittedAt;
@@ -167,6 +183,14 @@ export function stampOffload(type) {
       }
     });
     syncTurtleToIndexedDB();
+    habitatObservations.filter(o => o.surveyType === 'TURTLE').forEach(o => {
+      if (!o.turtleSubmittedAt) {
+        o.turtleSubmittedAt = now;
+      } else {
+        o.turtleResubmittedAt = now;
+      }
+    });
+    syncHabitatToIndexedDB();
 
   } else if (type === 'HABITAT') {
     // Stamp each habitat record individually using its own surveyType
