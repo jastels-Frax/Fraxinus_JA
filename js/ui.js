@@ -281,6 +281,12 @@ function prefillSurveyModal() {
     _setVal('mooseTransectIDInput',   mooseTransectID);
     _setVal('mooseSurveyDateInput',   mooseSurveyDate);
     _setVal('mooseStartTimeInput',    mooseStartTime);
+    if (!mooseStartTime) {
+      const now = new Date();
+      const t = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('mooseStartTimeInput').value = t;
+      setMooseMetadata({ ...getMetadataSnapshot(), mooseStartTime: t });
+    }
     _setVal('mooseEndTimeInput',      mooseEndTime);
     _setVal('mooseVisibilityInput',   mooseVisibility);
     _setVal('mooseSnowCoverInput',    mooseSnowCover);
@@ -293,6 +299,12 @@ function prefillSurveyModal() {
     _setVal('turtleSiteNameInput',   turtleSiteName);
     _setVal('turtleSurveyDateInput', turtleSurveyDate);
     _setVal('turtleStartTimeInput',  turtleStartTime);
+    if (!turtleStartTime) {
+      const now = new Date();
+      const t = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('turtleStartTimeInput').value = t;
+      setTurtleMetadata({ ...getMetadataSnapshot(), turtleStartTime: t });
+    }
     _setVal('turtleEndTimeInput',    turtleEndTime);
     _setVal('turtleWaterTempInput',  turtleWaterTemp);
     _setVal('turtleAirTempInput',    turtleAirTemp);
