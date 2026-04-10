@@ -72,7 +72,7 @@ export function closeSurveyModal() {
       surveyLat:        newSurveyLat,
       surveyLng:        newSurveyLng,
       surveyStartTime:  surveyStartTime,
-      surveyEndTime:    surveyEndTime
+      surveyEndTime:    document.getElementById('surveyEndTimeInput')?.value.trim() || ''
     });
   } else if (survey === 'MOOSE') {
     const snap = {
@@ -143,8 +143,18 @@ export function injectSurveyModal() {
         <input type="number" id="surveyLengthInput" />
         <label>Start Time: <span style="font-size:0.8em; color:#888;">(auto-filled when timer starts)</span></label>
         <input type="text" id="surveyStartTimeDisplay" readonly style="background:#1a1a1a; color:#aaa;" />
-        <label>End Time: <span style="font-size:0.8em; color:#888;">(auto-filled when timer ends)</span></label>
-        <input type="text" id="surveyEndTimeDisplay" readonly style="background:#1a1a1a; color:#aaa;" />
+        <label>Survey End Time:</label>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <input type="text" id="surveyEndTimeInput"
+            placeholder="Auto-filled when timer ends"
+            style="flex:1;" />
+          <button type="button" id="btnClearSurveyEnd"
+            title="Clear end time"
+            style="background:#333; border:1px solid #d6d6d6; color:#aaa; border-radius:8px; padding:5px 10px; font-size:0.85rem; cursor:pointer;">
+            ✕ Clear
+          </button>
+        </div>
+        <small style="opacity:0.6; display:block; margin:-4px 0 8px 0;">Auto-filled when timer ends — tap to override</small>
         <label>Wind Speed:</label>
         <input type="text" id="windInput" />
         <label>Wind Direction:</label>
@@ -158,6 +168,9 @@ export function injectSurveyModal() {
         <br/>
         <button onclick="closeSurveyModal()">Save and Close</button>
       </div>`;
+    document.getElementById('btnClearSurveyEnd')?.addEventListener('click', () => {
+      document.getElementById('surveyEndTimeInput').value = '';
+    });
   } else if (survey === 'MOOSE') {
     container.innerHTML = `
       <div class="modal-content">
@@ -261,7 +274,7 @@ function prefillSurveyModal() {
       _setVal('surveyLocationDisplay', `${parseFloat(surveyLat).toFixed(6)}, ${parseFloat(surveyLng).toFixed(6)}`);
     }
     _setVal('surveyStartTimeDisplay', surveyStartTime);
-    _setVal('surveyEndTimeDisplay',   surveyEndTime);
+    _setVal('surveyEndTimeInput',     surveyEndTime);
   } else if (survey === 'MOOSE') {
     _setVal('mooseProjectIDInput',    mooseProjectID);
     _setVal('mooseObserverInput',     mooseObserver);
@@ -332,7 +345,7 @@ function _renderBBSTable(drawer) {
             <th>Survey Type</th><th>Survey Length</th><th>Wind</th>
             <th>Wind Dir</th><th>Temp °C</th><th>Precip</th>
             <th>Site Habitat</th><th>Survey Location</th>
-            <th>Survey Start</th>
+            <th>Survey Start</th><th>Survey End</th>
             <th>Species</th><th>Count</th>
             <th>Range</th><th>Bearing</th><th>Pass Ht</th>
             <th>Flight Dir</th><th>Note</th><th>Obs. Timestamp</th>
@@ -354,7 +367,7 @@ function _renderBBSTable(drawer) {
       <td>${obs.surveyLat && obs.surveyLng
         ? parseFloat(obs.surveyLat).toFixed(4) + ', ' + parseFloat(obs.surveyLng).toFixed(4)
         : ''}</td>
-      <td>${obs.surveyStartTime||''}</td>
+      <td>${obs.surveyStartTime||''}</td><td>${obs.surveyEndTime||''}</td>
       <td>${obs.code||''}</td><td>${obs.count||''}</td>
       <td>${obs.range||''}</td><td>${obs.bearing||''}</td>
       <td>${obs.passHt||''}</td><td>${obs.flightDir||''}</td>
@@ -484,7 +497,7 @@ function _appendHabitatSection(drawer, surveyType) {
       <th>Survey Type</th><th>Project ID</th><th>Point ID</th><th>Observer</th>
       <th>Survey Length</th><th>Wind</th><th>Wind Dir</th><th>Temp °C</th>
       <th>Precip</th><th>Site Habitat</th><th>Survey Location</th>
-      <th>Survey Start</th>
+      <th>Survey Start</th><th>Survey End</th>
       <th>Feature Type</th><th>Criteria Met</th><th>Condition</th>
       <th>Photo Ref</th><th>Note</th><th>Obs. Timestamp</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
     </tr>`;
@@ -558,6 +571,7 @@ function _appendHabitatSection(drawer, surveyType) {
           ? parseFloat(obs.surveyLat).toFixed(4) + ', ' + parseFloat(obs.surveyLng).toFixed(4)
           : ''}</td>
         <td>${obs.surveyStartTime||''}</td>
+        <td>${obs.surveyEndTime  ||''}</td>
         ${tail}`;
     } else if (surveyType === 'MOOSE') {
       tr.innerHTML = `
@@ -646,7 +660,7 @@ function startSurveyTimer() {
       const now = new Date().toTimeString().slice(0, 5);
       setSurveyMetadata({ ...getMetadataSnapshot(), surveyStartTime: now, surveyEndTime: '' });
       const startEl = document.getElementById('surveyStartTimeDisplay');
-      const endEl   = document.getElementById('surveyEndTimeDisplay');
+      const endEl   = document.getElementById('surveyEndTimeInput');
       if (startEl) startEl.value = now;
       if (endEl)   endEl.value   = '';
     }
@@ -659,7 +673,7 @@ function startSurveyTimer() {
         surveyTimerInterval = null;
         const now = new Date().toTimeString().slice(0, 5);
         setSurveyMetadata({ ...getMetadataSnapshot(), surveyEndTime: now });
-        const endEl = document.getElementById('surveyEndTimeDisplay');
+        const endEl = document.getElementById('surveyEndTimeInput');
         if (endEl) endEl.value = now;
         alert('Survey complete!');
       }

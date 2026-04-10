@@ -183,7 +183,7 @@ export function exportSpeciesCSV() {
   const headers = [
     'PROJECT_ID','POINT_ID','OBSERVER','SURVEY_TYPE','SURVEY_LENGTH',
     'WIND','WIND_DIR','TEMP_C','PRECIP','SITE_HABITAT',
-    'SURVEY_LAT','SURVEY_LNG','SURVEY_START',
+    'SURVEY_LAT','SURVEY_LNG','SURVEY_START','SURVEY_END',
     'SPECIES','COUNT','RANGE','BEARING','PASS_HT','FLIGHT_DIR',
     'NOTE','OBS_TIMESTAMP','BREEDING',
     'SUBMITTED_AT','RESUBMITTED_AT'
@@ -191,7 +191,7 @@ export function exportSpeciesCSV() {
   const rows = [headers, ...speciesMarkers.map(m => [
     m.projectID, m.pointID, m.observer, m.surveyType, m.surveyLength,
     m.wind, m.windDir, m.tempC, m.precip, m.siteHabitat,
-    m.surveyLat, m.surveyLng, m.surveyStartTime || '',
+    m.surveyLat, m.surveyLng, m.surveyStartTime || '', m.surveyEndTime || '',
     m.code, m.count, m.range, m.bearing, m.passHt, m.flightDir,
     m.note, m.timestamp, m.breeding,
     m.surveySubmittedAt || '', m.surveyResubmittedAt || ''
@@ -221,6 +221,7 @@ export function buildSpeciesGeoJSON() {
         SITE_HABITAT:  strOrNull(m.siteHabitat),
         SURVEY_LAT:    numOrNull(m.surveyLat),  SURVEY_LNG:  numOrNull(m.surveyLng),
         SURVEY_START:  strOrNull(m.surveyStartTime),
+        SURVEY_END:    strOrNull(m.surveyEndTime),
         SPECIES:       strOrNull(m.code),       COUNT:       m.count,
         RANGE:         m.range,                 BEARING:     m.bearing,
         PASS_HT:       strOrNull(m.passHt),     FLIGHT_DIR:  strOrNull(m.flightDir),
@@ -483,7 +484,7 @@ export function exportHabitatCSV() {
     'PROJECT_ID','OBSERVER',
     // BBS-specific
     'POINT_ID','SURVEY_LENGTH','WIND','WIND_DIR',
-    'TEMP_C','PRECIP','SITE_HABITAT','SURVEY_LAT','SURVEY_LNG','SURVEY_START',
+    'TEMP_C','PRECIP','SITE_HABITAT','SURVEY_LAT','SURVEY_LNG','SURVEY_START','SURVEY_END',
     // Moose-specific
     'TRANSECT_ID','SURVEY_DATE','SURVEY_START',
     'VISIBILITY','SNOW_COVER','WIND_SPEED',
@@ -514,6 +515,7 @@ export function exportHabitatCSV() {
       isBBS ? (o.surveyLat       || '') : '',
       isBBS ? (o.surveyLng       || '') : '',
       isBBS ? (o.surveyStartTime || '') : '',
+      isBBS ? (o.surveyEndTime   || '') : '',
       // Moose
       isMoose ? (o.transectID || '') : '',
       (isMoose || isTurtle) ? (o.surveyDate || '') : '',
@@ -569,7 +571,8 @@ export function buildHabitatGeoJSON() {
           SITE_HABITAT:  strOrNull(o.siteHabitat),
           SURVEY_LAT:    numOrNull(o.surveyLat),
           SURVEY_LNG:    numOrNull(o.surveyLng),
-          SURVEY_START:  strOrNull(o.surveyStartTime)
+          SURVEY_START:  strOrNull(o.surveyStartTime),
+          SURVEY_END:    strOrNull(o.surveyEndTime)
         } : {}),
         ...(o.surveyType === 'MOOSE' ? {
           PROJECT_ID:   strOrNull(o.projectID),
