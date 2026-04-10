@@ -99,6 +99,12 @@ export async function loadSpeciesMarkers() {
   const store = tx.objectStore('speciesMarkers');
   const request = store.getAll();
   request.onsuccess = () => {
+    request.result.forEach(r => {
+      if (!('surveySubmittedAt'   in r)) r.surveySubmittedAt   = '';
+      if (!('surveyResubmittedAt' in r)) r.surveyResubmittedAt = '';
+      if (!('surveyStartTime'     in r)) r.surveyStartTime     = '';
+      if (!('surveyEndTime'       in r)) r.surveyEndTime       = '';
+    });
     request.result.forEach((data, index) => {
       const latlng = L.latLng(data.latlng.lat, data.latlng.lng);
       const marker = L.circleMarker(latlng, {
@@ -160,6 +166,13 @@ export async function loadMooseObservations() {
   const store = tx.objectStore('mooseObservations');
   const request = store.getAll();
   request.onsuccess = () => {
+    request.result.forEach(r => {
+      if (!('mooseSubmittedAt'   in r)) r.mooseSubmittedAt   = '';
+      if (!('mooseResubmittedAt' in r)) r.mooseResubmittedAt = '';
+      if (!('surveyDate'         in r)) r.surveyDate         = '';
+      if (!('startTime'          in r)) r.startTime          = '';
+      if (!('endTime'            in r)) r.endTime            = '';
+    });
     request.result.forEach((data, index) => {
       const latlng = L.latLng(data.latlng.lat, data.latlng.lng);
       const marker = L.circleMarker(latlng, {
@@ -220,6 +233,13 @@ export async function loadTurtleObservations() {
   const store = tx.objectStore('turtleObservations');
   const request = store.getAll();
   request.onsuccess = () => {
+    request.result.forEach(r => {
+      if (!('turtleSubmittedAt'   in r)) r.turtleSubmittedAt   = '';
+      if (!('turtleResubmittedAt' in r)) r.turtleResubmittedAt = '';
+      if (!('surveyDate'          in r)) r.surveyDate          = '';
+      if (!('startTime'           in r)) r.startTime           = '';
+      if (!('endTime'             in r)) r.endTime             = '';
+    });
     request.result.forEach((data, index) => {
       const latlng = L.latLng(data.latlng.lat, data.latlng.lng);
       const marker = L.circleMarker(latlng, {
@@ -268,6 +288,14 @@ export async function loadHabitatObservations() {
   const store = tx.objectStore('habitatObservations');
   const req   = store.getAll();
   req.onsuccess = () => {
+    req.result.forEach(r => {
+      if (!('surveySubmittedAt'   in r)) r.surveySubmittedAt   = '';
+      if (!('surveyResubmittedAt' in r)) r.surveyResubmittedAt = '';
+      if (!('mooseSubmittedAt'    in r)) r.mooseSubmittedAt    = '';
+      if (!('mooseResubmittedAt'  in r)) r.mooseResubmittedAt  = '';
+      if (!('turtleSubmittedAt'   in r)) r.turtleSubmittedAt   = '';
+      if (!('turtleResubmittedAt' in r)) r.turtleResubmittedAt = '';
+    });
     const MARKER_COLOUR = { BBS: '#7c3aed', MOOSE: '#b45309', TURTLE: '#0d9488' };
     req.result.forEach((data, index) => {
       const latlng = L.latLng(data.latlng.lat, data.latlng.lng);

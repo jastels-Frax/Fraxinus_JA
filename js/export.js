@@ -128,8 +128,11 @@ export function stampOffload(type) {
       surveyResubmittedAt: isFirst ? ''  : now
     });
     speciesMarkers.forEach(m => {
-      m.surveySubmittedAt   = isFirst ? now : m.surveySubmittedAt || now;
-      m.surveyResubmittedAt = isFirst ? ''  : now;
+      if (!m.surveySubmittedAt) {
+        m.surveySubmittedAt = now;
+      } else {
+        m.surveyResubmittedAt = now;
+      }
     });
     syncToIndexedDB();
 
@@ -141,8 +144,11 @@ export function stampOffload(type) {
       mooseResubmittedAt: isFirst ? ''  : now
     });
     mooseObservations.forEach(o => {
-      o.mooseSubmittedAt   = isFirst ? now : o.mooseSubmittedAt || now;
-      o.mooseResubmittedAt = isFirst ? ''  : now;
+      if (!o.mooseSubmittedAt) {
+        o.mooseSubmittedAt = now;
+      } else {
+        o.mooseResubmittedAt = now;
+      }
     });
     syncMooseToIndexedDB();
 
@@ -154,8 +160,11 @@ export function stampOffload(type) {
       turtleResubmittedAt: isFirst ? ''  : now
     });
     turtleObservations.forEach(o => {
-      o.turtleSubmittedAt   = isFirst ? now : o.turtleSubmittedAt || now;
-      o.turtleResubmittedAt = isFirst ? ''  : now;
+      if (!o.turtleSubmittedAt) {
+        o.turtleSubmittedAt = now;
+      } else {
+        o.turtleResubmittedAt = now;
+      }
     });
     syncTurtleToIndexedDB();
 
