@@ -129,6 +129,15 @@ export async function loadSpeciesMarkers() {
       marker.bindPopup(popup);
       speciesMarkers.push({ ...data, latlng, marker, label: labelMarker });
     });
+    // Backfill start/end time from localStorage for records saved before
+    // timer integration — only writes if localStorage has a value.
+    const _lsStart = localStorage.getItem('surveyStartTime') || '';
+    const _lsEnd   = localStorage.getItem('surveyEndTime')   || '';
+    speciesMarkers.forEach(m => {
+      if (!m.surveyStartTime && _lsStart) m.surveyStartTime = _lsStart;
+      if (!m.surveyEndTime   && _lsEnd)   m.surveyEndTime   = _lsEnd;
+    });
+    if (_lsStart || _lsEnd) syncToIndexedDB();
     updateTable();
   };
   request.onerror = e => console.error('Error loading species markers:', e.target.error);
@@ -194,6 +203,15 @@ export async function loadMooseObservations() {
       marker.bindPopup(popup);
       mooseObservations.push({ ...data, latlng, marker, label: labelMarker });
     });
+    // Backfill start/end time from localStorage for records saved before
+    // timer/modal integration — only writes if localStorage has a value.
+    const _lsStart = localStorage.getItem('mooseStartTime') || '';
+    const _lsEnd   = localStorage.getItem('mooseEndTime')   || '';
+    mooseObservations.forEach(o => {
+      if (!o.startTime && _lsStart) o.startTime = _lsStart;
+      if (!o.endTime   && _lsEnd)   o.endTime   = _lsEnd;
+    });
+    if (_lsStart || _lsEnd) syncMooseToIndexedDB();
     updateTable();
   };
   request.onerror = e => console.error('Error loading moose observations:', e.target.error);
@@ -262,6 +280,15 @@ export async function loadTurtleObservations() {
       marker.bindPopup(popup);
       turtleObservations.push({ ...data, latlng, marker, label: labelMarker });
     });
+    // Backfill start/end time from localStorage for records saved before
+    // timer/modal integration — only writes if localStorage has a value.
+    const _lsStart = localStorage.getItem('turtleStartTime') || '';
+    const _lsEnd   = localStorage.getItem('turtleEndTime')   || '';
+    turtleObservations.forEach(o => {
+      if (!o.startTime && _lsStart) o.startTime = _lsStart;
+      if (!o.endTime   && _lsEnd)   o.endTime   = _lsEnd;
+    });
+    if (_lsStart || _lsEnd) syncTurtleToIndexedDB();
     updateTable();
   };
   request.onerror = e => console.error('Error loading turtle observations:', e.target.error);

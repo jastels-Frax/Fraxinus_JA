@@ -94,11 +94,18 @@ export function saveSpeciesObservation() {
   const popup = createSpeciesPopupHTML(index, species.code, count, breeding, note, passHt, flightDir);
   marker.bindPopup(popup);
 
+  // Read start/end times fresh from localStorage at save time — the timer may
+  // have updated them after module load, or the user may not have started the
+  // timer yet (in which case they remain empty strings).
+  const _surveyStartTime = localStorage.getItem('surveyStartTime') || '';
+  const _surveyEndTime   = localStorage.getItem('surveyEndTime')   || '';
+
   speciesMarkers.push({
     code: species.code, name: species.name, soci: species.soci,
     latlng, observer, pointID, projectID, surveyType,
     surveyLength, wind, windDir, tempC, precip, siteHabitat,
-    surveyLat, surveyLng, surveyStartTime, surveyEndTime,
+    surveyLat, surveyLng,
+    surveyStartTime: _surveyStartTime, surveyEndTime: _surveyEndTime,
     surveySubmittedAt, surveyResubmittedAt,
     count, breeding, note, passHt, flightDir,
     marker, label,

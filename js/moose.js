@@ -101,17 +101,21 @@ export function saveMooseObservation() {
 
   // Read current metadata from live-bound globals
   const pid = G.mooseProjectID,   tid = G.mooseTransectID, obs = G.mooseObserver;
-  const sd  = G.mooseSurveyDate,  st  = G.mooseStartTime,  et  = G.mooseEndTime;
+  const sd  = G.mooseSurveyDate;
   const vis = G.mooseVisibility,  sc  = G.mooseSnowCover || null,  tc  = G.mooseTempC || null;
   const ws  = G.mooseWindSpeed || null;
+  // Read start/end times fresh from localStorage — the modal may have updated
+  // them after module load.
+  const _startTime = localStorage.getItem('mooseStartTime') || '';
+  const _endTime   = localStorage.getItem('mooseEndTime')   || '';
 
   const obsRecord = {
     projectID:  pid,
     transectID: tid,
     observer:   obs,
     surveyDate: sd,
-    startTime:  st,
-    endTime:    et,
+    startTime:  _startTime,
+    endTime:    _endTime,
     visibility: vis,
     snowCover:  sc,
     tempC:      tc,

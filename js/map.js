@@ -6,6 +6,7 @@ import { speciesMarkers } from './storageData.js';
 import { updateTable, openSurveyModal, openDrawer } from './ui.js';
 import { showSpeciesModal, isPlacingPoint } from './modal.js';
 import { activeSurvey } from './surveyGlobals.js';
+import { stampOffload } from './export.js';
 
 // ─── Shared map state ─────────────────────────────────────────────────────
 export let map              = null;
@@ -118,8 +119,14 @@ function addMasterButtons() {
 
   document.getElementById('btnSurvey')?.addEventListener('click', openSurveyModal);
   document.getElementById('btnDrawer')?.addEventListener('click', openDrawer);
-  document.getElementById('btnDraft')?.addEventListener('click',  () => window.saveDraftAndGoHome?.());
-  document.getElementById('btnSubmit')?.addEventListener('click', () => window.submitAndShowExport?.());
+  document.getElementById('btnDraft')?.addEventListener('click', () => {
+    window.saveDraftAndGoHome?.();
+    if (activeSurvey) stampOffload(activeSurvey);
+  });
+  document.getElementById('btnSubmit')?.addEventListener('click', () => {
+    window.submitAndShowExport?.();
+    if (activeSurvey) stampOffload(activeSurvey);
+  });
   if (survey === 'BBS') {
     document.getElementById('btnOverlay')?.addEventListener('click', toggleOverlay);
   }

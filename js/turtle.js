@@ -103,13 +103,18 @@ export function saveTurtleObservation() {
     })
   }).addTo(map);
 
+  // Read start/end times fresh from localStorage — the modal may have updated
+  // them after module load.
+  const _startTime = localStorage.getItem('turtleStartTime') || '';
+  const _endTime   = localStorage.getItem('turtleEndTime')   || '';
+
   const obsRecord = {
     projectID:  G.turtleProjectID  || '',
     siteName:   G.turtleSiteName   || '',
     observer:   G.turtleObserver   || '',
     surveyDate: G.turtleSurveyDate || '',
-    startTime:  G.turtleStartTime  || '',
-    endTime:    G.turtleEndTime    || '',
+    startTime:  _startTime,
+    endTime:    _endTime,
     waterTemp:  G.turtleWaterTemp  || null,
     airTemp:    G.turtleAirTemp    || null,
     waterLevel: G.turtleWaterLevel || '',

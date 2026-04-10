@@ -217,16 +217,16 @@ function _getActiveMeta() {
     siteHabitat:      G.siteHabitat,
     surveyLat:        G.surveyLat,
     surveyLng:        G.surveyLng,
-    surveyStartTime:  G.surveyStartTime,
-    surveyEndTime:    G.surveyEndTime
+    surveyStartTime:  localStorage.getItem('surveyStartTime') || '',
+    surveyEndTime:    localStorage.getItem('surveyEndTime')   || ''
   };
   if (t === 'MOOSE') return {
     projectID:  G.mooseProjectID,
     transectID: G.mooseTransectID,
     observer:   G.mooseObserver,
     surveyDate: G.mooseSurveyDate,
-    startTime:  G.mooseStartTime,
-    endTime:    G.mooseEndTime,
+    startTime:  localStorage.getItem('mooseStartTime') || '',
+    endTime:    localStorage.getItem('mooseEndTime')   || '',
     visibility: G.mooseVisibility,
     snowCover:  G.mooseSnowCover,
     tempC:      G.mooseTempC,
@@ -237,8 +237,8 @@ function _getActiveMeta() {
     siteName:   G.turtleSiteName,
     observer:   G.turtleObserver,
     surveyDate: G.turtleSurveyDate,
-    startTime:  G.turtleStartTime,
-    endTime:    G.turtleEndTime,
+    startTime:  localStorage.getItem('turtleStartTime') || '',
+    endTime:    localStorage.getItem('turtleEndTime')   || '',
     waterTemp:  G.turtleWaterTemp,
     airTemp:    G.turtleAirTemp,
     waterLevel: G.turtleWaterLevel,
