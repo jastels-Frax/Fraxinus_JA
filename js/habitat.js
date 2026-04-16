@@ -189,14 +189,16 @@ window.habitatFeatureTypeChange = function () {
   if (criteria.length) {
     criteria.forEach(item => {
       const id  = 'hc_' + item.replace(/[^a-z0-9]/gi, '_');
-      const lbl = document.createElement('label');
-      lbl.className = 'habitat-criteria-toggle';
-      lbl.innerHTML = `
-        <input type="checkbox" id="${id}" value="${item}" />
-        <span class="toggle-track"></span>
-        <span class="toggle-label">${item}</span>
+      const div = document.createElement('div');
+      div.className = 'criteria-item';
+      div.innerHTML = `
+        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:0.95rem; color:#d6d6d6; padding:4px 0;">
+          <input type="checkbox" id="${id}" value="${item}"
+            style="width:18px; height:18px; cursor:pointer; accent-color:#4caf50; flex-shrink:0;" />
+          ${item}
+        </label>
       `;
-      listDiv.appendChild(lbl);
+      listDiv.appendChild(div);
     });
   }
 };
