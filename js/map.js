@@ -7,6 +7,7 @@ import { updateTable, openSurveyModal, openDrawer } from './ui.js';
 import { showSpeciesModal, isPlacingPoint } from './modal.js';
 import { activeSurvey } from './surveyGlobals.js';
 import { stampOffload } from './export.js';
+import { showToast } from './toast.js';
 
 // ─── Shared map state ─────────────────────────────────────────────────────
 export let map              = null;
@@ -75,7 +76,15 @@ export function initializeMap() {
         map.setView(latlng, 17);
       }
     },
-    err => console.error('Geolocation error:', err),
+    err => {
+      console.error('Geolocation error:', err);
+      const _msgs = {
+        1: 'Location access denied \u2014 please allow GPS in browser settings.',
+        2: 'GPS signal lost \u2014 unable to determine position.',
+        3: 'GPS timed out \u2014 unable to get a position fix.'
+      };
+      showToast(_msgs[err.code] || `GPS error (code ${err.code})`, 'error', 6000);
+    },
     { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
   );
 
