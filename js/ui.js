@@ -335,6 +335,17 @@ export function updateTable() {
   } else {
     drawer.innerHTML = '<div style="padding:12px; color:#aaa;">No survey active.</div>';
   }
+
+  const badge = document.getElementById('obsCountBadge');
+  if (badge) {
+    const habCount = habitatObservations.filter(o => o.surveyType === survey).length;
+    const n = survey === 'BBS'   ? speciesMarkers.length     + habCount
+            : survey === 'MOOSE' ? mooseObservations.length  + habCount
+            : survey === 'TURTLE'? turtleObservations.length + habCount
+            : 0;
+    badge.textContent    = n > 0 ? String(n) : '';
+    badge.style.display  = n > 0 ? 'flex'    : 'none';
+  }
 }
 
 function _renderBBSTable(drawer) {

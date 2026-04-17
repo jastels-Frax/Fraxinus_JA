@@ -120,7 +120,7 @@ function addMasterButtons() {
     <button onclick="goBackToSelection()" title="Back to Survey Selection"><i class="fas fa-arrow-left fa-2x"></i></button>
     <button onclick="showInstructions()" title="Help"><i class="fas fa-circle-question fa-2x"></i></button>
     <button id="btnSurvey" title="Survey Metadata"><i class="fas fa-clipboard-list fa-2x"></i></button>
-    <button id="btnDrawer" title="Observations"><i class="fas fa-rectangle-list fa-2x"></i></button>
+    <button id="btnDrawer" title="Observations"><i class="fas fa-rectangle-list fa-2x"></i><span id="obsCountBadge"></span></button>
     ${survey === 'BBS' ? `<button id="btnOverlay" title="Distance/Bearing Overlay"><i class="fas fa-life-ring fa-2x"></i></button>` : ''}
     <button id="btnSpecies" title="${speciesTitle}" class="btn-survey-icon">${speciesEmoji}</button>
     <button id="btnHabitat" title="Record Habitat / Feature Observation" class="btn-survey-icon">🌿</button>
