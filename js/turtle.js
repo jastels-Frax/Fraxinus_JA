@@ -6,6 +6,7 @@ import { updateTable } from './ui.js';
 import { map, lockMap, unlockMap } from './map.js';
 import * as G from './surveyGlobals.js';
 import { capturePhoto } from './photo.js';
+import { showUndoToast } from './toast.js';
 
 // ─── Modal State ──────────────────────────────────────────────────────────
 let turtlePlacingPoint = false;
@@ -239,14 +240,42 @@ function updateTurtleObservation(index) {
   rec.marker.closePopup();
 }
 
+let _pendingDeleteTurtle = null;
+
 function deleteTurtleMarker(index) {
+  if (_pendingDeleteTurtle) {
+    clearTimeout(_pendingDeleteTurtle.timeoutId);
+    _pendingDeleteTurtle.dismissToast?.();
+    syncTurtleToIndexedDB();
+    _pendingDeleteTurtle = null;
+  }
+
   const obs = turtleObservations[index];
   if (!obs) return;
   if (obs.marker) map.removeLayer(obs.marker);
   if (obs.label)  map.removeLayer(obs.label);
   turtleObservations.splice(index, 1);
-  syncTurtleToIndexedDB();
   updateTable();
+
+  const timeoutId = setTimeout(() => {
+    if (_pendingDeleteTurtle?.timeoutId === timeoutId) {
+      _pendingDeleteTurtle.dismissToast?.();
+      syncTurtleToIndexedDB();
+      _pendingDeleteTurtle = null;
+    }
+  }, 5000);
+
+  const dismissToast = showUndoToast('Observation deleted.', () => {
+    if (_pendingDeleteTurtle?.timeoutId !== timeoutId) return;
+    clearTimeout(timeoutId);
+    turtleObservations.splice(index, 0, obs);
+    if (obs.marker) map.addLayer(obs.marker);
+    if (obs.label)  map.addLayer(obs.label);
+    _pendingDeleteTurtle = null;
+    updateTable();
+  });
+
+  _pendingDeleteTurtle = { timeoutId, dismissToast };
 }
 
 window.updateTurtleObservation = updateTurtleObservation;

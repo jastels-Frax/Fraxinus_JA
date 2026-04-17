@@ -6,6 +6,7 @@ import { updateTable } from './ui.js';
 import { map, lockMap, unlockMap } from './map.js';
 import * as G from './surveyGlobals.js';
 import { capturePhoto } from './photo.js';
+import { showUndoToast } from './toast.js';
 
 // ─── Modal State ──────────────────────────────────────────────────────────
 let moosePlacingPoint = false;
@@ -220,14 +221,42 @@ function updateMooseObservation(index) {
   rec.marker.closePopup();
 }
 
+let _pendingDeleteMoose = null;
+
 function deleteMooseMarker(index) {
+  if (_pendingDeleteMoose) {
+    clearTimeout(_pendingDeleteMoose.timeoutId);
+    _pendingDeleteMoose.dismissToast?.();
+    syncMooseToIndexedDB();
+    _pendingDeleteMoose = null;
+  }
+
   const obs = mooseObservations[index];
   if (!obs) return;
   if (obs.marker) map.removeLayer(obs.marker);
   if (obs.label)  map.removeLayer(obs.label);
   mooseObservations.splice(index, 1);
-  syncMooseToIndexedDB();
   updateTable();
+
+  const timeoutId = setTimeout(() => {
+    if (_pendingDeleteMoose?.timeoutId === timeoutId) {
+      _pendingDeleteMoose.dismissToast?.();
+      syncMooseToIndexedDB();
+      _pendingDeleteMoose = null;
+    }
+  }, 5000);
+
+  const dismissToast = showUndoToast('Observation deleted.', () => {
+    if (_pendingDeleteMoose?.timeoutId !== timeoutId) return;
+    clearTimeout(timeoutId);
+    mooseObservations.splice(index, 0, obs);
+    if (obs.marker) map.addLayer(obs.marker);
+    if (obs.label)  map.addLayer(obs.label);
+    _pendingDeleteMoose = null;
+    updateTable();
+  });
+
+  _pendingDeleteMoose = { timeoutId, dismissToast };
 }
 
 window.updateMooseObservation = updateMooseObservation;

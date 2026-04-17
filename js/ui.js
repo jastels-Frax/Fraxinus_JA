@@ -7,6 +7,7 @@ import {
   exportHabitatCSV, exportHabitatGeoJSON, exportHabitatKML
 } from './export.js';
 import { uploadToFelt } from './felt.js';
+import { showUndoToast } from './toast.js';
 import { map, lockMap, unlockMap } from './map.js';
 import { speciesMarkers, mooseObservations, turtleObservations, habitatObservations } from './storageData.js';
 import { syncToIndexedDB, syncMooseToIndexedDB, syncTurtleToIndexedDB } from './storage.js';
@@ -651,14 +652,42 @@ export function zoomToHabitatMarker(index) {
 }
 window.zoomToHabitatMarker = zoomToHabitatMarker;
 
+let _pendingDeleteBBS = null;
+
 export function deleteMarker(index) {
+  if (_pendingDeleteBBS) {
+    clearTimeout(_pendingDeleteBBS.timeoutId);
+    _pendingDeleteBBS.dismissToast?.();
+    syncToIndexedDB();
+    _pendingDeleteBBS = null;
+  }
+
   const obs = speciesMarkers[index];
   if (!obs) return;
   if (obs.marker) map.removeLayer(obs.marker);
   if (obs.label)  map.removeLayer(obs.label);
   speciesMarkers.splice(index, 1);
-  syncToIndexedDB();
   updateTable();
+
+  const timeoutId = setTimeout(() => {
+    if (_pendingDeleteBBS?.timeoutId === timeoutId) {
+      _pendingDeleteBBS.dismissToast?.();
+      syncToIndexedDB();
+      _pendingDeleteBBS = null;
+    }
+  }, 5000);
+
+  const dismissToast = showUndoToast('Observation deleted.', () => {
+    if (_pendingDeleteBBS?.timeoutId !== timeoutId) return;
+    clearTimeout(timeoutId);
+    speciesMarkers.splice(index, 0, obs);
+    if (obs.marker) map.addLayer(obs.marker);
+    if (obs.label)  map.addLayer(obs.label);
+    _pendingDeleteBBS = null;
+    updateTable();
+  });
+
+  _pendingDeleteBBS = { timeoutId, dismissToast };
 }
 
 // ─── Survey Timer ─────────────────────────────────────────────────────────

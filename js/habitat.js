@@ -9,6 +9,7 @@ import { updateTable } from './ui.js';
 import { map, lockMap, unlockMap } from './map.js';
 import * as G from './surveyGlobals.js';
 import { capturePhoto } from './photo.js';
+import { showUndoToast } from './toast.js';
 
 let habitatPlacingPoint  = false;
 let habitatCurrentLatLng = null;
@@ -409,14 +410,42 @@ rec.photoRef  = document.getElementById(`habPopPhoto-${index}`)?.value     || ''
   rec.marker.closePopup();
 }
 
+let _pendingDeleteHabitat = null;
+
 function deleteHabitatMarker(index) {
+  if (_pendingDeleteHabitat) {
+    clearTimeout(_pendingDeleteHabitat.timeoutId);
+    _pendingDeleteHabitat.dismissToast?.();
+    syncHabitatToIndexedDB();
+    _pendingDeleteHabitat = null;
+  }
+
   const obs = habitatObservations[index];
   if (!obs) return;
   if (obs.marker) map.removeLayer(obs.marker);
   if (obs.label)  map.removeLayer(obs.label);
   habitatObservations.splice(index, 1);
-  syncHabitatToIndexedDB();
   updateTable();
+
+  const timeoutId = setTimeout(() => {
+    if (_pendingDeleteHabitat?.timeoutId === timeoutId) {
+      _pendingDeleteHabitat.dismissToast?.();
+      syncHabitatToIndexedDB();
+      _pendingDeleteHabitat = null;
+    }
+  }, 5000);
+
+  const dismissToast = showUndoToast('Observation deleted.', () => {
+    if (_pendingDeleteHabitat?.timeoutId !== timeoutId) return;
+    clearTimeout(timeoutId);
+    habitatObservations.splice(index, 0, obs);
+    if (obs.marker) map.addLayer(obs.marker);
+    if (obs.label)  map.addLayer(obs.label);
+    _pendingDeleteHabitat = null;
+    updateTable();
+  });
+
+  _pendingDeleteHabitat = { timeoutId, dismissToast };
 }
 
 window.updateHabitatObservation = updateHabitatObservation;
