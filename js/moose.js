@@ -224,15 +224,15 @@ function updateMooseObservation(index) {
 let _pendingDeleteMoose = null;
 
 function deleteMooseMarker(index) {
+  const obs = mooseObservations[index];
+  if (!obs) return;
+
   if (_pendingDeleteMoose) {
     clearTimeout(_pendingDeleteMoose.timeoutId);
     _pendingDeleteMoose.dismissToast?.();
     syncMooseToIndexedDB();
     _pendingDeleteMoose = null;
   }
-
-  const obs = mooseObservations[index];
-  if (!obs) return;
   if (obs.marker) map.removeLayer(obs.marker);
   if (obs.label)  map.removeLayer(obs.label);
   mooseObservations.splice(index, 1);

@@ -413,15 +413,15 @@ rec.photoRef  = document.getElementById(`habPopPhoto-${index}`)?.value     || ''
 let _pendingDeleteHabitat = null;
 
 function deleteHabitatMarker(index) {
+  const obs = habitatObservations[index];
+  if (!obs) return;
+
   if (_pendingDeleteHabitat) {
     clearTimeout(_pendingDeleteHabitat.timeoutId);
     _pendingDeleteHabitat.dismissToast?.();
     syncHabitatToIndexedDB();
     _pendingDeleteHabitat = null;
   }
-
-  const obs = habitatObservations[index];
-  if (!obs) return;
   if (obs.marker) map.removeLayer(obs.marker);
   if (obs.label)  map.removeLayer(obs.label);
   habitatObservations.splice(index, 1);

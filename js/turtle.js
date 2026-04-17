@@ -243,15 +243,15 @@ function updateTurtleObservation(index) {
 let _pendingDeleteTurtle = null;
 
 function deleteTurtleMarker(index) {
+  const obs = turtleObservations[index];
+  if (!obs) return;
+
   if (_pendingDeleteTurtle) {
     clearTimeout(_pendingDeleteTurtle.timeoutId);
     _pendingDeleteTurtle.dismissToast?.();
     syncTurtleToIndexedDB();
     _pendingDeleteTurtle = null;
   }
-
-  const obs = turtleObservations[index];
-  if (!obs) return;
   if (obs.marker) map.removeLayer(obs.marker);
   if (obs.label)  map.removeLayer(obs.label);
   turtleObservations.splice(index, 1);

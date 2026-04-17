@@ -655,15 +655,15 @@ window.zoomToHabitatMarker = zoomToHabitatMarker;
 let _pendingDeleteBBS = null;
 
 export function deleteMarker(index) {
+  const obs = speciesMarkers[index];
+  if (!obs) return;
+
   if (_pendingDeleteBBS) {
     clearTimeout(_pendingDeleteBBS.timeoutId);
     _pendingDeleteBBS.dismissToast?.();
     syncToIndexedDB();
     _pendingDeleteBBS = null;
   }
-
-  const obs = speciesMarkers[index];
-  if (!obs) return;
   if (obs.marker) map.removeLayer(obs.marker);
   if (obs.label)  map.removeLayer(obs.label);
   speciesMarkers.splice(index, 1);
