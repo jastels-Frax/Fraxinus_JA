@@ -333,6 +333,24 @@ export function createHabitatPopupHTML(index, obs) {
   const selVal  = isOther ? 'Other' : (obs.featureType || '');
   const otherTx = isOther ? obs.featureType : '';
 
+  const popupCriteria = HABITAT_CRITERIA[obs.featureType] || [];
+  const criteriaSection = popupCriteria.length
+    ? `<div class="form-row" style="flex-direction:column; align-items:flex-start; gap:4px;">
+         <label>Criteria:</label>
+         <div id="habPopCriteriaList-${index}" style="padding:2px 0;">
+           ${popupCriteria.map(item => {
+             const cbId    = 'hpc_' + index + '_' + item.replace(/[^a-z0-9]/gi, '_');
+             const checked = obs.criteria?.includes(item) ? 'checked' : '';
+             return `<label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.88rem; color:#d6d6d6; padding:2px 0;">
+               <input type="checkbox" id="${cbId}" value="${item}" ${checked}
+                 style="width:15px; height:15px; cursor:pointer; accent-color:#4caf50; flex-shrink:0;" />
+               ${item}
+             </label>`;
+           }).join('')}
+         </div>
+       </div>`
+    : '';
+
   const div = document.createElement('div');
   div.className = 'popup-content compact';
   div.innerHTML = `
@@ -347,6 +365,7 @@ export function createHabitatPopupHTML(index, obs) {
       <label></label>
       <input type="text" id="habPopFeatureOther-${index}" value="${otherTx}" placeholder="Specify feature type…" style="flex:1;" />
     </div>
+    ${criteriaSection}
 <div class="form-row">
       <label>Photo Ref:</label>
       <input type="text" id="habPopPhoto-${index}" value="${obs.photoRef || ''}" placeholder="Filename or ID" style="flex:1;" />
@@ -375,6 +394,10 @@ function updateHabitatObservation(index) {
     : (selEl?.value || rec.featureType);
 rec.photoRef  = document.getElementById(`habPopPhoto-${index}`)?.value     || '';
   rec.note      = document.getElementById(`habPopNote-${index}`)?.value      || '';
+  const _criteriaList = document.getElementById(`habPopCriteriaList-${index}`);
+  if (_criteriaList) {
+    rec.criteria = Array.from(_criteriaList.querySelectorAll('input:checked')).map(cb => cb.value);
+  }
 
   rec.label.setIcon(L.divIcon({
     className: 'marker-label',
