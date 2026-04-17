@@ -18,7 +18,7 @@ export function getMetadataSnapshot() {
     projectID, pointID, observer, surveyType, surveyLength,
     wind, windDir, tempC, precip, siteHabitat,
     surveyLat, surveyLng,
-    surveyStartTime, surveyEndTime,
+    surveyStartTime, surveyEndTime, surveyRemainingSeconds,
     surveySubmittedAt, surveyResubmittedAt
   };
   if (activeSurvey === 'MOOSE') return {
@@ -58,6 +58,7 @@ export function resetMetadata(type) {
     localStorage.removeItem('surveyResubmittedAt');
     localStorage.removeItem('surveyStartTime');
     localStorage.removeItem('surveyEndTime');
+    localStorage.removeItem('surveyRemainingSeconds');
     setSurveyMetadata({ observer: observer || defObs, projectID: projectID || defPrj });
   } else if (type === 'MOOSE') {
     localStorage.removeItem('mooseSubmittedAt');
@@ -83,8 +84,9 @@ export let precip             = localStorage.getItem('precip')             || ''
 export let siteHabitat        = localStorage.getItem('siteHabitat')        || '';
 export let surveyLat          = localStorage.getItem('surveyLat')          || '';
 export let surveyLng          = localStorage.getItem('surveyLng')          || '';
-export let surveyStartTime     = localStorage.getItem('surveyStartTime')     || '';
-export let surveyEndTime       = localStorage.getItem('surveyEndTime')       || '';
+export let surveyStartTime        = localStorage.getItem('surveyStartTime')        || '';
+export let surveyEndTime          = localStorage.getItem('surveyEndTime')          || '';
+export let surveyRemainingSeconds = parseInt(localStorage.getItem('surveyRemainingSeconds')) || 0;
 export let surveySubmittedAt  = localStorage.getItem('surveySubmittedAt')  || '';
 export let surveyResubmittedAt= localStorage.getItem('surveyResubmittedAt')|| '';
 
@@ -101,8 +103,9 @@ export function setSurveyMetadata(data) {
   siteHabitat         = data.siteHabitat         || '';
   surveyLat           = data.surveyLat           || '';
   surveyLng           = data.surveyLng           || '';
-  surveyStartTime     = data.surveyStartTime     || '';
-  surveyEndTime       = data.surveyEndTime       || '';
+  surveyStartTime       = data.surveyStartTime       || '';
+  surveyEndTime         = data.surveyEndTime         || '';
+  surveyRemainingSeconds = data.surveyRemainingSeconds ?? surveyRemainingSeconds;
   surveySubmittedAt   = data.surveySubmittedAt   || '';
   surveyResubmittedAt = data.surveyResubmittedAt || '';
   localStorage.setItem('projectID',           projectID);
@@ -117,8 +120,9 @@ export function setSurveyMetadata(data) {
   localStorage.setItem('siteHabitat',         siteHabitat);
   localStorage.setItem('surveyLat',           surveyLat);
   localStorage.setItem('surveyLng',           surveyLng);
-  localStorage.setItem('surveyStartTime',     surveyStartTime);
-  localStorage.setItem('surveyEndTime',       surveyEndTime);
+  localStorage.setItem('surveyStartTime',        surveyStartTime);
+  localStorage.setItem('surveyEndTime',          surveyEndTime);
+  localStorage.setItem('surveyRemainingSeconds', surveyRemainingSeconds);
   localStorage.setItem('surveySubmittedAt',   surveySubmittedAt);
   localStorage.setItem('surveyResubmittedAt', surveyResubmittedAt);
 }

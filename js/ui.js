@@ -14,7 +14,9 @@ import {
   activeSurvey,
   projectID, pointID, observer, surveyType, surveyLength,
   wind, windDir, tempC, precip, siteHabitat, surveyLat, surveyLng,
-  surveyStartTime, surveyEndTime, setSurveyMetadata, getMetadataSnapshot,
+  surveyStartTime, surveyEndTime,
+  surveyRemainingSeconds as _gSurveyRemainingSeconds,
+  setSurveyMetadata, getMetadataSnapshot,
   mooseProjectID, mooseObserver, mooseTransectID, mooseSurveyDate,
   mooseStartTime, mooseEndTime, mooseVisibility, mooseSnowCover,
   mooseTempC, mooseWindSpeed, mooseNotes, setMooseMetadata,
@@ -691,11 +693,14 @@ function startSurveyTimer() {
       if (surveyRemainingSeconds > 0) {
         surveyRemainingSeconds--;
         updateSurveyTimerDisplay();
+        if (surveyRemainingSeconds % 30 === 0) {
+          setSurveyMetadata({ ...getMetadataSnapshot(), surveyRemainingSeconds });
+        }
       } else {
         clearInterval(surveyTimerInterval);
         surveyTimerInterval = null;
         const now = new Date().toTimeString().slice(0, 5);
-        setSurveyMetadata({ ...getMetadataSnapshot(), surveyEndTime: now });
+        setSurveyMetadata({ ...getMetadataSnapshot(), surveyEndTime: now, surveyRemainingSeconds: 0 });
         const endEl = document.getElementById('surveyEndTimeInput');
         if (endEl) endEl.value = now;
         alert('Survey complete!');
@@ -725,6 +730,11 @@ export function initTimerBindings() {
   if (pauseBtn) pauseBtn.addEventListener('click', pauseSurveyTimer);
   if (resetBtn) resetBtn.addEventListener('click', resetSurveyTimer);
   resetSurveyTimer();
+  // Restore remaining seconds from a resumed draft (0 means not started / new session)
+  if (_gSurveyRemainingSeconds > 0) {
+    surveyRemainingSeconds = _gSurveyRemainingSeconds;
+    updateSurveyTimerDisplay();
+  }
 }
 
 // ─── BBS Survey GPS Capture ───────────────────────────────────────────────
