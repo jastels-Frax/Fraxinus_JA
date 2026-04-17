@@ -53,6 +53,13 @@ export function initializeMap() {
       const latlng   = [position.coords.latitude, position.coords.longitude];
       const accuracy = position.coords.accuracy;
       observerLocation = L.latLng(latlng);
+      const _badge = document.getElementById('gpsAccuracyBadge');
+      if (_badge) {
+        _badge.textContent = `\u00b1${Math.round(accuracy)}m`;
+        _badge.style.display = '';
+        _badge.style.color = accuracy <= 10 ? '#4caf50' : accuracy <= 30 ? '#ffc107' : '#e57373';
+        _badge.title = accuracy > 30 ? 'Low accuracy \u2014 move to open sky' : '';
+      }
 
       if (userLocationMarker) {
         userLocationMarker.setLatLng(latlng);
@@ -109,6 +116,7 @@ function addMasterButtons() {
     <button id="btnSpecies" title="${speciesTitle}" class="btn-survey-icon">${speciesEmoji}</button>
     <button id="btnHabitat" title="Record Habitat / Feature Observation" class="btn-survey-icon">🌿</button>
     <button id="btnGPS"    title="GPS Auto-Follow" class="btn-session-action"><i class="fas fa-location-crosshairs"></i></button>
+    <div id="gpsAccuracyBadge" style="display:none; font-size:0.7rem; text-align:center; font-weight:600; padding:2px 6px; border-radius:4px; background:rgba(0,0,0,0.55); min-width:52px;"></div>
     <button id="btnDraft"  title="Save to Drafts"  class="btn-session-action">💾</button>
     <button id="btnSubmit" title="Save and Submit" class="btn-session-action">✅</button>
   `;
