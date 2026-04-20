@@ -2,6 +2,7 @@
 // Ported from GPS2026felt/src/io/FeltService.ts and FeltExportDialog.ts
 
 import { showToast } from './toast.js';
+import { setActiveModal, clearActiveModal } from './modal.js';
 import {
   buildSpeciesGeoJSON, buildMooseGeoJSON,
   buildTurtleGeoJSON, buildHabitatGeoJSON
@@ -115,9 +116,11 @@ function _openModal() {
     });
   }
   _overlay.style.display = 'flex';
+  setActiveModal('felt');
 }
 
 function _closeModal() {
+  clearActiveModal();
   if (_overlay) _overlay.style.display = 'none';
   if (_onClose) {
     const cb = _onClose;
@@ -537,3 +540,10 @@ export function uploadToFelt(surveyTarget, onClose) {
       _closeModal();
     });
 }
+
+export function cancelFeltModal() {
+  const uploadBtn = _overlay?.querySelector('#feltUpload');
+  if (uploadBtn?.disabled) return;
+  _closeModal();
+}
+window.cancelFeltModal = cancelFeltModal;

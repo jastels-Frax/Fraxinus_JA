@@ -7,6 +7,11 @@ import { lockMap, unlockMap } from './map.js';
 let placingPoint  = false;
 let currentLatLng = null;
 
+// ─── Active-modal registry ────────────────────────────────────────────────
+let _activeModal = null;
+export function setActiveModal(name) { _activeModal = name; }
+export function clearActiveModal()   { _activeModal = null; }
+
 // ─── BBS Species Modal ────────────────────────────────────────────────────
 export function showSpeciesModal(latlng) {
   if (!observer || !pointID) {
@@ -36,6 +41,7 @@ export function showSpeciesModal(latlng) {
 
   modal.style.display    = 'block';
   backdrop.style.display = 'block';
+  setActiveModal('species');
   lockMap();
   updateSpeciesList('');
 }
@@ -45,6 +51,7 @@ export function closeModal() {
   currentLatLng = null;
   document.getElementById('speciesModal')?.style.setProperty('display', 'none');
   document.getElementById('modalBackdrop')?.style.setProperty('display', 'none');
+  clearActiveModal();
   unlockMap();
 }
 
@@ -173,17 +180,28 @@ function showInstructions() {
 
   modal.style.display = 'block';
   document.getElementById('modalBackdrop')?.style.setProperty('display', 'block');
+  setActiveModal('instructions');
   lockMap();
 }
 
 function closeInstructions() {
   document.getElementById('instructionsModal')?.style.setProperty('display', 'none');
   document.getElementById('modalBackdrop')?.style.setProperty('display', 'none');
+  clearActiveModal();
   unlockMap();
 }
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeInstructions();
+  if (e.key !== 'Escape' || !_activeModal) return;
+  switch (_activeModal) {
+    case 'species':      closeModal(); break;
+    case 'moose':        window.closeMooseModal?.(); break;
+    case 'turtle':       window.closeTurtleModal?.(); break;
+    case 'habitat':      window.closeHabitatModal?.(); break;
+    case 'surveyMeta':   window.closeSurveyModal?.(); break;
+    case 'instructions': closeInstructions(); break;
+    case 'felt':         window.cancelFeltModal?.(); break;
+  }
 });
 
 // ─── DOM-Ready Bindings ───────────────────────────────────────────────────

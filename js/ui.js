@@ -8,6 +8,7 @@ import {
 } from './export.js';
 import { uploadToFelt } from './felt.js';
 import { showUndoToast } from './toast.js';
+import { setActiveModal, clearActiveModal } from './modal.js';
 import { map, lockMap, unlockMap } from './map.js';
 import { speciesMarkers, mooseObservations, turtleObservations, habitatObservations } from './storageData.js';
 import { syncToIndexedDB, syncMooseToIndexedDB, syncTurtleToIndexedDB } from './storage.js';
@@ -49,6 +50,7 @@ export function openSurveyModal() {
   prefillSurveyModal();
   modal.style.display    = 'block';
   backdrop.style.display = 'block';
+  setActiveModal('surveyMeta');
   lockMap();
 }
 
@@ -110,6 +112,7 @@ export function closeSurveyModal() {
   }
   document.getElementById('surveyModal').style.display = 'none';
   document.getElementById('modalBackdrop').style.display = 'none';
+  clearActiveModal();
   unlockMap();
 }
 

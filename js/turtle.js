@@ -7,6 +7,7 @@ import { map, lockMap, unlockMap } from './map.js';
 import * as G from './surveyGlobals.js';
 import { capturePhoto } from './photo.js';
 import { showUndoToast } from './toast.js';
+import { setActiveModal, clearActiveModal } from './modal.js';
 
 // ─── Modal State ──────────────────────────────────────────────────────────
 let turtlePlacingPoint = false;
@@ -43,6 +44,7 @@ export function showTurtleModal(latlng) {
 
   modal.style.display    = 'block';
   backdrop.style.display = 'block';
+  setActiveModal('turtle');
   lockMap();
 }
 
@@ -51,6 +53,7 @@ export function closeTurtleModal() {
   turtleCurrentLatLng  = null;
   document.getElementById('turtleModal')?.style.setProperty('display', 'none');
   document.getElementById('modalBackdrop')?.style.setProperty('display', 'none');
+  clearActiveModal();
   unlockMap();
 }
 

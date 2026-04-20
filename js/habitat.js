@@ -10,6 +10,7 @@ import { map, lockMap, unlockMap } from './map.js';
 import * as G from './surveyGlobals.js';
 import { capturePhoto } from './photo.js';
 import { showUndoToast } from './toast.js';
+import { setActiveModal, clearActiveModal } from './modal.js';
 
 let habitatPlacingPoint  = false;
 let habitatCurrentLatLng = null;
@@ -166,6 +167,7 @@ export function showHabitatModal(latlng) {
 
   modal.style.display    = 'block';
   backdrop.style.display = 'block';
+  setActiveModal('habitat');
   lockMap();
 }
 
@@ -174,6 +176,7 @@ export function closeHabitatModal() {
   habitatCurrentLatLng = null;
   document.getElementById('habitatModal')?.style.setProperty('display', 'none');
   document.getElementById('modalBackdrop')?.style.setProperty('display', 'none');
+  clearActiveModal();
   unlockMap();
 }
 

@@ -7,6 +7,7 @@ import { map, lockMap, unlockMap } from './map.js';
 import * as G from './surveyGlobals.js';
 import { capturePhoto } from './photo.js';
 import { showUndoToast } from './toast.js';
+import { setActiveModal, clearActiveModal } from './modal.js';
 
 // ─── Modal State ──────────────────────────────────────────────────────────
 let moosePlacingPoint = false;
@@ -40,6 +41,7 @@ export function showMooseModal(latlng) {
 
   modal.style.display = 'block';
   backdrop.style.display = 'block';
+  setActiveModal('moose');
   lockMap();
 }
 
@@ -48,6 +50,7 @@ export function closeMooseModal() {
   mooseCurrentLatLng = null;
   document.getElementById('mooseModal')?.style.setProperty('display', 'none');
   document.getElementById('modalBackdrop')?.style.setProperty('display', 'none');
+  clearActiveModal();
   unlockMap();
 }
 
