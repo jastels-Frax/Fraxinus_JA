@@ -104,7 +104,15 @@ export function initializeMap() {
 }
 
 // ─── Master Buttons ───────────────────────────────────────────────────────
+let _masterButtonsInitialised = false;
+
 function addMasterButtons() {
+  if (_masterButtonsInitialised) {
+    console.warn('[addMasterButtons] called again — ignoring');
+    return;
+  }
+  _masterButtonsInitialised = true;
+
   const container = document.getElementById('masterButton');
   if (!container) return;
 
@@ -117,7 +125,7 @@ function addMasterButtons() {
                      :                      'Record Turtle Observation';
 
   container.innerHTML = `
-    <button onclick="goBackToSelection()" title="Back to Survey Selection"><i class="fas fa-arrow-left fa-2x"></i></button>
+    <button id="btnBack" onclick="goBackToSelection()" title="Back to Survey Selection"><i class="fas fa-arrow-left fa-2x"></i></button>
     <button onclick="showInstructions()" title="Help"><i class="fas fa-circle-question fa-2x"></i></button>
     <button id="btnSurvey" title="Survey Metadata"><i class="fas fa-clipboard-list fa-2x"></i></button>
     <button id="btnDrawer" title="Observations"><i class="fas fa-rectangle-list fa-2x"></i><span id="obsCountBadge"></span></button>
@@ -179,6 +187,29 @@ function addMasterButtons() {
       if (!m.isHabitatPlacingPoint()) m.showHabitatModal(loc);
     });
   });
+
+  // Diagnostic: log whenever the back button is removed from the DOM so the
+  // exact call stack can be captured in the field via Safari Web Inspector.
+  const _mbEl = document.getElementById('masterButton');
+  if (_mbEl) {
+    new MutationObserver(mutations => {
+      for (const m of mutations) {
+        for (const node of m.removedNodes) {
+          if (node.id === 'btnBack' ||
+              (node.tagName === 'BUTTON' &&
+               node.getAttribute('onclick')?.includes('goBackToSelection'))) {
+            console.error('[BACK BUTTON REMOVED]',
+              'node:', node.outerHTML,
+              'stack:', new Error().stack);
+          }
+        }
+        if (m.addedNodes.length || m.removedNodes.length) {
+          console.log('[masterButton childList change]',
+            'added:', m.addedNodes.length, 'removed:', m.removedNodes.length);
+        }
+      }
+    }).observe(_mbEl, { childList: true, subtree: false });
+  }
 }
 
 // ─── Map interaction lock (used while any modal/overlay is open) ──────────
@@ -202,6 +233,7 @@ export function unlockMap() {
 
 // ─── Destroy map (called when returning to survey selection) ──────────────
 export function destroyMap() {
+  _masterButtonsInitialised = false;
   if (geoWatchId != null) { navigator.geolocation.clearWatch(geoWatchId); geoWatchId = null; }
   if (map) { map.remove(); map = null; }
   _lockCount = 0;

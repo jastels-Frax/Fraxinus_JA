@@ -155,6 +155,15 @@
   <!-- Toast container -->
   <div id="toast-container"></div>
 
+  <!-- Emergency back button — hidden by default; shown by ensureBackButton() if #btnBack goes missing -->
+  <button id="emergencyBack"
+    onclick="goBackToSelection()"
+    style="display:none; position:fixed; bottom:80px; right:16px; z-index:9999;
+      background:#333; color:white; border:2px solid #d6d6d6; border-radius:8px;
+      padding:10px 16px; font-size:1rem; cursor:pointer;">
+    ← Back to Home
+  </button>
+
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- Global species list (BBS) -->

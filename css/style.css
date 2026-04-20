@@ -464,6 +464,12 @@ body {
   opacity: 0.35;
 }
 
+/* Back button is always interactive — never locked out by a modal */
+#masterButton.ui-locked #btnBack {
+  pointer-events: auto !important;
+  opacity: 1 !important;
+}
+
 #masterButton button {
   font-size: 14px;
   font-family: 'Oswald', sans-serif;

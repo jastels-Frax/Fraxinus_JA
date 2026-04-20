@@ -325,8 +325,16 @@ function _setVal(id, val) {
   if (el) el.value = val || '';
 }
 
+// ─── Back button safety net ───────────────────────────────────────────────
+export function ensureBackButton() {
+  if (document.getElementById('btnBack')) return;
+  const fallback = document.getElementById('emergencyBack');
+  if (fallback) fallback.style.display = 'block';
+}
+
 // ─── Table Renderer ───────────────────────────────────────────────────────
 export function updateTable() {
+  ensureBackButton();
   const drawer = document.getElementById('dataDrawer');
   if (!drawer) return;
 
