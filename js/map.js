@@ -8,6 +8,8 @@ import { showSpeciesModal, isPlacingPoint } from './modal.js';
 import { activeSurvey } from './surveyGlobals.js';
 import { stampOffload } from './export.js';
 import { showToast } from './toast.js';
+import { injectMooseModal } from './moose.js';
+import { injectTurtleModal } from './turtle.js';
 
 // ─── Shared map state ─────────────────────────────────────────────────────
 export let map              = null;
@@ -96,8 +98,10 @@ export function initializeMap() {
   if (survey === 'BBS') {
     loadSpeciesMarkers();
   } else if (survey === 'MOOSE') {
+    injectMooseModal();
     loadMooseObservations();
   } else if (survey === 'TURTLE') {
+    injectTurtleModal();
     loadTurtleObservations();
   }
   loadHabitatObservations();

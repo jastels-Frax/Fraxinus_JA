@@ -26,7 +26,11 @@ export function showMooseModal(latlng) {
 
   const modal = document.getElementById('mooseModal');
   const backdrop = document.getElementById('modalBackdrop');
-  if (!modal || !backdrop) return;
+  if (!modal || !backdrop) {
+    console.error('[showMooseModal] modal not found — injectMooseModal() may not have been called');
+    showToast('Observation form not ready. Please restart the survey.', 'error', 5000);
+    return;
+  }
 
   // Reset fields
   modal.querySelector('#mooseSpeciesInput').value   = '';

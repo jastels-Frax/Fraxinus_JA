@@ -26,7 +26,11 @@ export function showTurtleModal(latlng) {
 
   const modal    = document.getElementById('turtleModal');
   const backdrop = document.getElementById('modalBackdrop');
-  if (!modal || !backdrop) return;
+  if (!modal || !backdrop) {
+    console.error('[showTurtleModal] modal not found — injectTurtleModal() may not have been called');
+    showToast('Observation form not ready. Please restart the survey.', 'error', 5000);
+    return;
+  }
 
   // Reset fields
   modal.querySelector('#turtleSpeciesInput').value    = '';
