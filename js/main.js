@@ -219,7 +219,7 @@ function _showNoDataModal() {
 }
 
 // ─── Back button — auto-save with metadata guard ──────────────────────────
-window.goBackToSelection = function () {
+window.goBackToSelection = async function () {
   // Case C: no metadata at all → prompt before discarding
   if (!hasAnyMetadata()) {
     _showNoMetadataModal();
@@ -229,7 +229,7 @@ window.goBackToSelection = function () {
   const obsCount = _currentObsCount();
   // _buildRecord captures state synchronously before the first await, so
   // calling clearInMemoryArrays() immediately after is safe.
-  saveDraft().catch(e => console.warn('Back-button auto-save failed:', e));
+  await saveDraft().catch(e => console.error('saveDraft error:', e));
   clearInMemoryArrays();
   _returnToHome();
   showToast(
@@ -514,6 +514,19 @@ async function _renderSessionLists() {
   document.getElementById('draftsSection').style.display = drafts.length ? '' : 'none';
   document.getElementById('recentSection').style.display = '';
 }
+
+window._refreshSessionLists = async function () {
+  const btn = document.getElementById('btn-refresh-sessions');
+  if (btn) {
+    btn.disabled = true;
+    btn.querySelector('i')?.classList.add('fa-spin');
+  }
+  await _renderSessionLists();
+  if (btn) {
+    btn.disabled = false;
+    btn.querySelector('i')?.classList.remove('fa-spin');
+  }
+};
 
 function _populateList(listId, sessions, isDraft) {
   const el = document.getElementById(listId);

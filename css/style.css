@@ -1139,10 +1139,10 @@ body {
   position: relative;
 }
 
-#btn-settings {
+#btn-settings,
+#btn-refresh-sessions {
   position: absolute;
   top: 12px;
-  right: 12px;
   background: transparent;
   border: none;
   color: #777;
@@ -1153,7 +1153,13 @@ body {
   line-height: 1;
 }
 
-#btn-settings:hover { color: #f0f0f0; }
+#btn-settings         { right: 12px; }
+#btn-refresh-sessions { right: 52px; }
+
+#btn-settings:hover,
+#btn-refresh-sessions:hover { color: #f0f0f0; }
+
+#btn-refresh-sessions:disabled { opacity: 0.4; cursor: default; }
 
 /* ── Felt upload modal overlay ───────────────────────────────────────── */
 .felt-overlay {
