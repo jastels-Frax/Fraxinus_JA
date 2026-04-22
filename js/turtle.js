@@ -6,7 +6,7 @@ import { updateTable } from './ui.js';
 import { map, lockMap, unlockMap } from './map.js';
 import * as G from './surveyGlobals.js';
 import { capturePhoto } from './photo.js';
-import { showUndoToast } from './toast.js';
+import { showUndoToast, showToast } from './toast.js';
 import { setActiveModal, clearActiveModal } from './modal.js';
 
 // ─── Modal State ──────────────────────────────────────────────────────────
@@ -18,11 +18,8 @@ export function isTurtlePlacingPoint() { return turtlePlacingPoint; }
 // ─── Show / Close Modal ───────────────────────────────────────────────────
 export function showTurtleModal(latlng) {
   if (!G.turtleObserver || !G.turtleSiteName) {
-    alert('Please complete survey metadata before placing observations.');
-    return;
+    showToast('Metadata incomplete — tap 📋 to fill in.', 'warning', 3000);
   }
-  turtlePlacingPoint = true;
-  turtleCurrentLatLng = latlng;
 
   const modal    = document.getElementById('turtleModal');
   const backdrop = document.getElementById('modalBackdrop');
@@ -31,6 +28,9 @@ export function showTurtleModal(latlng) {
     showToast('Observation form not ready. Please restart the survey.', 'error', 5000);
     return;
   }
+
+  turtlePlacingPoint = true;
+  turtleCurrentLatLng = latlng;
 
   // Reset fields
   modal.querySelector('#turtleSpeciesInput').value    = '';

@@ -165,14 +165,14 @@ function addMasterButtons() {
     if (survey === 'BBS') {
       if (!isPlacingPoint()) showSpeciesModal(observerLocation || map.getCenter());
     } else {
+      const loc = observerLocation ?? map.getCenter();
       if (!observerLocation) {
-        alert('GPS location not yet available. Please wait for a location fix.');
-        return;
+        showToast('No GPS fix yet — using map centre.', 'warning', 3000);
       }
       if (survey === 'MOOSE') {
-        import('./moose.js').then(m => { if (!m.isMoosePlacingPoint()) m.showMooseModal(observerLocation); });
+        import('./moose.js').then(m => { if (!m.isMoosePlacingPoint()) m.showMooseModal(loc); });
       } else if (survey === 'TURTLE') {
-        import('./turtle.js').then(m => { if (!m.isTurtlePlacingPoint()) m.showTurtleModal(observerLocation); });
+        import('./turtle.js').then(m => { if (!m.isTurtlePlacingPoint()) m.showTurtleModal(loc); });
       }
     }
   });

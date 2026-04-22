@@ -3,6 +3,7 @@
 import { updateSpeciesList, adjustCount, saveSpeciesObservation } from './species.js';
 import { observer, pointID, activeSurvey } from './surveyGlobals.js';
 import { lockMap, unlockMap } from './map.js';
+import { showToast } from './toast.js';
 
 let placingPoint  = false;
 let currentLatLng = null;
@@ -15,15 +16,15 @@ export function clearActiveModal()   { _activeModal = null; }
 // ─── BBS Species Modal ────────────────────────────────────────────────────
 export function showSpeciesModal(latlng) {
   if (!observer || !pointID) {
-    alert('Please complete survey metadata before placing observations.');
-    return;
+    showToast('Metadata incomplete — tap 📋 to fill in.', 'warning', 3000);
   }
-  placingPoint  = true;
-  currentLatLng = latlng;
 
   const modal    = document.getElementById('speciesModal');
   const backdrop = document.getElementById('modalBackdrop');
   if (!modal || !backdrop) return;
+
+  placingPoint  = true;
+  currentLatLng = latlng;
 
   const searchInput  = document.getElementById('speciesSearch');
   const countDisplay = document.getElementById('speciesCountDisplay');
