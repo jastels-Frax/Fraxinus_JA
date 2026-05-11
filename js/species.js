@@ -14,12 +14,22 @@ import {
 
 // ─── Species Search Autocomplete ──────────────────────────────────────────
 const RARITY_COLOUR = { rare: '#CC0000', infrequent: '#E69138' };
+const SARA_LABEL    = { E: 'SAR-E', T: 'SAR-T', SC: 'SAR-SC' };
+const SARA_COLOUR   = { E: '#CC0000', T: '#E69138', SC: '#F1C232' };
 
 const RARITY_LEGEND_HTML = `
-  <div id="rarityLegend" style="display:flex;gap:14px;font-size:0.75rem;opacity:0.6;margin-bottom:8px;align-items:center;padding:0 2px;">
-    <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#CC0000;margin-right:4px;vertical-align:middle;"></span>Rare</span>
-    <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#E69138;margin-right:4px;vertical-align:middle;"></span>Infrequent</span>
-    <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#888;margin-right:4px;vertical-align:middle;"></span>Regular</span>
+  <div id="rarityLegend" style="display:flex;flex-direction:column;gap:6px;font-size:0.75rem;opacity:0.6;margin-bottom:8px;padding:0 2px;">
+    <div style="display:flex;gap:14px;align-items:center;">
+      <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#CC0000;margin-right:4px;vertical-align:middle;"></span>Rare</span>
+      <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#E69138;margin-right:4px;vertical-align:middle;"></span>Infrequent</span>
+      <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#888;margin-right:4px;vertical-align:middle;"></span>Regular</span>
+    </div>
+    <div style="display:flex;gap:10px;font-size:0.72rem;opacity:0.65;flex-wrap:wrap;">
+      <span><span style="background:#CC0000;color:#fff;padding:1px 4px;border-radius:3px;font-size:0.65rem;font-weight:700;">SAR-E</span> Endangered</span>
+      <span><span style="background:#E69138;color:#fff;padding:1px 4px;border-radius:3px;font-size:0.65rem;font-weight:700;">SAR-T</span> Threatened</span>
+      <span><span style="background:#F1C232;color:#fff;padding:1px 4px;border-radius:3px;font-size:0.65rem;font-weight:700;">SAR-SC</span> Special Concern</span>
+      <span><span style="background:#674ea7;color:#fff;padding:1px 4px;border-radius:3px;font-size:0.65rem;font-weight:700;">SOCI</span> Prov. concern</span>
+    </div>
   </div>`;
 
 export function updateSpeciesList(filter) {
@@ -49,8 +59,15 @@ export function updateSpeciesList(filter) {
       const srankText = (sp.srank && sp.code !== 'OTHER')
         ? `<span style="font-size:0.75rem;opacity:0.45;margin-left:4px;">${sp.srank}</span>`
         : '';
+      let statusBadge = '';
+      if (sp.sara) {
+        statusBadge = `<span style="font-size:0.65rem;font-weight:700;padding:1px 5px;border-radius:3px;background:${SARA_COLOUR[sp.sara]};color:#fff;margin-left:6px;vertical-align:middle;letter-spacing:0.03em;">${SARA_LABEL[sp.sara]}</span>`;
+      } else if (sp.soci) {
+        statusBadge = `<span style="font-size:0.65rem;font-weight:700;padding:1px 5px;border-radius:3px;background:#674ea7;color:#fff;margin-left:6px;vertical-align:middle;letter-spacing:0.03em;">SOCI</span>`;
+      }
+
       const li = document.createElement('li');
-      li.innerHTML = `${dot}<strong>${sp.code}</strong> – ${sp.name}${srankText}${sp.soci ? ' <span style="color:tomato;">(SOCI)</span>' : ''}`;
+      li.innerHTML = `${dot}${sp.name}${statusBadge}${srankText}`;
       li.style.cursor = 'pointer';
       li.onclick = () => {
         const modal   = document.getElementById('speciesModal');
@@ -59,7 +76,9 @@ export function updateSpeciesList(filter) {
         if (modal)   modal._selectedSpecies = sp;
         if (search)  { search.style.display = 'none'; search.value = sp.code; }
         if (display) {
-          display.innerHTML = `<strong>${sp.code}</strong> — ${sp.name}${sp.scientific ? ` <em style="opacity:0.55;font-size:0.85em;">${sp.scientific}</em>` : ''} <span style="float:right;opacity:0.5;font-size:0.8em;">tap to change</span>`;
+          display.innerHTML = `${dot}<strong>${sp.name}</strong>${statusBadge}${srankText}`
+            + `<span style="font-size:0.75rem;opacity:0.5;margin-left:8px;">(${sp.code})</span>`
+            + `<span style="float:right;font-size:0.8rem;opacity:0.6;margin-top:1px;">tap to change ✕</span>`;
           display.style.display = 'block';
         }
         list.innerHTML = '';
@@ -92,8 +111,8 @@ export function saveSpeciesObservation() {
   const count     = parseInt(document.getElementById('speciesCountDisplay')?.textContent) || 1;
   const breeding  = document.getElementById('breedingInput')?.value  || '';
   const note      = document.getElementById('noteInput')?.value      || '';
-  const passHt    = document.getElementById('passHtInput')?.value    || '';    // BUG FIX: was 'passHt'
-  const flightDir = document.getElementById('flightDirInput')?.value || '';    // BUG FIX: was 'flightDir'
+  const passHt    = document.getElementById('passHtInput')?.value    || '';
+  const flightDir = document.getElementById('flightDirInput')?.value || '';
   const latlng    = currentLatLng;
   const timestamp = new Date().toLocaleString();
   const index     = speciesMarkers.length;
@@ -110,10 +129,16 @@ export function saveSpeciesObservation() {
     ) * 180 / Math.PI + 360) % 360;
   }
 
-  // Marker (white fill, SOCI = red border)
+  // Marker colour: SARA listed = red, SOCI-only = purple, regular = green
+  const markerColor = species.sara
+    ? '#CC0000'
+    : species.soci
+      ? '#9900cc'
+      : '#33a853';
+
   const marker = L.circleMarker(latlng, {
     radius:      15,
-    color:       species.soci ? 'red' : 'green',
+    color:       markerColor,
     fillColor:   'white',
     fillOpacity: 0.6,
     weight:      2
@@ -156,15 +181,21 @@ export function saveSpeciesObservation() {
 
 // ─── Popup HTML ───────────────────────────────────────────────────────────
 export function createSpeciesPopupHTML(index, code, count, breeding, note, passHeight = '', flightDir = '') {
-  const speciesInfo = window.speciesList?.find(s => s.code === code);
-  const srankBadge = (speciesInfo?.srank && speciesInfo.srank !== 'SNA' && code !== 'OTHER')
-    ? `<span style="font-size:0.7rem;background:#333;padding:1px 5px;border-radius:4px;opacity:0.7;margin-left:4px;">${speciesInfo.srank}</span>`
+  const info = window.speciesList?.find(s => s.code === code);
+  const srankBadge = (info?.srank && info.srank !== 'SNA' && code !== 'OTHER')
+    ? `<span style="font-size:0.7rem;background:#333;padding:1px 5px;border-radius:4px;opacity:0.7;margin-left:4px;">${info.srank}</span>`
     : '';
+  let statusBadge = '';
+  if (info?.sara) {
+    statusBadge = `<span style="font-size:0.7rem;background:${SARA_COLOUR[info.sara]};color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;">${SARA_LABEL[info.sara]}</span>`;
+  } else if (info?.soci) {
+    statusBadge = `<span style="font-size:0.7rem;background:#674ea7;color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;">SOCI</span>`;
+  }
 
   const popup = document.createElement('div');
   popup.className = 'popup-content compact';
   popup.innerHTML = `
-    <div style="font-weight:600; margin-bottom:6px;">${code}${srankBadge}</div>
+    <div style="font-weight:600; margin-bottom:6px;">${code}${srankBadge}${statusBadge}</div>
     <div class="form-row">
       <label>Count:</label>
       <div class="counter-inline">
