@@ -13,9 +13,28 @@ import {
 } from './surveyGlobals.js';
 
 // ─── Species Search Autocomplete ──────────────────────────────────────────
+const RARITY_COLOUR = { rare: '#CC0000', infrequent: '#E69138' };
+
+const RARITY_LEGEND_HTML = `
+  <div id="rarityLegend" style="display:flex;gap:14px;font-size:0.75rem;opacity:0.6;margin-bottom:8px;align-items:center;padding:0 2px;">
+    <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#CC0000;margin-right:4px;vertical-align:middle;"></span>Rare</span>
+    <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#E69138;margin-right:4px;vertical-align:middle;"></span>Infrequent</span>
+    <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#888;margin-right:4px;vertical-align:middle;"></span>Regular</span>
+  </div>`;
+
 export function updateSpeciesList(filter) {
   const list = document.getElementById('speciesList');
   if (!list || !window.speciesList) return;
+
+  if (!document.getElementById('rarityLegend')) {
+    const searchInput = document.getElementById('speciesSearch');
+    if (searchInput) {
+      const legend = document.createElement('div');
+      legend.innerHTML = RARITY_LEGEND_HTML;
+      searchInput.parentNode.insertBefore(legend.firstElementChild, searchInput);
+    }
+  }
+
   list.innerHTML = '';
   window.speciesList
     .filter(sp =>
@@ -23,8 +42,15 @@ export function updateSpeciesList(filter) {
       sp.name.toLowerCase().includes(filter.toLowerCase())
     )
     .forEach(sp => {
+      const colour = RARITY_COLOUR[sp.rarity] || '';
+      const dot = colour
+        ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${colour};margin-right:6px;flex-shrink:0;vertical-align:middle;"></span>`
+        : `<span style="display:inline-block;width:8px;margin-right:6px;"></span>`;
+      const srankText = (sp.srank && sp.code !== 'OTHER')
+        ? `<span style="font-size:0.75rem;opacity:0.45;margin-left:4px;">${sp.srank}</span>`
+        : '';
       const li = document.createElement('li');
-      li.innerHTML = `<strong>${sp.code}</strong> – ${sp.name}${sp.soci ? ' <span style="color:tomato;">(SOCI)</span>' : ''}`;
+      li.innerHTML = `${dot}<strong>${sp.code}</strong> – ${sp.name}${srankText}${sp.soci ? ' <span style="color:tomato;">(SOCI)</span>' : ''}`;
       li.style.cursor = 'pointer';
       li.onclick = () => {
         document.getElementById('speciesSearch').value = sp.code;
@@ -120,10 +146,15 @@ export function saveSpeciesObservation() {
 
 // ─── Popup HTML ───────────────────────────────────────────────────────────
 export function createSpeciesPopupHTML(index, code, count, breeding, note, passHeight = '', flightDir = '') {
+  const speciesInfo = window.speciesList?.find(s => s.code === code);
+  const srankBadge = (speciesInfo?.srank && speciesInfo.srank !== 'SNA' && code !== 'OTHER')
+    ? `<span style="font-size:0.7rem;background:#333;padding:1px 5px;border-radius:4px;opacity:0.7;margin-left:4px;">${speciesInfo.srank}</span>`
+    : '';
+
   const popup = document.createElement('div');
   popup.className = 'popup-content compact';
   popup.innerHTML = `
-    <div style="font-weight:600; margin-bottom:6px;">${code}</div>
+    <div style="font-weight:600; margin-bottom:6px;">${code}${srankBadge}</div>
     <div class="form-row">
       <label>Count:</label>
       <div class="counter-inline">
