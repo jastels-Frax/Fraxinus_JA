@@ -53,8 +53,17 @@ export function updateSpeciesList(filter) {
       li.innerHTML = `${dot}<strong>${sp.code}</strong> – ${sp.name}${srankText}${sp.soci ? ' <span style="color:tomato;">(SOCI)</span>' : ''}`;
       li.style.cursor = 'pointer';
       li.onclick = () => {
-        document.getElementById('speciesSearch').value = sp.code;
+        const modal   = document.getElementById('speciesModal');
+        const search  = document.getElementById('speciesSearch');
+        const display = document.getElementById('selectedSpeciesDisplay');
+        if (modal)   modal._selectedSpecies = sp;
+        if (search)  { search.style.display = 'none'; search.value = sp.code; }
+        if (display) {
+          display.innerHTML = `<strong>${sp.code}</strong> — ${sp.name}${sp.scientific ? ` <em style="opacity:0.55;font-size:0.85em;">${sp.scientific}</em>` : ''} <span style="float:right;opacity:0.5;font-size:0.8em;">tap to change</span>`;
+          display.style.display = 'block';
+        }
         list.innerHTML = '';
+        if (list) list.style.display = 'none';
       };
       list.appendChild(li);
     });
@@ -72,8 +81,9 @@ export function adjustCount(delta) {
 
 // ─── Save Observation ─────────────────────────────────────────────────────
 export function saveSpeciesObservation() {
+  const modal   = document.getElementById('speciesModal');
   const code    = document.getElementById('speciesSearch')?.value.trim().toUpperCase();
-  const species = window.speciesList?.find(sp => sp.code === code);
+  const species = modal?._selectedSpecies ?? window.speciesList?.find(sp => sp.code === code);
   if (!species || !currentLatLng) {
     alert('Invalid species or location.');
     return;

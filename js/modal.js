@@ -26,19 +26,36 @@ export function showSpeciesModal(latlng) {
   placingPoint  = true;
   currentLatLng = latlng;
 
-  const searchInput  = document.getElementById('speciesSearch');
-  const countDisplay = document.getElementById('speciesCountDisplay');
-  const noteInput    = document.getElementById('noteInput');
-  const breedingInput= document.getElementById('breedingInput');
-  const passHtInput  = document.getElementById('passHtInput');
-  const flightDirInput=document.getElementById('flightDirInput');
+  const searchInput   = document.getElementById('speciesSearch');
+  const speciesListEl = document.getElementById('speciesList');
+  const countDisplay  = document.getElementById('speciesCountDisplay');
+  const noteInput     = document.getElementById('noteInput');
+  const breedingInput = document.getElementById('breedingInput');
+  const passHtInput   = document.getElementById('passHtInput');
+  const flightDirInput= document.getElementById('flightDirInput');
 
-  if (searchInput)   searchInput.value   = '';
+  if (searchInput)   { searchInput.value = ''; searchInput.style.display = ''; }
+  if (speciesListEl) { speciesListEl.innerHTML = ''; speciesListEl.style.display = ''; }
   if (countDisplay)  countDisplay.textContent = '1';
   if (noteInput)     noteInput.value     = '';
   if (breedingInput) breedingInput.value = '';
   if (passHtInput)   passHtInput.value   = '';
   if (flightDirInput)flightDirInput.value= '';
+
+  modal._selectedSpecies = null;
+  const display = document.getElementById('selectedSpeciesDisplay');
+  if (display) { display.style.display = 'none'; display.innerHTML = ''; }
+  if (display && !display.dataset.wired) {
+    display.dataset.wired = 'true';
+    display.addEventListener('click', () => {
+      modal._selectedSpecies = null;
+      if (searchInput)   { searchInput.style.display = ''; searchInput.value = ''; searchInput.focus(); }
+      if (speciesListEl) { speciesListEl.style.display = ''; }
+      display.style.display = 'none';
+      display.innerHTML = '';
+      updateSpeciesList('');
+    });
+  }
 
   modal.style.display    = 'block';
   backdrop.style.display = 'block';
@@ -50,7 +67,15 @@ export function showSpeciesModal(latlng) {
 export function closeModal() {
   placingPoint  = false;
   currentLatLng = null;
-  document.getElementById('speciesModal')?.style.setProperty('display', 'none');
+  const speciesModal = document.getElementById('speciesModal');
+  speciesModal?.style.setProperty('display', 'none');
+  if (speciesModal) speciesModal._selectedSpecies = null;
+  const display = document.getElementById('selectedSpeciesDisplay');
+  if (display) { display.style.display = 'none'; display.innerHTML = ''; }
+  const searchInput = document.getElementById('speciesSearch');
+  if (searchInput) searchInput.style.display = '';
+  const speciesListEl = document.getElementById('speciesList');
+  if (speciesListEl) speciesListEl.style.display = '';
   document.getElementById('modalBackdrop')?.style.setProperty('display', 'none');
   clearActiveModal();
   unlockMap();
@@ -221,6 +246,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('speciesSearch');
   if (searchInput) {
     searchInput.addEventListener('input', e => updateSpeciesList(e.target.value));
+    if (!document.getElementById('selectedSpeciesDisplay')) {
+      const display = document.createElement('div');
+      display.id = 'selectedSpeciesDisplay';
+      display.style.cssText = 'display:none; padding:8px 10px; margin:4px 0 6px; background:#2a2a2a; border:1px solid #4caf50; border-radius:6px; cursor:pointer; font-size:0.95rem; color:#fff;';
+      searchInput.parentNode.insertBefore(display, searchInput.nextSibling);
+    }
   }
 
   // Backdrop click intentionally does NOT close observation modals —
