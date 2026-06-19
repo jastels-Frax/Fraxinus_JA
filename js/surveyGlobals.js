@@ -1,7 +1,7 @@
 // js/surveyGlobals.js — Shared global state for all survey modules
 
 // ─── Active Survey Type ────────────────────────────────────────────────────
-// Values: 'BBS' | 'MOOSE' | 'TURTLE'
+// Values: 'BBS' | 'MOOSE' | 'TURTLE' | 'NEST'
 export let activeSurvey = null;
 
 export function setActiveSurvey(type) {
@@ -27,6 +27,14 @@ export function getMetadataSnapshot() {
     mooseTempC, mooseWindSpeed, mooseNotes,
     mooseSubmittedAt, mooseResubmittedAt
   };
+  if (activeSurvey === 'NEST') return {
+    nestProjectID, nestObserver, nestClient,
+    nestSiteName, nestMunicipality, nestSurveyDate,
+    nestStartTime, nestEndTime,
+    nestProposedActivity, nestHabitatTypes, nestSurveyMethod, nestAreaHa,
+    nestTempC, nestWind, nestPrecip, nestProvince,
+    nestSubmittedAt, nestResubmittedAt
+  };
   return {
     turtleProjectID, turtleObserver, turtleSiteName, turtleSurveyDate,
     turtleStartTime, turtleEndTime, turtleWaterTemp, turtleAirTemp,
@@ -36,15 +44,17 @@ export function getMetadataSnapshot() {
 }
 
 export function restoreMetadata(type, meta) {
-  if (type === 'BBS')   setSurveyMetadata(meta);
+  if (type === 'BBS')        setSurveyMetadata(meta);
   else if (type === 'MOOSE') setMooseMetadata(meta);
-  else setTurtleMetadata(meta);
+  else if (type === 'NEST')  setNestMetadata(meta);
+  else                       setTurtleMetadata(meta);
 }
 
 // Returns true if the active survey has at least one non-blank key field.
 export function hasAnyMetadata() {
   if (activeSurvey === 'BBS')   return [projectID, pointID, observer].some(v => v && v.trim());
   if (activeSurvey === 'MOOSE') return [mooseProjectID, mooseObserver, mooseTransectID].some(v => v && v.trim());
+  if (activeSurvey === 'NEST')  return [nestProjectID, nestObserver, nestSiteName].some(v => v && v.trim());
   return [turtleProjectID, turtleObserver, turtleSiteName].some(v => v && v.trim());
 }
 
@@ -64,6 +74,10 @@ export function resetMetadata(type) {
     localStorage.removeItem('mooseSubmittedAt');
     localStorage.removeItem('mooseResubmittedAt');
     setMooseMetadata({ mooseObserver: mooseObserver || defObs, mooseProjectID: mooseProjectID || defPrj });
+  } else if (type === 'NEST') {
+    localStorage.removeItem('nestSubmittedAt');
+    localStorage.removeItem('nestResubmittedAt');
+    setNestMetadata({ nestObserver: nestObserver || defObs, nestProjectID: nestProjectID || defPrj, nestProvince: nestProvince });
   } else {
     localStorage.removeItem('turtleSubmittedAt');
     localStorage.removeItem('turtleResubmittedAt');
@@ -213,4 +227,63 @@ export function setTurtleMetadata(data) {
   localStorage.setItem('turtleNotes',          turtleNotes);
   localStorage.setItem('turtleSubmittedAt',    turtleSubmittedAt);
   localStorage.setItem('turtleResubmittedAt',  turtleResubmittedAt);
+}
+
+// ─── Nest Sweep Metadata ───────────────────────────────────────────────────
+export let nestProjectID        = localStorage.getItem('nestProjectID')        || '';
+export let nestObserver         = localStorage.getItem('nestObserver')         || '';
+export let nestClient           = localStorage.getItem('nestClient')           || '';
+export let nestSiteName         = localStorage.getItem('nestSiteName')         || '';
+export let nestMunicipality     = localStorage.getItem('nestMunicipality')     || '';
+export let nestSurveyDate       = localStorage.getItem('nestSurveyDate')       || '';
+export let nestStartTime        = localStorage.getItem('nestStartTime')        || '';
+export let nestEndTime          = localStorage.getItem('nestEndTime')          || '';
+export let nestProposedActivity = localStorage.getItem('nestProposedActivity') || '';
+export let nestHabitatTypes     = localStorage.getItem('nestHabitatTypes')     || '';
+export let nestSurveyMethod     = localStorage.getItem('nestSurveyMethod')     || '';
+export let nestAreaHa           = localStorage.getItem('nestAreaHa')           || '';
+export let nestTempC            = localStorage.getItem('nestTempC')            || '';
+export let nestWind             = localStorage.getItem('nestWind')             || '';
+export let nestPrecip           = localStorage.getItem('nestPrecip')           || '';
+export let nestProvince         = localStorage.getItem('nestProvince')         || '';
+export let nestSubmittedAt      = localStorage.getItem('nestSubmittedAt')      || '';
+export let nestResubmittedAt    = localStorage.getItem('nestResubmittedAt')    || '';
+
+export function setNestMetadata(data) {
+  nestProjectID        = data.nestProjectID        || '';
+  nestObserver         = data.nestObserver         || '';
+  nestClient           = data.nestClient           || '';
+  nestSiteName         = data.nestSiteName         || '';
+  nestMunicipality     = data.nestMunicipality     || '';
+  nestSurveyDate       = data.nestSurveyDate       || '';
+  nestStartTime        = data.nestStartTime        || '';
+  nestEndTime          = data.nestEndTime          || '';
+  nestProposedActivity = data.nestProposedActivity || '';
+  nestHabitatTypes     = data.nestHabitatTypes     || '';
+  nestSurveyMethod     = data.nestSurveyMethod     || '';
+  nestAreaHa           = data.nestAreaHa           || '';
+  nestTempC            = data.nestTempC            || '';
+  nestWind             = data.nestWind             || '';
+  nestPrecip           = data.nestPrecip           || '';
+  nestProvince         = data.nestProvince         || '';
+  nestSubmittedAt      = data.nestSubmittedAt      || '';
+  nestResubmittedAt    = data.nestResubmittedAt    || '';
+  localStorage.setItem('nestProjectID',        nestProjectID);
+  localStorage.setItem('nestObserver',         nestObserver);
+  localStorage.setItem('nestClient',           nestClient);
+  localStorage.setItem('nestSiteName',         nestSiteName);
+  localStorage.setItem('nestMunicipality',     nestMunicipality);
+  localStorage.setItem('nestSurveyDate',       nestSurveyDate);
+  localStorage.setItem('nestStartTime',        nestStartTime);
+  localStorage.setItem('nestEndTime',          nestEndTime);
+  localStorage.setItem('nestProposedActivity', nestProposedActivity);
+  localStorage.setItem('nestHabitatTypes',     nestHabitatTypes);
+  localStorage.setItem('nestSurveyMethod',     nestSurveyMethod);
+  localStorage.setItem('nestAreaHa',           nestAreaHa);
+  localStorage.setItem('nestTempC',            nestTempC);
+  localStorage.setItem('nestWind',             nestWind);
+  localStorage.setItem('nestPrecip',           nestPrecip);
+  localStorage.setItem('nestProvince',         nestProvince);
+  localStorage.setItem('nestSubmittedAt',      nestSubmittedAt);
+  localStorage.setItem('nestResubmittedAt',    nestResubmittedAt);
 }

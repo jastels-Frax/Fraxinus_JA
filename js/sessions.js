@@ -5,7 +5,7 @@ import {
   saveSessionRecord, loadAllSessions as _loadAllSessions,
   deleteSessionRecord, clearObservationStores, restoreSnapshot
 } from './storage.js';
-import { speciesMarkers, mooseObservations, turtleObservations, habitatObservations } from './storageData.js';
+import { speciesMarkers, mooseObservations, turtleObservations, nestObservations, habitatObservations } from './storageData.js';
 
 // ─── Current session ID ───────────────────────────────────────────────────
 let _sessionId = null;
@@ -24,16 +24,18 @@ export function setResumedSessionId(id) {
 // ─── Session label (shown in the home screen list) ────────────────────────
 function _buildLabel() {
   const date = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
-  if (G.activeSurvey === 'BBS')   return `BBS – ${G.pointID         || 'No Point ID'} – ${date}`;
-  if (G.activeSurvey === 'MOOSE') return `Wildlife – ${G.mooseTransectID || 'No Transect'} – ${date}`;
+  if (G.activeSurvey === 'BBS')    return `BBS – ${G.pointID              || 'No Point ID'} – ${date}`;
+  if (G.activeSurvey === 'MOOSE')  return `Wildlife – ${G.mooseTransectID || 'No Transect'} – ${date}`;
+  if (G.activeSurvey === 'NEST')   return `Nest Sweep – ${G.nestSiteName  || 'No Site'} – ${date}`;
   return `Turtle – ${G.turtleSiteName || 'No Site'} – ${date}`;
 }
 
 // ─── Observation count ────────────────────────────────────────────────────
 function _obsCount() {
-  const primary = G.activeSurvey === 'BBS'   ? speciesMarkers.length
-                : G.activeSurvey === 'MOOSE' ? mooseObservations.length
-                :                              turtleObservations.length;
+  const primary = G.activeSurvey === 'BBS'    ? speciesMarkers.length
+                : G.activeSurvey === 'MOOSE'  ? mooseObservations.length
+                : G.activeSurvey === 'NEST'   ? nestObservations.length
+                :                               turtleObservations.length;
   return primary + habitatObservations.length;
 }
 
@@ -47,6 +49,7 @@ function _serializeObs() {
     speciesMarkers:     speciesMarkers.map(strip),
     mooseObservations:  mooseObservations.map(strip),
     turtleObservations: turtleObservations.map(strip),
+    nestObservations:   nestObservations.map(strip),
     habitatObservations:habitatObservations.map(strip)
   };
 }
@@ -56,6 +59,7 @@ export function clearInMemoryArrays() {
   speciesMarkers.length     = 0;
   mooseObservations.length  = 0;
   turtleObservations.length = 0;
+  nestObservations.length   = 0;
   habitatObservations.length= 0;
 }
 

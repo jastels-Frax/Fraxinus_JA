@@ -2,14 +2,15 @@
 
 import { updateTable } from './ui.js';
 import { map } from './map.js';
-import { speciesMarkers, mooseObservations, turtleObservations, habitatObservations } from './storageData.js';
+import { speciesMarkers, mooseObservations, turtleObservations, nestObservations, habitatObservations } from './storageData.js';
 import { createSpeciesPopupHTML } from './species.js';
 import { createMoosePopupHTML } from './moose.js';
 import { createTurtlePopupHTML } from './turtle.js';
 import { createHabitatPopupHTML } from './habitat.js';
+import { createNestPopupHTML } from './nest.js';
 
 const DB_NAME    = 'SpeciesSurveyDB';
-const DB_VERSION = 5; // v5: ensure sessions store exists on all clients
+const DB_VERSION = 6; // v6: add nestObservations store
 
 let db;
 
@@ -38,6 +39,9 @@ function openDatabase() {
       }
       if (!db.objectStoreNames.contains('habitatObservations')) {
         db.createObjectStore('habitatObservations', { keyPath: 'id', autoIncrement: true });
+      }
+      if (!db.objectStoreNames.contains('nestObservations')) {
+        db.createObjectStore('nestObservations', { keyPath: 'id', autoIncrement: true });
       }
       if (!db.objectStoreNames.contains('sessions')) {
         db.createObjectStore('sessions', { keyPath: 'id' });
@@ -361,6 +365,85 @@ export async function loadHabitatObservations() {
   req.onerror = e => console.error('Error loading habitat observations:', e.target.error);
 }
 
+// ─── Nest Observations ────────────────────────────────────────────────────
+export function syncNestToIndexedDB() {
+  if (!db) { openDatabase().then(() => syncNestToIndexedDB()); return; }
+  syncStore('nestObservations', nestObservations, o => ({
+    projectID:        o.projectID        || '',
+    observer:         o.observer         || '',
+    client:           o.client           || '',
+    siteName:         o.siteName         || '',
+    municipality:     o.municipality     || '',
+    surveyDate:       o.surveyDate       || '',
+    startTime:        o.startTime        || '',
+    endTime:          o.endTime          || '',
+    proposedActivity: o.proposedActivity || '',
+    habitatTypes:     o.habitatTypes     || '',
+    surveyMethod:     o.surveyMethod     || '',
+    areaHa:           o.areaHa           || '',
+    tempC:            o.tempC            || '',
+    wind:             o.wind             || '',
+    precip:           o.precip           || '',
+    province:         o.province         || '',
+    species:      o.species      || '',
+    status:       o.status       || '',
+    contents:     o.contents     || [],
+    eggCount:     o.eggCount     ?? 0,
+    chickCount:   o.chickCount   ?? 0,
+    substrate:    o.substrate    || '',
+    treeHeight:   o.treeHeight   || '',
+    sched1:       o.sched1       || '',
+    sar:          o.sar          || '',
+    buffer:       o.buffer       || '',
+    disposition:  o.disposition  || '',
+    photos:       o.photos       ?? false,
+    note:         o.note         || '',
+    latlng:       { lat: o.latlng.lat, lng: o.latlng.lng },
+    timestamp:         o.timestamp,
+    nestSubmittedAt:   o.nestSubmittedAt   || '',
+    nestResubmittedAt: o.nestResubmittedAt || ''
+  }));
+}
+
+export async function loadNestObservations() {
+  if (!db) await openDatabase();
+  const tx    = db.transaction('nestObservations', 'readonly');
+  const store = tx.objectStore('nestObservations');
+  const req   = store.getAll();
+  req.onsuccess = () => {
+    req.result.forEach(r => {
+      if (!('nestSubmittedAt'   in r)) r.nestSubmittedAt   = '';
+      if (!('nestResubmittedAt' in r)) r.nestResubmittedAt = '';
+    });
+    req.result.forEach((data, index) => {
+      const STATUS_COLOUR = { Active: '#CC0000', Inactive: '#888888', Unknown: '#E69138' };
+      const latlng      = L.latLng(data.latlng.lat, data.latlng.lng);
+      const markerColor = STATUS_COLOUR[data.status] || '#888888';
+      const marker = L.circleMarker(latlng, {
+        radius: 6,
+        color: markerColor,
+        fillColor: 'black',
+        fillOpacity: 0.6,
+        weight: 2
+      }).addTo(map);
+      const statusAbbr = data.status === 'Active' ? 'A' : data.status === 'Inactive' ? 'I' : 'U';
+      const labelText  = `${data.species || '?'} [${statusAbbr}]`;
+      const labelMarker = L.marker([latlng.lat, latlng.lng + 0.0001], {
+        icon: L.divIcon({
+          className: 'DBmarker-label',
+          html: labelText,
+          iconAnchor: [0, 10]
+        })
+      }).addTo(map);
+      const popup = createNestPopupHTML(index, data);
+      marker.bindPopup(popup);
+      nestObservations.push({ ...data, latlng, marker, label: labelMarker });
+    });
+    updateTable();
+  };
+  req.onerror = e => console.error('Error loading nest observations:', e.target.error);
+}
+
 // ─── Session Records ──────────────────────────────────────────────────────
 export async function saveSessionRecord(session) {
   if (!db) await openDatabase();
@@ -398,7 +481,7 @@ export async function deleteSessionRecord(id) {
 // ─── Clear all 4 observation stores in parallel ───────────────────────────
 export async function clearObservationStores() {
   if (!db) await openDatabase();
-  const names = ['speciesMarkers', 'mooseObservations', 'turtleObservations', 'habitatObservations'];
+  const names = ['speciesMarkers', 'mooseObservations', 'turtleObservations', 'nestObservations', 'habitatObservations'];
   await Promise.all(names.map(name => new Promise((resolve, reject) => {
     const tx  = db.transaction(name, 'readwrite');
     const req = tx.objectStore(name).clear();
@@ -414,6 +497,7 @@ export async function restoreSnapshot(snapshot) {
     speciesMarkers:     snapshot.speciesMarkers     || [],
     mooseObservations:  snapshot.mooseObservations  || [],
     turtleObservations: snapshot.turtleObservations || [],
+    nestObservations:   snapshot.nestObservations   || [],
     habitatObservations:snapshot.habitatObservations|| []
   };
   await Promise.all(Object.entries(storeMap).map(([name, records]) => new Promise((resolve, reject) => {

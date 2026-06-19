@@ -30,6 +30,16 @@ const FEATURE_TYPES = {
   TURTLE: [
     'Basking Site', 'Nesting Area', 'Overwintering Site',
     'Foraging Area', 'Riparian Corridor', 'Water Feature'
+  ],
+  NEST: [
+    'Dense Canopy/Woodland',
+    'Shrub/Thicket',
+    'Grassland/Open Area',
+    'Structure/Building',
+    'Cliff/Bank',
+    'Hedgerow/Edge',
+    'Snag/Cavity',
+    'Wetland/Water Edge'
   ]
 };
 
@@ -113,6 +123,47 @@ const HABITAT_CRITERIA = {
     'Tracks converging',
     'Evidence of repeated use'
   ],
+  // — NEST —
+  'Dense Canopy/Woodland': [
+    'Canopy cover adequate for nesting',
+    'Understorey shrub layer present',
+    'Coarse woody debris present'
+  ],
+  'Shrub/Thicket': [
+    'Dense shrub cover present',
+    'Suitable nest-support structure',
+    'Low human disturbance'
+  ],
+  'Grassland/Open Area': [
+    'Ground cover suitable for ground nesters',
+    'Low mowing/disturbance risk',
+    'Adjacent to cover or edge'
+  ],
+  'Structure/Building': [
+    'Ledges, beams, or eaves accessible',
+    'No recent disturbance to surface',
+    'Historical use signs present'
+  ],
+  'Cliff/Bank': [
+    'Suitable crevices or ledges present',
+    'Adequate vertical relief',
+    'Low predator access'
+  ],
+  'Hedgerow/Edge': [
+    'Dense shrub or tree hedgerow present',
+    'Suitable vertical structure for cup nests',
+    'Low disturbance along edge'
+  ],
+  'Snag/Cavity': [
+    'Cavity entrance visible',
+    'Sufficient DBH for cavity species',
+    'No active logging or clearing nearby'
+  ],
+  'Wetland/Water Edge': [
+    'Emergent vegetation at water edge',
+    'Floating or overhanging nest support',
+    'Low disturbance to water margin'
+  ],
   // — TURTLE —
   'Basking Site': [
     'Logs or rocks at water surface',
@@ -147,7 +198,7 @@ const HABITAT_CRITERIA = {
 };
 
 // Marker colours per survey — dashed outline to distinguish from species marks
-const MARKER_COLOUR = { BBS: '#7c3aed', MOOSE: '#b45309', TURTLE: '#0d9488' };
+const MARKER_COLOUR = { BBS: '#7c3aed', MOOSE: '#b45309', TURTLE: '#0d9488', NEST: '#0f7abf' };
 
 // ─── Show / Close Modal ───────────────────────────────────────────────────
 export function showHabitatModal(latlng) {
@@ -255,6 +306,17 @@ function _getActiveMeta() {
     weather:             G.turtleWeather,
     turtleSubmittedAt:   G.turtleSubmittedAt   || '',
     turtleResubmittedAt: G.turtleResubmittedAt || ''
+  };
+  if (t === 'NEST') return {
+    projectID:        G.nestProjectID       || '',
+    siteName:         G.nestSiteName        || '',
+    observer:         G.nestObserver        || '',
+    surveyDate:       G.nestSurveyDate      || '',
+    startTime:        localStorage.getItem('nestStartTime') || '',
+    endTime:          localStorage.getItem('nestEndTime')   || '',
+    province:         G.nestProvince        || '',
+    nestSubmittedAt:  G.nestSubmittedAt     || '',
+    nestResubmittedAt:G.nestResubmittedAt   || ''
   };
   return {};
 }

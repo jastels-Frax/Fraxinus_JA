@@ -1,13 +1,14 @@
 // js/export.js — Multi-survey CSV / GeoJSON / KML export
 
-import { speciesMarkers, mooseObservations, turtleObservations, habitatObservations } from './storageData.js';
+import { speciesMarkers, mooseObservations, turtleObservations, nestObservations, habitatObservations } from './storageData.js';
 import {
   surveyStartTime, surveyEndTime,
   surveySubmittedAt, surveyResubmittedAt, setSurveyMetadata, getMetadataSnapshot,
   mooseSubmittedAt, mooseResubmittedAt, setMooseMetadata,
-  turtleSubmittedAt, turtleResubmittedAt, setTurtleMetadata
+  turtleSubmittedAt, turtleResubmittedAt, setTurtleMetadata,
+  nestSubmittedAt, nestResubmittedAt, setNestMetadata
 } from './surveyGlobals.js';
-import { syncToIndexedDB, syncMooseToIndexedDB, syncTurtleToIndexedDB, syncHabitatToIndexedDB } from './storage.js';
+import { syncToIndexedDB, syncMooseToIndexedDB, syncTurtleToIndexedDB, syncNestToIndexedDB, syncHabitatToIndexedDB } from './storage.js';
 
 // ─── Utilities ────────────────────────────────────────────────────────────
 function todayString() {
@@ -192,12 +193,36 @@ export function stampOffload(type) {
     });
     syncHabitatToIndexedDB();
 
+  } else if (type === 'NEST') {
+    const isFirst = !nestSubmittedAt;
+    setNestMetadata({
+      ...snap,
+      nestSubmittedAt:   isFirst ? now : nestSubmittedAt,
+      nestResubmittedAt: isFirst ? ''  : now
+    });
+    nestObservations.forEach(o => {
+      if (!o.nestSubmittedAt) {
+        o.nestSubmittedAt = now;
+      } else {
+        o.nestResubmittedAt = now;
+      }
+    });
+    syncNestToIndexedDB();
+    habitatObservations.filter(o => o.surveyType === 'NEST').forEach(o => {
+      if (!o.nestSubmittedAt) {
+        o.nestSubmittedAt = now;
+      } else {
+        o.nestResubmittedAt = now;
+      }
+    });
+    syncHabitatToIndexedDB();
+
   } else if (type === 'HABITAT') {
     // Stamp each habitat record individually using its own surveyType
     habitatObservations.forEach(o => {
-      const key  = o.surveyType; // 'BBS' | 'MOOSE' | 'TURTLE'
-      const saKey = key === 'BBS' ? 'surveySubmittedAt'  : key === 'MOOSE' ? 'mooseSubmittedAt'  : 'turtleSubmittedAt';
-      const raKey = key === 'BBS' ? 'surveyResubmittedAt': key === 'MOOSE' ? 'mooseResubmittedAt': 'turtleResubmittedAt';
+      const key  = o.surveyType; // 'BBS' | 'MOOSE' | 'TURTLE' | 'NEST'
+      const saKey = key === 'BBS' ? 'surveySubmittedAt'  : key === 'MOOSE' ? 'mooseSubmittedAt'  : key === 'NEST' ? 'nestSubmittedAt' : 'turtleSubmittedAt';
+      const raKey = key === 'BBS' ? 'surveyResubmittedAt': key === 'MOOSE' ? 'mooseResubmittedAt': key === 'NEST' ? 'nestResubmittedAt' : 'turtleResubmittedAt';
       if (!o[saKey]) {
         o[saKey] = now;
         o[raKey] = '';
@@ -505,6 +530,116 @@ ${pmarks}
   </Document>
 </kml>`;
   triggerDownload(kml, `TURTLE_OBS_${date}_kml.kml`, 'application/vnd.google-earth.kml+xml');
+}
+
+// ─── Nest Exports ─────────────────────────────────────────────────────────
+export function exportNestCSV() {
+  stampOffload('NEST');
+  const date    = todayString();
+  const headers = [
+    'PROJECT_ID','OBSERVER','CLIENT','SITE_NAME','MUNICIPALITY',
+    'SURVEY_DATE','SURVEY_START','SURVEY_END',
+    'HABITAT_TYPES','SURVEY_METHOD','AREA_HA',
+    'TEMP_C','WIND','PRECIP','PROVINCE',
+    'LAT','LNG',
+    'SPECIES','STATUS','CONTENTS','EGG_COUNT','CHICK_COUNT',
+    'SUBSTRATE','TREE_HEIGHT_M','SCHED1','SAR','BUFFER_M',
+    'DISPOSITION','PHOTOS_TAKEN','NOTES',
+    'OBS_TIMESTAMP','SUBMITTED_AT','RESUBMITTED_AT'
+  ];
+  const rows = [headers, ...nestObservations.map(o => [
+    o.projectID, o.observer, o.client, o.siteName, o.municipality,
+    o.surveyDate, o.startTime, o.endTime,
+    o.habitatTypes, o.surveyMethod, o.areaHa,
+    o.tempC, o.wind, o.precip, o.province,
+    o.latlng?.lat ?? '', o.latlng?.lng ?? '',
+    o.species, o.status,
+    (o.contents || []).join(' | '),
+    o.eggCount ?? 0, o.chickCount ?? 0,
+    o.substrate, o.treeHeight, o.sched1, o.sar, o.buffer,
+    o.disposition, o.photos ? 'Yes' : 'No', o.note,
+    o.timestamp,
+    o.nestSubmittedAt || '', o.nestResubmittedAt || ''
+  ])];
+  const csv = rows.map(csvRow).join('\n');
+  triggerDownload(csv, `NEST_OBS_${date}_csv.csv`, 'text/csv');
+}
+
+export function buildNestGeoJSON() {
+  stampOffload('NEST');
+  const features = nestObservations.filter(o => getLoc(o)).map(o => {
+    const { lat, lng } = getLoc(o);
+    return {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [lng, lat] },
+      properties: sanitizeProps({
+        PROJECT_ID:    strOrNull(o.projectID),  OBSERVER:       strOrNull(o.observer),
+        CLIENT:        strOrNull(o.client),      SITE_NAME:      strOrNull(o.siteName),
+        MUNICIPALITY:  strOrNull(o.municipality),SURVEY_DATE:    strOrNull(o.surveyDate),
+        SURVEY_START:  dateTimeOrNull(o.surveyDate, o.startTime),
+        SURVEY_END:    dateTimeOrNull(o.surveyDate, o.endTime),
+        HABITAT_TYPES: strOrNull(o.habitatTypes), SURVEY_METHOD: strOrNull(o.surveyMethod),
+        AREA_HA:       strOrNull(o.areaHa),       TEMP_C:        numOrNull(o.tempC),
+        WIND:          strOrNull(o.wind),          PRECIP:        strOrNull(o.precip),
+        PROVINCE:      strOrNull(o.province),
+        SPECIES:       strOrNull(o.species),       STATUS:        strOrNull(o.status),
+        CONTENTS:      (o.contents || []).join(' | ') || null,
+        EGG_COUNT:     o.eggCount  ?? null,        CHICK_COUNT:   o.chickCount ?? null,
+        SUBSTRATE:     strOrNull(o.substrate),     TREE_HEIGHT_M: strOrNull(o.treeHeight),
+        SCHED1:        strOrNull(o.sched1),        SAR:           strOrNull(o.sar),
+        BUFFER_M:      strOrNull(o.buffer),        DISPOSITION:   strOrNull(o.disposition),
+        PHOTOS_TAKEN:  o.photos ? 'Yes' : 'No',
+        NOTES:         strOrNull(o.note),          OBS_TIMESTAMP: strOrNull(o.timestamp),
+        SUBMITTED_AT:  strOrNull(o.nestSubmittedAt),
+        RESUBMITTED_AT:strOrNull(o.nestResubmittedAt)
+      })
+    };
+  });
+  return JSON.stringify({ type: 'FeatureCollection', features }, null, 2);
+}
+
+export function exportNestGeoJSON() {
+  triggerDownload(buildNestGeoJSON(), `NEST_OBS_${todayString()}_geojson.geojson`, 'application/json');
+}
+
+export function exportNestKML() {
+  stampOffload('NEST');
+  const date  = todayString();
+  const marks = nestObservations.filter(o => getLoc(o));
+  const pmarks = marks.map(o => {
+    const { lat, lng } = getLoc(o);
+    return `
+  <Placemark>
+    <name>${o.species || 'Nest'} [${o.status || '?'}]</name>
+    <description><![CDATA[
+<b>Species:</b> ${o.species || ''}<br/>
+<b>Status:</b> ${o.status || ''}<br/>
+<b>Disposition:</b> ${o.disposition || ''}<br/>
+<b>Contents:</b> ${(o.contents || []).join(', ') || ''}<br/>
+<b>Substrate:</b> ${o.substrate || ''}${o.treeHeight ? ' · ' + o.treeHeight + ' m' : ''}<br/>
+<b>Sched. 1:</b> ${o.sched1 || ''}<br/>
+<b>SAR:</b> ${o.sar || ''}<br/>
+<b>Buffer (m):</b> ${o.buffer || ''}<br/>
+<b>Photos:</b> ${o.photos ? 'Yes' : 'No'}<br/>
+<b>Observer:</b> ${o.observer || ''}<br/>
+<b>Site:</b> ${o.siteName || ''}<br/>
+<b>Proposed Activity:</b> ${o.proposedActivity || ''}<br/>
+<b>Province:</b> ${o.province || ''}<br/>
+<b>Note:</b> ${o.note || ''}<br/>
+<b>Timestamp:</b> ${o.timestamp || ''}<br/>
+<b>Submitted:</b> ${o.nestSubmittedAt || ''}<br/>
+<b>Resubmitted:</b> ${o.nestResubmittedAt || ''}
+    ]]></description>
+    <Point><coordinates>${lng},${lat},0</coordinates></Point>
+  </Placemark>`;
+  }).join('\n');
+  const kml = `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document><name>Nest Sweep Observations</name>
+${pmarks}
+  </Document>
+</kml>`;
+  triggerDownload(kml, `NEST_OBS_${date}_kml.kml`, 'application/vnd.google-earth.kml+xml');
 }
 
 // ─── Habitat / Feature Exports ────────────────────────────────────────────
