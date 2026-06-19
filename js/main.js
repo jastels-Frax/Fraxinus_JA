@@ -26,6 +26,7 @@ import {
 } from './export.js';
 import { uploadToFelt } from './felt.js';
 import { showToast } from './toast.js';
+import { exportNestPDF } from './nestPDF.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   // ── Expose globals needed by any inline onclick= handlers ─────────────
@@ -456,6 +457,7 @@ function _showExportDialog(type, snap, onDone) {
         <button id="expCsv">Download CSV</button>
         <button id="expGeoJson">Download GeoJSON</button>
         <button id="expKml">Download KML</button>
+        ${type === 'NEST' ? '<button id="expPdf">Download PDF Report</button>' : ''}
         <button id="expFelt" class="export-felt-btn">↑ Upload to Felt</button>
         <button id="expStore" class="export-store-local">💾 Store Locally — No Download</button>
         <button id="expSkip" class="export-skip">Done</button>
@@ -481,6 +483,9 @@ function _showExportDialog(type, snap, onDone) {
   document.getElementById('expCsv').addEventListener('click',     () => { withSnap(() => _runExport('csv',     type)); close(); });
   document.getElementById('expGeoJson').addEventListener('click', () => { withSnap(() => _runExport('geojson', type)); close(); });
   document.getElementById('expKml').addEventListener('click',     () => { withSnap(() => _runExport('kml',     type)); close(); });
+  if (type === 'NEST') {
+    document.getElementById('expPdf')?.addEventListener('click', () => { withSnap(() => exportNestPDF()); close(); });
+  }
   document.getElementById('expFelt').addEventListener('click',    () => {
     overlay.remove();
     // Restore snapshot so uploadToFelt can read observations (arrays were cleared by submitSession)
@@ -616,6 +621,7 @@ function _showReExportDialog(session) {
         <button id="reexpCsv">Download CSV</button>
         <button id="reexpGeoJson">Download GeoJSON</button>
         <button id="reexpKml">Download KML</button>
+        ${session.type === 'NEST' ? '<button id="reexpPdf">Download PDF Report</button>' : ''}
         <button id="reexpFelt" class="export-felt-btn">↑ Upload to Felt</button>
         <button id="reexpClose" class="export-skip">Close</button>
       </div>
@@ -655,6 +661,16 @@ function _showReExportDialog(session) {
   overlay.querySelector('#reexpCsv').addEventListener('click',     () => doExport('csv'));
   overlay.querySelector('#reexpGeoJson').addEventListener('click', () => doExport('geojson'));
   overlay.querySelector('#reexpKml').addEventListener('click',     () => doExport('kml'));
+  if (session.type === 'NEST') {
+    overlay.querySelector('#reexpPdf')?.addEventListener('click', () => {
+      clearInMemoryArrays();
+      (snap.nestObservations    || []).forEach(r => nestObservations.push(r));
+      (snap.habitatObservations || []).forEach(r => habitatObservations.push(r));
+      exportNestPDF();
+      clearInMemoryArrays();
+      close();
+    });
+  }
   overlay.querySelector('#reexpFelt').addEventListener('click',    doFeltUpload);
   overlay.querySelector('#reexpClose').addEventListener('click', close);
 }

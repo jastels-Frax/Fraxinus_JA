@@ -11,8 +11,9 @@ import {
 const STATUS_COLOUR = { Active: '#CC0000', Inactive: '#888888', Unknown: '#E69138' };
 
 export async function exportNestPDF() {
-  const obs     = nestObservations;
-  const habObs  = habitatObservations.filter(o => o.surveyType === 'NEST');
+  // Copy arrays immediately — callers may clear the shared arrays right after calling us
+  const obs     = [...nestObservations];
+  const habObs  = [...habitatObservations].filter(o => o.surveyType === 'NEST');
   if (!obs.length && !habObs.length) {
     alert('No nest observations to export.');
     return;
