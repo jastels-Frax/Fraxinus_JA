@@ -33,20 +33,29 @@ const RARITY_LEGEND_HTML = `
     <span style="font-size:0.65rem;opacity:0.5;margin-top:3px;display:block;">Both may appear for provincially rare SARA species</span>
   </div>`;
 
-export function updateSpeciesList(filter) {
-  const list = document.getElementById('speciesList');
+// ids defaults to BBS modal elements; pass custom ids to drive any other modal's search.
+export function updateSpeciesList(filter, ids = {}) {
+  const searchId  = ids.searchId  || 'speciesSearch';
+  const listId    = ids.listId    || 'speciesList';
+  const displayId = ids.displayId || 'selectedSpeciesDisplay';
+  const modalId   = ids.modalId   || 'speciesModal';
+  const legendId  = ids.legendId  || 'rarityLegend';
+
+  const list = document.getElementById(listId);
   if (!list || !window.speciesList) return;
 
-  if (!document.getElementById('rarityLegend')) {
-    const searchInput = document.getElementById('speciesSearch');
+  if (!document.getElementById(legendId)) {
+    const searchInput = document.getElementById(searchId);
     if (searchInput) {
       const legend = document.createElement('div');
       legend.innerHTML = RARITY_LEGEND_HTML;
+      legend.firstElementChild.id = legendId;
       searchInput.parentNode.insertBefore(legend.firstElementChild, searchInput);
     }
   }
 
   list.innerHTML = '';
+  list.style.display = '';
   window.speciesList
     .filter(sp =>
       sp.code.includes(filter.toUpperCase()) ||
@@ -71,9 +80,9 @@ export function updateSpeciesList(filter) {
       li.innerHTML = `${dot}${sp.name}${saraBadge}${sociBadge}${srankText}`;
       li.style.cursor = 'pointer';
       li.onclick = () => {
-        const modal   = document.getElementById('speciesModal');
-        const search  = document.getElementById('speciesSearch');
-        const display = document.getElementById('selectedSpeciesDisplay');
+        const modal   = document.getElementById(modalId);
+        const search  = document.getElementById(searchId);
+        const display = document.getElementById(displayId);
         if (modal)   modal._selectedSpecies = sp;
         if (search)  { search.style.display = 'none'; search.value = sp.code; }
         if (display) {
@@ -83,7 +92,7 @@ export function updateSpeciesList(filter) {
           display.style.display = 'block';
         }
         list.innerHTML = '';
-        if (list) list.style.display = 'none';
+        list.style.display = 'none';
       };
       list.appendChild(li);
     });

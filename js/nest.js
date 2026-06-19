@@ -7,6 +7,7 @@ import { map, lockMap, unlockMap } from './map.js';
 import * as G from './surveyGlobals.js';
 import { showUndoToast, showToast } from './toast.js';
 import { setActiveModal, clearActiveModal } from './modal.js';
+import { updateSpeciesList } from './species.js';
 
 // ─── Modal State ──────────────────────────────────────────────────────────
 let nestPlacingPoint  = false;
@@ -16,6 +17,44 @@ export function isNestPlacingPoint() { return nestPlacingPoint; }
 
 // ─── Status colours ───────────────────────────────────────────────────────
 const STATUS_COLOUR = { Active: '#CC0000', Inactive: '#888888', Unknown: '#E69138' };
+
+// ─── Species search IDs (parallel to BBS modal, but scoped to nestModal) ──
+const NEST_SP_IDS = {
+  searchId:  'nestSpeciesSearch',
+  listId:    'nestSpeciesList',
+  displayId: 'nestSelectedSpeciesDisplay',
+  modalId:   'nestModal',
+  legendId:  'nestRarityLegend'
+};
+const UNKNOWN_SP = { name: 'Unknown', code: 'UNKN', rarity: '', soci: false, sara: '' };
+
+// Populate species list for nest modal; always prepend Unknown so it stays selectable.
+function _updateNestList(filter) {
+  updateSpeciesList(filter, NEST_SP_IDS);
+
+  const list = document.getElementById('nestSpeciesList');
+  if (!list) return;
+  if (!filter || 'unknown'.includes(filter.toLowerCase())) {
+    const li = document.createElement('li');
+    li.innerHTML = `<span style="display:inline-block;width:8px;margin-right:6px;"></span><em style="color:#aaa;">Unknown</em>`;
+    li.style.cursor = 'pointer';
+    li.onclick = () => {
+      const modal   = document.getElementById('nestModal');
+      const search  = document.getElementById('nestSpeciesSearch');
+      const display = document.getElementById('nestSelectedSpeciesDisplay');
+      if (modal)   modal._selectedSpecies = UNKNOWN_SP;
+      if (search)  { search.style.display = 'none'; search.value = ''; }
+      if (display) {
+        display.innerHTML = `<span style="display:inline-block;width:8px;margin-right:6px;"></span><strong>Unknown</strong><span style="float:right;font-size:0.8rem;opacity:0.6;margin-top:1px;">tap to change ✕</span>`;
+        display.style.display = 'block';
+      }
+      list.innerHTML = '';
+      list.style.display = 'none';
+    };
+    list.insertBefore(li, list.firstChild);
+    list.style.display = '';
+  }
+}
 
 // ─── Show / Close Modal ───────────────────────────────────────────────────
 export function showNestModal(latlng) {
@@ -35,7 +74,31 @@ export function showNestModal(latlng) {
   nestCurrentLatLng = latlng;
 
   // Reset all fields
-  modal.querySelector('#nestSpeciesInput').value = '';
+  // ── Species search: reset to Unknown default ──
+  modal._selectedSpecies = UNKNOWN_SP;
+  const _search  = modal.querySelector('#nestSpeciesSearch');
+  const _display = modal.querySelector('#nestSelectedSpeciesDisplay');
+  const _list    = modal.querySelector('#nestSpeciesList');
+  if (_search)  { _search.value = ''; _search.style.display = 'none'; }
+  if (_list)    { _list.innerHTML = ''; _list.style.display = 'none'; }
+  if (_display) {
+    _display.innerHTML = `<span style="display:inline-block;width:8px;margin-right:6px;"></span><strong>Unknown</strong><span style="float:right;font-size:0.8rem;opacity:0.6;margin-top:1px;">tap to change ✕</span>`;
+    _display.style.display = 'block';
+  }
+  // Wire tap-to-change (once only per element lifetime)
+  if (_display && !_display.dataset.wired) {
+    _display.dataset.wired = 'true';
+    _display.addEventListener('click', () => {
+      modal._selectedSpecies = null;
+      if (_search)  { _search.style.display = ''; _search.value = ''; _search.focus(); }
+      if (_display) { _display.style.display = 'none'; _display.innerHTML = ''; }
+      _updateNestList('');
+    });
+  }
+  if (_search && !_search.dataset.wired) {
+    _search.dataset.wired = 'true';
+    _search.addEventListener('input', e => _updateNestList(e.target.value));
+  }
   modal.querySelectorAll('input[name="nestStatus"]').forEach(r => { r.checked = false; });
   ['nestContentsFlushed','nestContentsEggs','nestContentsChicks','nestContentsEmpty','nestContentsUnknown'].forEach(id => {
     const el = modal.querySelector(`#${id}`);
@@ -66,6 +129,16 @@ export function showNestModal(latlng) {
 export function closeNestModal() {
   nestPlacingPoint  = false;
   nestCurrentLatLng = null;
+  const _m = document.getElementById('nestModal');
+  if (_m) {
+    _m._selectedSpecies = null;
+    const _s = _m.querySelector('#nestSpeciesSearch');
+    const _d = _m.querySelector('#nestSelectedSpeciesDisplay');
+    const _l = _m.querySelector('#nestSpeciesList');
+    if (_s) { _s.style.display = 'none'; _s.value = ''; }
+    if (_d) { _d.style.display = 'none'; _d.innerHTML = ''; }
+    if (_l) { _l.innerHTML = ''; _l.style.display = 'none'; }
+  }
   document.getElementById('nestModal')?.style.setProperty('display', 'none');
   document.getElementById('modalBackdrop')?.style.setProperty('display', 'none');
   clearActiveModal();
@@ -105,7 +178,8 @@ export function saveNestObservation() {
     showToast('Active nest detected — confirm disposition before saving.', 'warning', 4000);
   }
 
-  const species   = document.getElementById('nestSpeciesInput')?.value.trim() || 'Unknown';
+  const _nestModal = document.getElementById('nestModal');
+  const species    = _nestModal?._selectedSpecies?.name || 'Unknown';
   const contentsIds = ['nestContentsFlushed','nestContentsEggs','nestContentsChicks','nestContentsEmpty','nestContentsUnknown'];
   const contents  = contentsIds
     .filter(id => document.getElementById(id)?.checked)
@@ -349,7 +423,9 @@ export function injectNestModal() {
       <h2>Nest Observation</h2>
 
       <label>Species / Suspected Species:</label>
-      <input type="text" id="nestSpeciesInput" placeholder="Species or 'Unknown'" autocomplete="off" />
+      <div id="nestSelectedSpeciesDisplay" style="display:none; padding:8px 10px; margin:4px 0 6px; background:#2a2a2a; border:1px solid #4caf50; border-radius:6px; cursor:pointer; font-size:0.95rem; color:#fff;"></div>
+      <input type="text" id="nestSpeciesSearch" placeholder="Search species…" autocomplete="off" style="display:none;" />
+      <ul id="nestSpeciesList" style="max-height:220px; overflow-y:auto; list-style:none; margin:0 0 6px; padding:4px 0; display:none; background:#1e1e1e; border:1px solid #444; border-radius:4px;"></ul>
 
       <label>Nest Status: <span style="color:red;">*</span></label>
       <div style="display:flex; gap:16px; margin:4px 0 8px; flex-wrap:wrap;">

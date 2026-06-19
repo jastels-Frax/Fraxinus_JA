@@ -524,7 +524,8 @@ body {
   border-radius: 6px;
 }
 
-#speciesList li {
+#speciesList li,
+#nestSpeciesList li {
   padding: 6px;
   cursor: pointer;
   background: #333;
@@ -533,10 +534,14 @@ body {
   transition: background 0.2s;
 }
 
-#speciesList li:hover { background: #444; }
-#speciesList li.selected { background: #666; font-weight: bold; }
-#speciesList::-webkit-scrollbar { width: 6px; }
-#speciesList::-webkit-scrollbar-thumb { background: #666; border-radius: 3px; }
+#speciesList li:hover,
+#nestSpeciesList li:hover { background: #444; }
+#speciesList li.selected,
+#nestSpeciesList li.selected { background: #666; font-weight: bold; }
+#speciesList::-webkit-scrollbar,
+#nestSpeciesList::-webkit-scrollbar { width: 6px; }
+#speciesList::-webkit-scrollbar-thumb,
+#nestSpeciesList::-webkit-scrollbar-thumb { background: #666; border-radius: 3px; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    INSTRUCTIONS MODAL
