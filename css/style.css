@@ -231,6 +231,7 @@ body {
 #surveyModal,
 #mooseModal,
 #turtleModal,
+#nestModal,
 #habitatModal {
   display: none;
   position: fixed;
