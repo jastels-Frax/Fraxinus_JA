@@ -30,6 +30,7 @@ const RARITY_LEGEND_HTML = `
       <span><span style="background:#F1C232;color:#fff;padding:1px 4px;border-radius:3px;font-size:0.65rem;font-weight:700;">SAR-SC</span> Special Concern</span>
       <span><span style="background:#674ea7;color:#fff;padding:1px 4px;border-radius:3px;font-size:0.65rem;font-weight:700;">SOCI</span> Prov. concern</span>
     </div>
+    <span style="font-size:0.65rem;opacity:0.5;margin-top:3px;display:block;">Both may appear for provincially rare SARA species</span>
   </div>`;
 
 export function updateSpeciesList(filter) {
@@ -59,15 +60,15 @@ export function updateSpeciesList(filter) {
       const srankText = (sp.srank && sp.code !== 'OTHER')
         ? `<span style="font-size:0.75rem;opacity:0.45;margin-left:4px;">${sp.srank}</span>`
         : '';
-      let statusBadge = '';
-      if (sp.sara) {
-        statusBadge = `<span style="font-size:0.65rem;font-weight:700;padding:1px 5px;border-radius:3px;background:${SARA_COLOUR[sp.sara]};color:#fff;margin-left:6px;vertical-align:middle;letter-spacing:0.03em;">${SARA_LABEL[sp.sara]}</span>`;
-      } else if (sp.soci) {
-        statusBadge = `<span style="font-size:0.65rem;font-weight:700;padding:1px 5px;border-radius:3px;background:#674ea7;color:#fff;margin-left:6px;vertical-align:middle;letter-spacing:0.03em;">SOCI</span>`;
-      }
+      const saraBadge = sp.sara
+        ? `<span style="font-size:0.65rem;font-weight:700;padding:1px 5px;border-radius:3px;background:${SARA_COLOUR[sp.sara]};color:#fff;margin-left:6px;vertical-align:middle;letter-spacing:0.03em;">${SARA_LABEL[sp.sara]}</span>`
+        : '';
+      const sociBadge = sp.soci
+        ? `<span style="font-size:0.65rem;font-weight:700;padding:1px 5px;border-radius:3px;background:#674ea7;color:#fff;margin-left:4px;vertical-align:middle;letter-spacing:0.03em;">SOCI</span>`
+        : '';
 
       const li = document.createElement('li');
-      li.innerHTML = `${dot}${sp.name}${statusBadge}${srankText}`;
+      li.innerHTML = `${dot}${sp.name}${saraBadge}${sociBadge}${srankText}`;
       li.style.cursor = 'pointer';
       li.onclick = () => {
         const modal   = document.getElementById('speciesModal');
@@ -76,7 +77,7 @@ export function updateSpeciesList(filter) {
         if (modal)   modal._selectedSpecies = sp;
         if (search)  { search.style.display = 'none'; search.value = sp.code; }
         if (display) {
-          display.innerHTML = `${dot}<strong>${sp.name}</strong>${statusBadge}${srankText}`
+          display.innerHTML = `${dot}<strong>${sp.name}</strong>${saraBadge}${sociBadge}${srankText}`
             + `<span style="font-size:0.75rem;opacity:0.5;margin-left:8px;">(${sp.code})</span>`
             + `<span style="float:right;font-size:0.8rem;opacity:0.6;margin-top:1px;">tap to change ✕</span>`;
           display.style.display = 'block';
@@ -185,17 +186,17 @@ export function createSpeciesPopupHTML(index, code, count, breeding, note, passH
   const srankBadge = (info?.srank && info.srank !== 'SNA' && code !== 'OTHER')
     ? `<span style="font-size:0.7rem;background:#333;padding:1px 5px;border-radius:4px;opacity:0.7;margin-left:4px;">${info.srank}</span>`
     : '';
-  let statusBadge = '';
-  if (info?.sara) {
-    statusBadge = `<span style="font-size:0.7rem;background:${SARA_COLOUR[info.sara]};color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;">${SARA_LABEL[info.sara]}</span>`;
-  } else if (info?.soci) {
-    statusBadge = `<span style="font-size:0.7rem;background:#674ea7;color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;">SOCI</span>`;
-  }
+  const saraBadge = info?.sara
+    ? `<span style="font-size:0.7rem;background:${SARA_COLOUR[info.sara]};color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;">${SARA_LABEL[info.sara]}</span>`
+    : '';
+  const sociBadge = info?.soci
+    ? `<span style="font-size:0.7rem;background:#674ea7;color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px;">SOCI</span>`
+    : '';
 
   const popup = document.createElement('div');
   popup.className = 'popup-content compact';
   popup.innerHTML = `
-    <div style="font-weight:600; margin-bottom:6px;">${code}${srankBadge}${statusBadge}</div>
+    <div style="font-weight:600; margin-bottom:6px;">${code}${srankBadge}${saraBadge}${sociBadge}</div>
     <div class="form-row">
       <label>Count:</label>
       <div class="counter-inline">
