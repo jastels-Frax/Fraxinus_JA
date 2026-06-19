@@ -51,7 +51,10 @@ function openDatabase() {
 }
 
 // ─── Generic sync helper ──────────────────────────────────────────────────
+const _syncInFlight = new Set();
 async function syncStore(storeName, records, serializer) {
+  if (_syncInFlight.has(storeName)) return;
+  _syncInFlight.add(storeName);
   if (!db) await openDatabase();
   const tx = db.transaction(storeName, 'readwrite');
   const store = tx.objectStore(storeName);
@@ -60,6 +63,8 @@ async function syncStore(storeName, records, serializer) {
     records.forEach(r => store.add(serializer(r)));
   };
   clearReq.onerror = e => console.error(`Failed to clear ${storeName}:`, e.target.error);
+  tx.oncomplete = () => _syncInFlight.delete(storeName);
+  tx.onerror    = () => _syncInFlight.delete(storeName);
 }
 
 // ─── BBS Species Markers ──────────────────────────────────────────────────

@@ -55,6 +55,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // ── Offline / online feedback ─────────────────────────────────────────
+  window.addEventListener('offline', () => showToast('Network offline — data saved locally.', 'warning', 5000));
+  window.addEventListener('online',  () => showToast('Network restored.', 'success', 3000));
+
   // ── Render session lists on home screen ───────────────────────────────
   await _renderSessionLists();
 });
@@ -120,7 +124,7 @@ let _autoSaveTimer = null;
 
 function _startAutoSave() {
   _stopAutoSave();
-  const secs = parseInt(localStorage.getItem('autoSaveInterval') || '0', 10);
+  const secs = parseInt(localStorage.getItem('autoSaveInterval') || '60', 10);
   if (!secs) return;
   _autoSaveTimer = setInterval(async () => {
     if (!activeSurvey) return;

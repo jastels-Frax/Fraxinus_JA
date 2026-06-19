@@ -9,7 +9,8 @@ import {
   projectID, pointID, observer, surveyType,
   surveyLength, wind, windDir, tempC, precip, siteHabitat,
   surveyLat, surveyLng, surveyStartTime, surveyEndTime,
-  surveySubmittedAt, surveyResubmittedAt
+  surveySubmittedAt, surveyResubmittedAt,
+  setLastBBSSpecies
 } from './surveyGlobals.js';
 
 // ─── Species Search Autocomplete ──────────────────────────────────────────
@@ -184,6 +185,7 @@ export function saveSpeciesObservation() {
     timestamp
   });
 
+  setLastBBSSpecies(species.code, species.name);
   syncToIndexedDB();
   updateTable();
   closeModal();

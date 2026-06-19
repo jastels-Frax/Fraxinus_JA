@@ -3,7 +3,7 @@
 
 import { loadSpeciesMarkers, loadMooseObservations, loadTurtleObservations, loadNestObservations, loadHabitatObservations } from './storage.js';
 import { speciesMarkers } from './storageData.js';
-import { updateTable, openSurveyModal, openDrawer } from './ui.js';
+import { updateTable, openSurveyModal, openDrawer, updateMetaBadge } from './ui.js';
 import { showSpeciesModal, isPlacingPoint } from './modal.js';
 import { activeSurvey } from './surveyGlobals.js';
 import { stampOffload } from './export.js';
@@ -93,6 +93,7 @@ export function initializeMap() {
 
   // Master buttons
   addMasterButtons();
+  updateMetaBadge();
 
   // Load stored data for the active survey
   const survey = activeSurvey;

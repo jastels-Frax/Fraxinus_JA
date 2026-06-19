@@ -3,7 +3,7 @@
 import { nestObservations } from './storageData.js';
 import { syncNestToIndexedDB } from './storage.js';
 import { updateTable } from './ui.js';
-import { map, lockMap, unlockMap } from './map.js';
+import { map, lockMap, unlockMap, observerLocation } from './map.js';
 import * as G from './surveyGlobals.js';
 import { showUndoToast, showToast } from './toast.js';
 import { setActiveModal, clearActiveModal } from './modal.js';
@@ -120,6 +120,8 @@ export function showNestModal(latlng) {
   modal.querySelector('#nestPhotos').checked     = false;
   modal.querySelector('#nestNotes').value        = '';
 
+  _updateNestLocationDisplay(latlng);
+
   modal.style.display    = 'block';
   backdrop.style.display = 'block';
   setActiveModal('nest');
@@ -138,12 +140,40 @@ export function closeNestModal() {
     if (_s) { _s.style.display = 'none'; _s.value = ''; }
     if (_d) { _d.style.display = 'none'; _d.innerHTML = ''; }
     if (_l) { _l.innerHTML = ''; _l.style.display = 'none'; }
+    const _loc = _m.querySelector('#nestLocationDisplay');
+    if (_loc) { _loc.textContent = '—'; _loc.style.color = '#aaa'; }
   }
   document.getElementById('nestModal')?.style.setProperty('display', 'none');
   document.getElementById('modalBackdrop')?.style.setProperty('display', 'none');
   clearActiveModal();
   unlockMap();
 }
+
+// ─── Location display helpers ─────────────────────────────────────────────
+function _updateNestLocationDisplay(latlng) {
+  const display = document.getElementById('nestLocationDisplay');
+  if (!display) return;
+  if (latlng && Number.isFinite(latlng.lat ?? latlng[0])) {
+    const lat = (latlng.lat ?? latlng[0]).toFixed(6);
+    const lng = (latlng.lng ?? latlng[1]).toFixed(6);
+    display.textContent = `${lat}, ${lng}`;
+    display.style.color = '#4caf50';
+  } else {
+    display.textContent = '— no GPS fix —';
+    display.style.color = '#e57373';
+  }
+}
+
+window.useCurrentLocationForNest = function () {
+  const loc = observerLocation || (map ? map.getCenter() : null);
+  if (!loc) {
+    showToast('No GPS fix yet — move to open sky.', 'warning', 3000);
+    return;
+  }
+  nestCurrentLatLng = loc;
+  _updateNestLocationDisplay(loc);
+  showToast('Location updated to current GPS.', 'success', 2000);
+};
 
 // ─── Save Observation ─────────────────────────────────────────────────────
 export function saveNestObservation() {
@@ -443,6 +473,16 @@ export function injectNestModal() {
         </label>
       </div>
 
+      <label>Disposition: <span style="color:red;">*</span></label>
+      <select id="nestDisposition">
+        <option value="">-- Select --</option>
+        <option value="Work can proceed">Work can proceed</option>
+        <option value="Delay required (active nest)">Delay required (active nest)</option>
+        <option value="Buffer zone required">Buffer zone required</option>
+        <option value="ECCC/SARA consultation required">ECCC/SARA consultation required</option>
+        <option value="Pending assessment">Pending assessment</option>
+      </select>
+
       <label>Nest Contents:</label>
       <div style="display:flex; flex-direction:column; gap:4px; margin:4px 0 8px;">
         <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
@@ -508,22 +548,18 @@ export function injectNestModal() {
       <label>Recommended Buffer (m):</label>
       <input type="number" id="nestBuffer" min="0" placeholder="e.g. 30" />
 
-      <label>Disposition: <span style="color:red;">*</span></label>
-      <select id="nestDisposition">
-        <option value="">-- Select --</option>
-        <option value="Work can proceed">Work can proceed</option>
-        <option value="Delay required (active nest)">Delay required (active nest)</option>
-        <option value="Buffer zone required">Buffer zone required</option>
-        <option value="ECCC/SARA consultation required">ECCC/SARA consultation required</option>
-        <option value="Pending assessment">Pending assessment</option>
-      </select>
-
       <label style="display:flex; align-items:center; gap:8px; margin-top:8px; cursor:pointer;">
         <input type="checkbox" id="nestPhotos" /> Photos taken
       </label>
 
       <label>Notes:</label>
       <textarea id="nestNotes" rows="3" placeholder="Optional notes..."></textarea>
+
+      <label style="margin-top:8px;">GPS Location:</label>
+      <div style="display:flex; gap:8px; align-items:center; margin-bottom:4px;">
+        <span id="nestLocationDisplay" style="flex:1; font-size:0.85rem; color:#aaa; font-family:monospace;">—</span>
+        <button type="button" id="nestGPSBtn" onclick="useCurrentLocationForNest()" title="Snap to current GPS" style="padding:6px 10px; font-size:0.8rem; white-space:nowrap;">📍 Use GPS</button>
+      </div>
 
       <div style="margin-top:10px; display:flex; gap:8px;">
         <button onclick="saveNestObservation()">Save Observation</button>

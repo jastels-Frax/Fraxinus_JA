@@ -43,7 +43,7 @@ function _obsCount() {
 function _serializeObs() {
   const strip = o => {
     const { marker, label, ...rest } = o;
-    return { ...rest, latlng: { lat: o.latlng.lat, lng: o.latlng.lng } };
+    return { ...rest, latlng: o.latlng ? { lat: o.latlng.lat, lng: o.latlng.lng } : null };
   };
   return {
     speciesMarkers:     speciesMarkers.map(strip),

@@ -249,6 +249,14 @@ export let nestProvince         = localStorage.getItem('nestProvince')         |
 export let nestSubmittedAt      = localStorage.getItem('nestSubmittedAt')      || '';
 export let nestResubmittedAt    = localStorage.getItem('nestResubmittedAt')    || '';
 
+// ─── BBS "Repeat last species" state ──────────────────────────────────────
+export let lastBBSSpeciesCode = '';
+export let lastBBSSpeciesName = '';
+export function setLastBBSSpecies(code, name) {
+  lastBBSSpeciesCode = code;
+  lastBBSSpeciesName = name;
+}
+
 export function setNestMetadata(data) {
   nestProjectID        = data.nestProjectID        || '';
   nestObserver         = data.nestObserver         || '';

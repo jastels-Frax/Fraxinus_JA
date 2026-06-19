@@ -1,7 +1,7 @@
 // js/modal.js — BBS species observation modal + shared instructions modal
 
 import { updateSpeciesList, adjustCount, saveSpeciesObservation } from './species.js';
-import { observer, pointID, activeSurvey } from './surveyGlobals.js';
+import { observer, pointID, activeSurvey, lastBBSSpeciesCode, lastBBSSpeciesName } from './surveyGlobals.js';
 import { lockMap, unlockMap } from './map.js';
 import { showToast } from './toast.js';
 
@@ -55,6 +55,33 @@ export function showSpeciesModal(latlng) {
       display.innerHTML = '';
       updateSpeciesList('');
     });
+  }
+
+  // Inject / update the "Repeat last species" quick-add button
+  let repeatBtn = document.getElementById('repeatSpeciesBtn');
+  if (!repeatBtn) {
+    repeatBtn = document.createElement('button');
+    repeatBtn.id = 'repeatSpeciesBtn';
+    repeatBtn.style.cssText = 'width:100%; margin-bottom:8px; padding:10px; background:#1a3a1a; border:1px solid #4caf50; border-radius:6px; color:#4caf50; font-size:0.9rem; cursor:pointer; text-align:left;';
+    searchInput?.parentNode?.insertBefore(repeatBtn, searchInput);
+  }
+  if (lastBBSSpeciesCode && lastBBSSpeciesName) {
+    repeatBtn.style.display = '';
+    repeatBtn.textContent   = `↩ Repeat: ${lastBBSSpeciesName} (${lastBBSSpeciesCode})`;
+    repeatBtn.onclick = () => {
+      const sp = window.speciesList?.find(s => s.code === lastBBSSpeciesCode);
+      if (!sp) return;
+      modal._selectedSpecies = sp;
+      const display = document.getElementById('selectedSpeciesDisplay');
+      if (display) {
+        display.innerHTML = `<strong>${sp.name}</strong> <span style="opacity:0.6;">${sp.code}</span><span style="float:right;font-size:0.8rem;opacity:0.6;margin-top:1px;">tap to change ✕</span>`;
+        display.style.display = 'block';
+      }
+      if (searchInput)   { searchInput.style.display   = 'none'; searchInput.value = ''; }
+      if (speciesListEl) { speciesListEl.style.display  = 'none'; speciesListEl.innerHTML = ''; }
+    };
+  } else {
+    repeatBtn.style.display = 'none';
   }
 
   modal.style.display    = 'block';

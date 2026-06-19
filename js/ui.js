@@ -8,6 +8,7 @@ import {
   exportHabitatCSV, exportHabitatGeoJSON, exportHabitatKML
 } from './export.js';
 import { uploadToFelt } from './felt.js';
+import { exportNestPDF } from './nestPDF.js';
 import { showUndoToast } from './toast.js';
 import { setActiveModal, clearActiveModal } from './modal.js';
 import { map, lockMap, unlockMap } from './map.js';
@@ -29,7 +30,8 @@ import {
   nestProjectID, nestObserver, nestClient, nestSiteName, nestMunicipality,
   nestSurveyDate, nestStartTime, nestEndTime,
   nestProposedActivity, nestHabitatTypes, nestSurveyMethod, nestAreaHa,
-  nestTempC, nestWind, nestPrecip, nestProvince, setNestMetadata
+  nestTempC, nestWind, nestPrecip, nestProvince, setNestMetadata,
+  hasAnyMetadata
 } from './surveyGlobals.js';
 
 // ─── Drawer ───────────────────────────────────────────────────────────────
@@ -448,6 +450,15 @@ function _setVal(id, val) {
   if (el) el.value = val || '';
 }
 
+// ─── Metadata completeness badge on the 📋 button ────────────────────────
+export function updateMetaBadge() {
+  const btn = document.getElementById('btnSurvey');
+  if (!btn) return;
+  const complete = hasAnyMetadata();
+  btn.classList.toggle('meta-complete',   complete);
+  btn.classList.toggle('meta-incomplete', !complete);
+}
+
 // ─── Back button safety net ───────────────────────────────────────────────
 export function ensureBackButton() {
   if (document.getElementById('btnBack')) return;
@@ -457,6 +468,7 @@ export function ensureBackButton() {
 
 // ─── Table Renderer ───────────────────────────────────────────────────────
 export function updateTable() {
+  updateMetaBadge();
   ensureBackButton();
   const drawer = document.getElementById('dataDrawer');
   if (!drawer) return;
@@ -498,21 +510,22 @@ function _renderBBSTable(drawer) {
           <button onclick="exportSpeciesGeoJSON()">GeoJSON</button>
           <button onclick="exportSpeciesKML()">KML</button>
           <button class="felt-export-btn" onclick="uploadToFelt('BBS')">↑ Felt</button>
+          <button id="bbs-col-toggle" onclick="const t=document.getElementById('obsTableBody')?.closest('table');if(t){t.classList.toggle('show-all-cols');this.textContent=t.classList.contains('show-all-cols')?'▲ Less':'▼ More';}">▼ More</button>
         </div>
       </div>
       <h2 style="margin-top:0;">Breeding Bird Survey Observations</h2>
       <div style="overflow-x:auto;">
         <table>
           <thead><tr>
-            <th>Project ID</th><th>Point ID</th><th>Observer</th>
-            <th>Survey Type</th><th>Survey Length</th><th>Wind</th>
-            <th>Wind Dir</th><th>Temp °C</th><th>Precip</th>
-            <th>Site Habitat</th><th>Survey Location</th>
-            <th>Survey Start</th><th>Survey End</th>
+            <th class="meta-col">Project ID</th><th class="meta-col">Point ID</th><th class="meta-col">Observer</th>
+            <th class="meta-col">Survey Type</th><th class="meta-col">Survey Length</th><th class="meta-col">Wind</th>
+            <th class="meta-col">Wind Dir</th><th class="meta-col">Temp °C</th><th class="meta-col">Precip</th>
+            <th class="meta-col">Site Habitat</th><th class="meta-col">Survey Location</th>
+            <th class="meta-col">Survey Start</th><th class="meta-col">Survey End</th>
             <th>Species</th><th>Count</th>
             <th>Range</th><th>Bearing</th><th>Pass Ht</th>
             <th>Flight Dir</th><th>Note</th><th>Obs. Timestamp</th>
-            <th>Breeding</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
+            <th>Breeding</th><th class="meta-col">Submitted At</th><th class="meta-col">Resubmitted At</th><th>Actions</th>
           </tr></thead>
           <tbody id="obsTableBody"></tbody>
         </table>
@@ -522,22 +535,22 @@ function _renderBBSTable(drawer) {
   speciesMarkers.forEach((obs, i) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${obs.projectID||''}</td><td>${obs.pointID||''}</td>
-      <td>${obs.observer||''}</td><td>${obs.surveyType||''}</td>
-      <td>${obs.surveyLength||''}</td><td>${obs.wind||''}</td>
-      <td>${obs.windDir||''}</td><td>${obs.tempC||''}</td>
-      <td>${obs.precip||''}</td><td>${obs.siteHabitat||''}</td>
-      <td>${obs.surveyLat && obs.surveyLng
+      <td class="meta-col">${obs.projectID||''}</td><td class="meta-col">${obs.pointID||''}</td>
+      <td class="meta-col">${obs.observer||''}</td><td class="meta-col">${obs.surveyType||''}</td>
+      <td class="meta-col">${obs.surveyLength||''}</td><td class="meta-col">${obs.wind||''}</td>
+      <td class="meta-col">${obs.windDir||''}</td><td class="meta-col">${obs.tempC||''}</td>
+      <td class="meta-col">${obs.precip||''}</td><td class="meta-col">${obs.siteHabitat||''}</td>
+      <td class="meta-col">${obs.surveyLat && obs.surveyLng
         ? parseFloat(obs.surveyLat).toFixed(4) + ', ' + parseFloat(obs.surveyLng).toFixed(4)
         : ''}</td>
-      <td>${obs.surveyStartTime||''}</td><td>${obs.surveyEndTime||''}</td>
+      <td class="meta-col">${obs.surveyStartTime||''}</td><td class="meta-col">${obs.surveyEndTime||''}</td>
       <td>${obs.code||''}</td><td>${obs.count||''}</td>
       <td>${obs.range||''}</td><td>${obs.bearing||''}</td>
       <td>${obs.passHt||''}</td><td>${obs.flightDir||''}</td>
       <td>${obs.note||''}</td><td>${obs.timestamp||''}</td>
       <td>${obs.breeding||''}</td>
-      <td>${obs.surveySubmittedAt||''}</td>
-      <td>${obs.surveyResubmittedAt||''}</td>
+      <td class="meta-col">${obs.surveySubmittedAt||''}</td>
+      <td class="meta-col">${obs.surveyResubmittedAt||''}</td>
       <td>
         <button onclick="zoomToMarker(${i})">🔍</button>
         <button onclick="deleteMarker(${i})" style="color:red;">❌</button>
@@ -557,18 +570,19 @@ function _renderMooseTable(drawer) {
           <button onclick="exportMooseGeoJSON()">GeoJSON</button>
           <button onclick="exportMooseKML()">KML</button>
           <button class="felt-export-btn" onclick="uploadToFelt('MOOSE')">↑ Felt</button>
+          <button id="moose-col-toggle" onclick="const t=document.getElementById('obsTableBody')?.closest('table');if(t){t.classList.toggle('show-all-cols');this.textContent=t.classList.contains('show-all-cols')?'▲ Less':'▼ More';}">▼ More</button>
         </div>
       </div>
       <h2 style="margin-top:0;">General Wildlife Survey Observations</h2>
       <div style="overflow-x:auto;">
         <table>
           <thead><tr>
-            <th>Project ID</th><th>Transect ID</th><th>Observer</th>
-            <th>Survey Date</th><th>Survey Start</th>
-            <th>Visibility</th><th>Snow Cover</th><th>Temp °C</th>
-            <th>Wind Speed</th><th>Species</th><th>Obs. Type</th>
+            <th class="meta-col">Project ID</th><th class="meta-col">Transect ID</th><th class="meta-col">Observer</th>
+            <th class="meta-col">Survey Date</th><th class="meta-col">Survey Start</th>
+            <th class="meta-col">Visibility</th><th class="meta-col">Snow Cover</th><th class="meta-col">Temp °C</th>
+            <th class="meta-col">Wind Speed</th><th>Species</th><th>Obs. Type</th>
             <th>Habitat</th><th>Photo Ref</th><th>Note</th>
-            <th>Obs. Timestamp</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
+            <th>Obs. Timestamp</th><th class="meta-col">Submitted At</th><th class="meta-col">Resubmitted At</th><th>Actions</th>
           </tr></thead>
           <tbody id="obsTableBody"></tbody>
         </table>
@@ -578,16 +592,16 @@ function _renderMooseTable(drawer) {
   mooseObservations.forEach((obs, i) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${obs.projectID||''}</td><td>${obs.transectID||''}</td>
-      <td>${obs.observer||''}</td><td>${obs.surveyDate||''}</td>
-      <td>${obs.startTime||''}</td>
-      <td>${obs.visibility||''}</td><td>${obs.snowCover||''}</td>
-      <td>${obs.tempC||''}</td><td>${obs.windSpeed||''}</td>
+      <td class="meta-col">${obs.projectID||''}</td><td class="meta-col">${obs.transectID||''}</td>
+      <td class="meta-col">${obs.observer||''}</td><td class="meta-col">${obs.surveyDate||''}</td>
+      <td class="meta-col">${obs.startTime||''}</td>
+      <td class="meta-col">${obs.visibility||''}</td><td class="meta-col">${obs.snowCover||''}</td>
+      <td class="meta-col">${obs.tempC||''}</td><td class="meta-col">${obs.windSpeed||''}</td>
       <td>${obs.species||''}</td><td>${obs.obsType||''}</td>
       <td>${obs.habitat||''}</td><td>${obs.photoRef||''}</td>
       <td>${obs.note||''}</td><td>${obs.timestamp||''}</td>
-      <td>${obs.mooseSubmittedAt||''}</td>
-      <td>${obs.mooseResubmittedAt||''}</td>
+      <td class="meta-col">${obs.mooseSubmittedAt||''}</td>
+      <td class="meta-col">${obs.mooseResubmittedAt||''}</td>
       <td>
         <button onclick="zoomToMooseMarker(${i})">🔍</button>
         <button onclick="deleteMooseMarker(${i})" style="color:red;">❌</button>
@@ -607,19 +621,20 @@ function _renderTurtleTable(drawer) {
           <button onclick="exportTurtleGeoJSON()">GeoJSON</button>
           <button onclick="exportTurtleKML()">KML</button>
           <button class="felt-export-btn" onclick="uploadToFelt('TURTLE')">↑ Felt</button>
+          <button id="turtle-col-toggle" onclick="const t=document.getElementById('obsTableBody')?.closest('table');if(t){t.classList.toggle('show-all-cols');this.textContent=t.classList.contains('show-all-cols')?'▲ Less':'▼ More';}">▼ More</button>
         </div>
       </div>
       <h2 style="margin-top:0;">Wood Turtle Survey Observations</h2>
       <div style="overflow-x:auto;">
         <table>
           <thead><tr>
-            <th>Project ID</th><th>Site Name</th><th>Observer</th>
-            <th>Survey Date</th><th>Survey Start</th>
-            <th>Water Temp °C</th><th>Air Temp °C</th>
-            <th>Water Level</th><th>Weather</th>
+            <th class="meta-col">Project ID</th><th class="meta-col">Site Name</th><th class="meta-col">Observer</th>
+            <th class="meta-col">Survey Date</th><th class="meta-col">Survey Start</th>
+            <th class="meta-col">Water Temp °C</th><th class="meta-col">Air Temp °C</th>
+            <th class="meta-col">Water Level</th><th class="meta-col">Weather</th>
             <th>Species</th><th>Sex</th><th>Age Class</th>
             <th>Activity</th><th>Habitat</th><th>Photo ID</th>
-            <th>Note</th><th>Obs. Timestamp</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
+            <th>Note</th><th>Obs. Timestamp</th><th class="meta-col">Submitted At</th><th class="meta-col">Resubmitted At</th><th>Actions</th>
           </tr></thead>
           <tbody id="obsTableBody"></tbody>
         </table>
@@ -629,17 +644,17 @@ function _renderTurtleTable(drawer) {
   turtleObservations.forEach((obs, i) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${obs.projectID||''}</td><td>${obs.siteName||''}</td>
-      <td>${obs.observer||''}</td><td>${obs.surveyDate||''}</td>
-      <td>${obs.startTime||''}</td>
-      <td>${obs.waterTemp||''}</td><td>${obs.airTemp||''}</td>
-      <td>${obs.waterLevel||''}</td><td>${obs.weather||''}</td>
+      <td class="meta-col">${obs.projectID||''}</td><td class="meta-col">${obs.siteName||''}</td>
+      <td class="meta-col">${obs.observer||''}</td><td class="meta-col">${obs.surveyDate||''}</td>
+      <td class="meta-col">${obs.startTime||''}</td>
+      <td class="meta-col">${obs.waterTemp||''}</td><td class="meta-col">${obs.airTemp||''}</td>
+      <td class="meta-col">${obs.waterLevel||''}</td><td class="meta-col">${obs.weather||''}</td>
       <td>${obs.species||''}</td><td>${obs.sex||''}</td>
       <td>${obs.ageClass||''}</td><td>${obs.activity||''}</td>
       <td>${obs.habitat||''}</td><td>${obs.photoID||''}</td>
       <td>${obs.note||''}</td><td>${obs.timestamp||''}</td>
-      <td>${obs.turtleSubmittedAt||''}</td>
-      <td>${obs.turtleResubmittedAt||''}</td>
+      <td class="meta-col">${obs.turtleSubmittedAt||''}</td>
+      <td class="meta-col">${obs.turtleResubmittedAt||''}</td>
       <td>
         <button onclick="zoomToTurtleMarker(${i})">🔍</button>
         <button onclick="deleteTurtleMarker(${i})" style="color:red;">❌</button>
@@ -659,17 +674,19 @@ function _renderNestTable(drawer) {
           <button onclick="exportNestGeoJSON()">GeoJSON</button>
           <button onclick="exportNestKML()">KML</button>
           <button class="felt-export-btn" onclick="uploadToFelt('NEST')">↑ Felt</button>
+          <button onclick="exportNestPDF()">PDF</button>
+          <button id="nest-col-toggle" onclick="const t=document.getElementById('obsTableBody')?.closest('table');if(t){t.classList.toggle('show-all-cols');this.textContent=t.classList.contains('show-all-cols')?'▲ Less':'▼ More';}">▼ More</button>
         </div>
       </div>
       <h2 style="margin-top:0;">🪹 Nest Sweep Observations</h2>
       <div style="overflow-x:auto;">
         <table>
           <thead><tr>
-            <th>#</th><th>Species</th><th>Status</th><th>Contents</th>
+            <th>#</th><th>Species</th><th>Status</th><th>Disposition</th><th>Contents</th>
             <th>Substrate</th><th>Sched.1</th><th>SAR</th>
-            <th>Buffer (m)</th><th>Disposition</th><th>Photos</th>
+            <th>Buffer (m)</th><th>Photos</th>
             <th>Notes</th><th>Obs. Timestamp</th>
-            <th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
+            <th class="meta-col">Submitted At</th><th class="meta-col">Resubmitted At</th><th>Actions</th>
           </tr></thead>
           <tbody id="obsTableBody"></tbody>
         </table>
@@ -684,17 +701,17 @@ function _renderNestTable(drawer) {
       <td>${i + 1}</td>
       <td>${obs.species || ''}</td>
       <td><span style="color:${statusColour}; font-weight:600;">${obs.status || ''}</span></td>
+      <td>${obs.disposition || ''}</td>
       <td>${(obs.contents || []).join(', ')}</td>
       <td>${obs.substrate || ''}</td>
       <td>${obs.sched1 || ''}</td>
       <td>${obs.sar || ''}</td>
       <td>${obs.buffer || ''}</td>
-      <td>${obs.disposition || ''}</td>
       <td>${obs.photos ? '✓' : ''}</td>
       <td>${obs.note || ''}</td>
       <td>${obs.timestamp || ''}</td>
-      <td>${obs.nestSubmittedAt || ''}</td>
-      <td>${obs.nestResubmittedAt || ''}</td>
+      <td class="meta-col">${obs.nestSubmittedAt || ''}</td>
+      <td class="meta-col">${obs.nestResubmittedAt || ''}</td>
       <td>
         <button onclick="zoomToNestMarker(${i})">🔍</button>
         <button onclick="deleteNestMarker(${i})" style="color:red;">❌</button>
@@ -1028,5 +1045,6 @@ window.exportHabitatKML      = exportHabitatKML;
 window.exportNestCSV         = exportNestCSV;
 window.exportNestGeoJSON     = exportNestGeoJSON;
 window.exportNestKML         = exportNestKML;
+window.exportNestPDF         = exportNestPDF;
 window.zoomToNestMarker      = zoomToNestMarker;
 window.uploadToFelt          = uploadToFelt;

@@ -6,10 +6,10 @@
 import { habitatObservations } from './storageData.js';
 import { syncHabitatToIndexedDB } from './storage.js';
 import { updateTable } from './ui.js';
-import { map, lockMap, unlockMap } from './map.js';
+import { map, lockMap, unlockMap, observerLocation } from './map.js';
 import * as G from './surveyGlobals.js';
 import { capturePhoto } from './photo.js';
-import { showUndoToast } from './toast.js';
+import { showUndoToast, showToast } from './toast.js';
 import { setActiveModal, clearActiveModal } from './modal.js';
 
 let habitatPlacingPoint  = false;
@@ -216,6 +216,8 @@ export function showHabitatModal(latlng) {
   modal.querySelector('#habitatPhotoInput').value     = '';
   modal.querySelector('#habitatNoteInput').value      = '';
 
+  _updateHabitatLocationDisplay(latlng);
+
   modal.style.display    = 'block';
   backdrop.style.display = 'block';
   setActiveModal('habitat');
@@ -225,11 +227,38 @@ export function showHabitatModal(latlng) {
 export function closeHabitatModal() {
   habitatPlacingPoint  = false;
   habitatCurrentLatLng = null;
+  const _loc = document.getElementById('habitatLocationDisplay');
+  if (_loc) { _loc.textContent = '—'; _loc.style.color = '#aaa'; }
   document.getElementById('habitatModal')?.style.setProperty('display', 'none');
   document.getElementById('modalBackdrop')?.style.setProperty('display', 'none');
   clearActiveModal();
   unlockMap();
 }
+
+function _updateHabitatLocationDisplay(latlng) {
+  const display = document.getElementById('habitatLocationDisplay');
+  if (!display) return;
+  if (latlng && Number.isFinite(latlng.lat ?? latlng[0])) {
+    const lat = (latlng.lat ?? latlng[0]).toFixed(6);
+    const lng = (latlng.lng ?? latlng[1]).toFixed(6);
+    display.textContent = `${lat}, ${lng}`;
+    display.style.color = '#4caf50';
+  } else {
+    display.textContent = '— no GPS fix —';
+    display.style.color = '#e57373';
+  }
+}
+
+window.useCurrentLocationForHabitat = function () {
+  const loc = observerLocation || (map ? map.getCenter() : null);
+  if (!loc) {
+    showToast('No GPS fix yet — move to open sky.', 'warning', 3000);
+    return;
+  }
+  habitatCurrentLatLng = loc;
+  _updateHabitatLocationDisplay(loc);
+  showToast('Location updated to current GPS.', 'success', 2000);
+};
 
 // ─── Feature type change — show criteria toggles ──────────────────────────
 window.habitatFeatureTypeChange = function () {
@@ -557,6 +586,12 @@ export function injectHabitatModal(surveyType) {
 
       <label>Notes:</label>
       <textarea id="habitatNoteInput" rows="3" placeholder="Optional notes…"></textarea>
+
+      <label style="margin-top:8px;">GPS Location:</label>
+      <div style="display:flex; gap:8px; align-items:center; margin-bottom:4px;">
+        <span id="habitatLocationDisplay" style="flex:1; font-size:0.85rem; color:#aaa; font-family:monospace;">—</span>
+        <button type="button" onclick="useCurrentLocationForHabitat()" title="Snap to current GPS" style="padding:6px 10px; font-size:0.8rem; white-space:nowrap;">📍 Use GPS</button>
+      </div>
 
       <div style="margin-top:10px; display:flex; gap:8px;">
         <button onclick="saveHabitatObservation()">Save Observation</button>
