@@ -1,7 +1,7 @@
 // js/map.js — Leaflet map initialisation, geolocation, overlay
 // initializeMap() is called by main.js AFTER survey type is selected.
 
-import { loadSpeciesMarkers, loadMooseObservations, loadTurtleObservations, loadHabitatObservations } from './storage.js';
+import { loadSpeciesMarkers, loadMooseObservations, loadTurtleObservations, loadNestObservations, loadHabitatObservations } from './storage.js';
 import { speciesMarkers } from './storageData.js';
 import { updateTable, openSurveyModal, openDrawer } from './ui.js';
 import { showSpeciesModal, isPlacingPoint } from './modal.js';
@@ -10,6 +10,7 @@ import { stampOffload } from './export.js';
 import { showToast } from './toast.js';
 import { injectMooseModal } from './moose.js';
 import { injectTurtleModal } from './turtle.js';
+import { injectNestModal } from './nest.js';
 
 // ─── Shared map state ─────────────────────────────────────────────────────
 export let map              = null;
@@ -103,6 +104,9 @@ export function initializeMap() {
   } else if (survey === 'TURTLE') {
     injectTurtleModal();
     loadTurtleObservations();
+  } else if (survey === 'NEST') {
+    injectNestModal();
+    loadNestObservations();
   }
   loadHabitatObservations();
 }
@@ -123,9 +127,10 @@ function addMasterButtons() {
   const survey = activeSurvey;
 
   // Per-survey species emoji and label
-  const speciesEmoji = survey === 'BBS' ? '🐦' : survey === 'MOOSE' ? '🦌' : '🐢';
+  const speciesEmoji = survey === 'BBS' ? '🐦' : survey === 'MOOSE' ? '🦌' : survey === 'NEST' ? '🪹' : '🐢';
   const speciesTitle = survey === 'BBS'   ? 'Record Bird Species (or tap map)'
                      : survey === 'MOOSE' ? 'Record Wildlife Species Observation'
+                     : survey === 'NEST'  ? 'Record Nest Observation'
                      :                      'Record Turtle Observation';
 
   container.innerHTML = `
@@ -173,6 +178,8 @@ function addMasterButtons() {
         import('./moose.js').then(m => { if (!m.isMoosePlacingPoint()) m.showMooseModal(loc); });
       } else if (survey === 'TURTLE') {
         import('./turtle.js').then(m => { if (!m.isTurtlePlacingPoint()) m.showTurtleModal(loc); });
+      } else if (survey === 'NEST') {
+        import('./nest.js').then(m => { if (!m.isNestPlacingPoint()) m.showNestModal(loc); });
       }
     }
   });

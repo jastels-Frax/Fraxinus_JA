@@ -4,14 +4,15 @@ import {
   exportSpeciesCSV, exportSpeciesGeoJSON, exportSpeciesKML,
   exportMooseCSV,   exportMooseGeoJSON,   exportMooseKML,
   exportTurtleCSV,  exportTurtleGeoJSON,  exportTurtleKML,
+  exportNestCSV,    exportNestGeoJSON,    exportNestKML,
   exportHabitatCSV, exportHabitatGeoJSON, exportHabitatKML
 } from './export.js';
 import { uploadToFelt } from './felt.js';
 import { showUndoToast } from './toast.js';
 import { setActiveModal, clearActiveModal } from './modal.js';
 import { map, lockMap, unlockMap } from './map.js';
-import { speciesMarkers, mooseObservations, turtleObservations, habitatObservations } from './storageData.js';
-import { syncToIndexedDB, syncMooseToIndexedDB, syncTurtleToIndexedDB } from './storage.js';
+import { speciesMarkers, mooseObservations, turtleObservations, nestObservations, habitatObservations } from './storageData.js';
+import { syncToIndexedDB, syncMooseToIndexedDB, syncTurtleToIndexedDB, syncNestToIndexedDB } from './storage.js';
 import {
   activeSurvey,
   projectID, pointID, observer, surveyType, surveyLength,
@@ -24,7 +25,11 @@ import {
   mooseTempC, mooseWindSpeed, mooseNotes, setMooseMetadata,
   turtleProjectID, turtleObserver, turtleSiteName, turtleSurveyDate,
   turtleStartTime, turtleEndTime, turtleWaterTemp, turtleAirTemp,
-  turtleWaterLevel, turtleWeather, turtleNotes, setTurtleMetadata
+  turtleWaterLevel, turtleWeather, turtleNotes, setTurtleMetadata,
+  nestProjectID, nestObserver, nestClient, nestSiteName, nestMunicipality,
+  nestSurveyDate, nestStartTime, nestEndTime,
+  nestProposedActivity, nestHabitatTypes, nestSurveyMethod, nestAreaHa,
+  nestTempC, nestWind, nestPrecip, nestProvince, setNestMetadata
 } from './surveyGlobals.js';
 
 // ─── Drawer ───────────────────────────────────────────────────────────────
@@ -109,6 +114,29 @@ export function closeSurveyModal() {
       turtleNotes:      _val('turtleNotesInput')
     };
     setTurtleMetadata(snap);
+  } else if (survey === 'NEST') {
+    const habTypes = ['Treed','Shrub','Grassland/Lawn','Structure','Cliff/Bank','Mixed','Other']
+      .filter(h => document.getElementById(`nestHabTyp_${h.replace('/','_')}`)?.checked)
+      .join(', ');
+    const snap = {
+      nestProjectID:        _val('nestProjectIDInput'),
+      nestObserver:         _val('nestObserverInput'),
+      nestClient:           _val('nestClientInput'),
+      nestSiteName:         _val('nestSiteNameInput'),
+      nestMunicipality:     _val('nestMunicipalityInput'),
+      nestSurveyDate:       _val('nestSurveyDateInput'),
+      nestStartTime:        _val('nestStartTimeInput'),
+      nestEndTime:          _val('nestEndTimeInput'),
+      nestProposedActivity: _val('nestProposedActivityInput'),
+      nestHabitatTypes:     habTypes,
+      nestSurveyMethod:     _val('nestSurveyMethodInput'),
+      nestAreaHa:           _val('nestAreaHaInput'),
+      nestTempC:            _val('nestTempCInput'),
+      nestWind:             _val('nestWindInput'),
+      nestPrecip:           _val('nestPrecipInput'),
+      nestProvince:         _val('nestProvinceInput')
+    };
+    setNestMetadata(snap);
   }
   document.getElementById('surveyModal').style.display = 'none';
   document.getElementById('modalBackdrop').style.display = 'none';
@@ -252,6 +280,73 @@ export function injectSurveyModal() {
         <br/>
         <button onclick="closeSurveyModal()">Save and Close</button>
       </div>`;
+  } else if (survey === 'NEST') {
+    container.innerHTML = `
+    <div class="modal-content">
+      <h2>Survey Metadata — Nest Sweep</h2>
+      <label>Project ID:</label>
+      <input type="text" id="nestProjectIDInput" />
+      <label>Observer:</label>
+      <input type="text" id="nestObserverInput" />
+      <label>Client / Proponent:</label>
+      <input type="text" id="nestClientInput" />
+      <label>Site Name / Legal Description:</label>
+      <input type="text" id="nestSiteNameInput" />
+      <label>Municipality / County:</label>
+      <input type="text" id="nestMunicipalityInput" />
+      <label>Survey Date:</label>
+      <input type="date" id="nestSurveyDateInput" />
+      <label>Start Time:</label>
+      <input type="time" id="nestStartTimeInput" />
+      <label>End Time:</label>
+      <input type="time" id="nestEndTimeInput" />
+      <label>Proposed Activity Triggering Sweep:</label>
+      <input type="text" id="nestProposedActivityInput" placeholder="e.g. Vegetation clearing" />
+      <label>Habitat Types Surveyed:</label>
+      <div style="display:flex; flex-direction:column; gap:4px; margin:4px 0 8px;">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="nestHabTyp_Treed" value="Treed" /> Treed</label>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="nestHabTyp_Shrub" value="Shrub" /> Shrub</label>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="nestHabTyp_Grassland_Lawn" value="Grassland/Lawn" /> Grassland/Lawn</label>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="nestHabTyp_Structure" value="Structure" /> Structure</label>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="nestHabTyp_Cliff_Bank" value="Cliff/Bank" /> Cliff/Bank</label>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="nestHabTyp_Mixed" value="Mixed" /> Mixed</label>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="nestHabTyp_Other" value="Other" /> Other</label>
+      </div>
+      <label>Survey Method:</label>
+      <select id="nestSurveyMethodInput">
+        <option value="">-- Select --</option>
+        <option value="Systematic transects">Systematic transects</option>
+        <option value="Visual scan">Visual scan</option>
+        <option value="Opportunistic">Opportunistic</option>
+      </select>
+      <label>Area Surveyed (ha):</label>
+      <input type="text" id="nestAreaHaInput" placeholder="Optional" />
+      <label>Temperature (°C):</label>
+      <input type="number" id="nestTempCInput" step="0.1" />
+      <label>Wind (Beaufort 0–7):</label>
+      <input type="number" id="nestWindInput" min="0" max="7" />
+      <label>Precipitation:</label>
+      <select id="nestPrecipInput">
+        <option value="">-- Select --</option>
+        <option value="None">None</option>
+        <option value="Light">Light</option>
+        <option value="Moderate">Moderate</option>
+        <option value="Heavy">Heavy</option>
+      </select>
+      <label>Province:</label>
+      <select id="nestProvinceInput">
+        <option value="">-- Select --</option>
+        <option value="NS">Nova Scotia (NS)</option>
+        <option value="NB">New Brunswick (NB)</option>
+        <option value="PEI">Prince Edward Island (PEI)</option>
+        <option value="NL">Newfoundland &amp; Labrador (NL)</option>
+        <option value="QC">Quebec (QC)</option>
+        <option value="ON">Ontario (ON)</option>
+        <option value="Other">Other</option>
+      </select>
+      <br/>
+      <button onclick="closeSurveyModal()">Save and Close</button>
+    </div>`;
   } else {
     container.innerHTML = `
       <div class="modal-content">
@@ -317,6 +412,34 @@ function prefillSurveyModal() {
     _setVal('turtleWaterLevelInput', turtleWaterLevel);
     _setVal('turtleWeatherInput',    turtleWeather);
     _setVal('turtleNotesInput',      turtleNotes);
+  } else if (survey === 'NEST') {
+    _setVal('nestProjectIDInput',        nestProjectID);
+    _setVal('nestObserverInput',         nestObserver);
+    _setVal('nestClientInput',           nestClient);
+    _setVal('nestSiteNameInput',         nestSiteName);
+    _setVal('nestMunicipalityInput',     nestMunicipality);
+    _setVal('nestSurveyDateInput',       nestSurveyDate);
+    _setVal('nestStartTimeInput',        nestStartTime);
+    if (!nestStartTime) {
+      const now = new Date();
+      const t = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('nestStartTimeInput').value = t;
+      setNestMetadata({ ...getMetadataSnapshot(), nestStartTime: t });
+    }
+    _setVal('nestEndTimeInput',          nestEndTime);
+    _setVal('nestProposedActivityInput', nestProposedActivity);
+    // Restore habitat type checkboxes
+    const habTypes = (nestHabitatTypes || '').split(',').map(s => s.trim()).filter(Boolean);
+    ['Treed','Shrub','Grassland/Lawn','Structure','Cliff/Bank','Mixed','Other'].forEach(h => {
+      const el = document.getElementById(`nestHabTyp_${h.replace('/','_')}`);
+      if (el) el.checked = habTypes.includes(h);
+    });
+    _setVal('nestSurveyMethodInput',     nestSurveyMethod);
+    _setVal('nestAreaHaInput',           nestAreaHa);
+    _setVal('nestTempCInput',            nestTempC);
+    _setVal('nestWindInput',             nestWind);
+    _setVal('nestPrecipInput',           nestPrecip);
+    _setVal('nestProvinceInput',         nestProvince);
   }
 }
 
@@ -346,6 +469,8 @@ export function updateTable() {
     _renderMooseTable(drawer);
   } else if (survey === 'TURTLE') {
     _renderTurtleTable(drawer);
+  } else if (survey === 'NEST') {
+    _renderNestTable(drawer);
   } else {
     drawer.innerHTML = '<div style="padding:12px; color:#aaa;">No survey active.</div>';
   }
@@ -353,9 +478,10 @@ export function updateTable() {
   const badge = document.getElementById('obsCountBadge');
   if (badge) {
     const habCount = habitatObservations.filter(o => o.surveyType === survey).length;
-    const n = survey === 'BBS'   ? speciesMarkers.length     + habCount
-            : survey === 'MOOSE' ? mooseObservations.length  + habCount
-            : survey === 'TURTLE'? turtleObservations.length + habCount
+    const n = survey === 'BBS'    ? speciesMarkers.length     + habCount
+            : survey === 'MOOSE'  ? mooseObservations.length  + habCount
+            : survey === 'TURTLE' ? turtleObservations.length + habCount
+            : survey === 'NEST'   ? nestObservations.length   + habCount
             : 0;
     badge.textContent    = n > 0 ? String(n) : '';
     badge.style.display  = n > 0 ? 'flex'    : 'none';
@@ -523,6 +649,61 @@ function _renderTurtleTable(drawer) {
   _appendHabitatSection(drawer, activeSurvey);
 }
 
+function _renderNestTable(drawer) {
+  drawer.innerHTML = `
+    <div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button onclick="closeDrawer()">✕ Close</button>
+          <button onclick="exportNestCSV()">CSV</button>
+          <button onclick="exportNestGeoJSON()">GeoJSON</button>
+          <button onclick="exportNestKML()">KML</button>
+          <button class="felt-export-btn" onclick="uploadToFelt('NEST')">↑ Felt</button>
+        </div>
+      </div>
+      <h2 style="margin-top:0;">🪹 Nest Sweep Observations</h2>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>#</th><th>Species</th><th>Status</th><th>Contents</th>
+            <th>Substrate</th><th>Sched.1</th><th>SAR</th>
+            <th>Buffer (m)</th><th>Disposition</th><th>Photos</th>
+            <th>Notes</th><th>Obs. Timestamp</th>
+            <th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="obsTableBody"></tbody>
+        </table>
+      </div>
+    </div>`;
+  const tbody = document.getElementById('obsTableBody');
+  nestObservations.forEach((obs, i) => {
+    const STATUS_COLOUR = { Active: '#CC0000', Inactive: '#888', Unknown: '#E69138' };
+    const statusColour  = STATUS_COLOUR[obs.status] || '#888';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${obs.species || ''}</td>
+      <td><span style="color:${statusColour}; font-weight:600;">${obs.status || ''}</span></td>
+      <td>${(obs.contents || []).join(', ')}</td>
+      <td>${obs.substrate || ''}</td>
+      <td>${obs.sched1 || ''}</td>
+      <td>${obs.sar || ''}</td>
+      <td>${obs.buffer || ''}</td>
+      <td>${obs.disposition || ''}</td>
+      <td>${obs.photos ? '✓' : ''}</td>
+      <td>${obs.note || ''}</td>
+      <td>${obs.timestamp || ''}</td>
+      <td>${obs.nestSubmittedAt || ''}</td>
+      <td>${obs.nestResubmittedAt || ''}</td>
+      <td>
+        <button onclick="zoomToNestMarker(${i})">🔍</button>
+        <button onclick="deleteNestMarker(${i})" style="color:red;">❌</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  _appendHabitatSection(drawer, activeSurvey);
+}
+
 // ─── Habitat Observations Section (appended to every survey's drawer) ─────
 function _appendHabitatSection(drawer, surveyType) {
   if (!habitatObservations.length) return;
@@ -543,6 +724,13 @@ function _appendHabitatSection(drawer, surveyType) {
       <th>Survey Type</th><th>Project ID</th><th>Transect ID</th><th>Observer</th>
       <th>Survey Date</th><th>Survey Start</th>
       <th>Visibility</th><th>Snow Cover</th><th>Temp °C</th><th>Wind Speed</th>
+      <th>Feature Type</th><th>Criteria Met</th><th>Condition</th>
+      <th>Photo Ref</th><th>Note</th><th>Obs. Timestamp</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
+    </tr>`;
+  } else if (surveyType === 'NEST') {
+    theadHTML = `<tr>
+      <th>Survey Type</th><th>Project ID</th><th>Site Name</th><th>Observer</th>
+      <th>Survey Date</th><th>Survey Start</th><th>Province</th>
       <th>Feature Type</th><th>Criteria Met</th><th>Condition</th>
       <th>Photo Ref</th><th>Note</th><th>Obs. Timestamp</th><th>Submitted At</th><th>Resubmitted At</th><th>Actions</th>
     </tr>`;
@@ -623,6 +811,16 @@ function _appendHabitatSection(drawer, surveyType) {
         <td>${obs.tempC       ||''}</td>
         <td>${obs.windSpeed   ||''}</td>
         ${tail}`;
+    } else if (surveyType === 'NEST') {
+      tr.innerHTML = `
+        <td>${obs.surveyType  ||''}</td>
+        <td>${obs.projectID   ||''}</td>
+        <td>${obs.siteName    ||''}</td>
+        <td>${obs.observer    ||''}</td>
+        <td>${obs.surveyDate  ||''}</td>
+        <td>${obs.startTime   ||''}</td>
+        <td>${obs.province    ||''}</td>
+        ${tail}`;
     } else {
       tr.innerHTML = `
         <td>${obs.surveyType  ||''}</td>
@@ -654,6 +852,11 @@ export function zoomToMooseMarker(index) {
 
 export function zoomToTurtleMarker(index) {
   const obs = turtleObservations[index];
+  if (obs?.latlng) { map.setView(obs.latlng, 18); obs.marker.openPopup(); }
+}
+
+export function zoomToNestMarker(index) {
+  const obs = nestObservations[index];
   if (obs?.latlng) { map.setView(obs.latlng, 18); obs.marker.openPopup(); }
 }
 
@@ -822,4 +1025,8 @@ window.exportTurtleKML       = exportTurtleKML;
 window.exportHabitatCSV      = exportHabitatCSV;
 window.exportHabitatGeoJSON  = exportHabitatGeoJSON;
 window.exportHabitatKML      = exportHabitatKML;
+window.exportNestCSV         = exportNestCSV;
+window.exportNestGeoJSON     = exportNestGeoJSON;
+window.exportNestKML         = exportNestKML;
+window.zoomToNestMarker      = zoomToNestMarker;
 window.uploadToFelt          = uploadToFelt;

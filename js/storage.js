@@ -319,7 +319,7 @@ export async function loadHabitatObservations() {
   const store = tx.objectStore('habitatObservations');
   const req   = store.getAll();
   req.onsuccess = () => {
-    const MARKER_COLOUR = { BBS: '#7c3aed', MOOSE: '#b45309', TURTLE: '#0d9488' };
+    const MARKER_COLOUR = { BBS: '#7c3aed', MOOSE: '#b45309', TURTLE: '#0d9488', NEST: '#0f7abf' };
     req.result.forEach((data, index) => {
       const latlng = L.latLng(data.latlng.lat, data.latlng.lng);
       const colour = MARKER_COLOUR[data.surveyType] || '#7c3aed';
@@ -357,6 +357,11 @@ export async function loadHabitatObservations() {
         if (!('turtleResubmittedAt' in o)) o.turtleResubmittedAt = '';
         if (!('startTime'           in o)) o.startTime = localStorage.getItem('turtleStartTime') || '';
         if (!('endTime'             in o)) o.endTime   = localStorage.getItem('turtleEndTime')   || '';
+      } else if (o.surveyType === 'NEST') {
+        if (!('nestSubmittedAt'   in o)) o.nestSubmittedAt   = '';
+        if (!('nestResubmittedAt' in o)) o.nestResubmittedAt = '';
+        if (!('startTime'         in o)) o.startTime = localStorage.getItem('nestStartTime') || '';
+        if (!('endTime'           in o)) o.endTime   = localStorage.getItem('nestEndTime')   || '';
       }
     });
     syncHabitatToIndexedDB();

@@ -223,6 +223,7 @@ document.addEventListener('keydown', e => {
     case 'species':      closeModal(); break;
     case 'moose':        window.closeMooseModal?.(); break;
     case 'turtle':       window.closeTurtleModal?.(); break;
+    case 'nest':         window.closeNestModal?.(); break;
     case 'habitat':      window.closeHabitatModal?.(); break;
     case 'surveyMeta':   window.closeSurveyModal?.(); break;
     case 'instructions': closeInstructions(); break;

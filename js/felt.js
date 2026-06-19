@@ -5,9 +5,9 @@ import { showToast } from './toast.js';
 import { setActiveModal, clearActiveModal } from './modal.js';
 import {
   buildSpeciesGeoJSON, buildMooseGeoJSON,
-  buildTurtleGeoJSON, buildHabitatGeoJSON
+  buildTurtleGeoJSON, buildNestGeoJSON, buildHabitatGeoJSON
 } from './export.js';
-import { speciesMarkers, mooseObservations, turtleObservations, habitatObservations } from './storageData.js';
+import { speciesMarkers, mooseObservations, turtleObservations, nestObservations, habitatObservations } from './storageData.js';
 
 const FELT_API = 'https://felt.com/api/v2';
 
@@ -15,10 +15,11 @@ const DISPLAY_NAME = {
   BBS:     'BBS Survey',
   MOOSE:   'Wildlife Survey',
   TURTLE:  'Turtle Survey',
+  NEST:    'Nest Sweep',
   HABITAT: 'Habitat Observations'
 };
 
-const SURVEY_EMOJI = { BBS: '🐦', MOOSE: '🦌', TURTLE: '🐢', HABITAT: '🌿' };
+const SURVEY_EMOJI = { BBS: '🐦', MOOSE: '🦌', TURTLE: '🐢', NEST: '🪹', HABITAT: '🌿' };
 
 // ── Module-level state ────────────────────────────────────────────────────
 let _overlay           = null;
@@ -50,6 +51,7 @@ function _getObsCount(target) {
   if (target === 'BBS')     return speciesMarkers.length     + habitatObservations.length;
   if (target === 'MOOSE')   return mooseObservations.length  + habitatObservations.length;
   if (target === 'TURTLE')  return turtleObservations.length + habitatObservations.length;
+  if (target === 'NEST')    return nestObservations.length   + habitatObservations.length;
   if (target === 'HABITAT') return habitatObservations.length;
   return 0;
 }
@@ -58,6 +60,7 @@ function _buildPrimaryGeoJSON(target) {
   if (target === 'BBS')    return buildSpeciesGeoJSON();
   if (target === 'MOOSE')  return buildMooseGeoJSON();
   if (target === 'TURTLE') return buildTurtleGeoJSON();
+  if (target === 'NEST')   return buildNestGeoJSON();
   return JSON.stringify({ type: 'FeatureCollection', features: [] });
 }
 

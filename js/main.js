@@ -10,16 +10,18 @@ import { initTimerBindings, updateTable } from './ui.js';
 import { updateSpeciesList, saveSpeciesObservation } from './species.js';
 import { injectMooseModal } from './moose.js';
 import { injectTurtleModal } from './turtle.js';
+import { injectNestModal } from './nest.js';
 import { injectHabitatModal } from './habitat.js';
 import {
   initNewSession, saveDraft, saveDraftSilently, submitSession,
   loadSessions, deleteSession, resumeSession, clearInMemoryArrays
 } from './sessions.js';
-import { speciesMarkers, mooseObservations, turtleObservations, habitatObservations } from './storageData.js';
+import { speciesMarkers, mooseObservations, turtleObservations, nestObservations, habitatObservations } from './storageData.js';
 import {
   exportSpeciesCSV, exportSpeciesGeoJSON, exportSpeciesKML,
   exportMooseCSV,   exportMooseGeoJSON,   exportMooseKML,
   exportTurtleCSV,  exportTurtleGeoJSON,  exportTurtleKML,
+  exportNestCSV,    exportNestGeoJSON,    exportNestKML,
   exportHabitatCSV, exportHabitatGeoJSON, exportHabitatKML
 } from './export.js';
 import { uploadToFelt } from './felt.js';
@@ -144,8 +146,9 @@ function _showMapUI(type) {
   const timerStrip = document.getElementById('survey-timer-strip');
   if (timerStrip) timerStrip.style.display = type === 'BBS' ? 'flex' : 'none';
 
-  if (type === 'MOOSE')  injectMooseModal();
+  if (type === 'MOOSE')       injectMooseModal();
   else if (type === 'TURTLE') injectTurtleModal();
+  else if (type === 'NEST')   injectNestModal();
   injectHabitatModal(type);
 
   initializeMap();
@@ -160,6 +163,7 @@ function _closeAllSurveyUI() {
   window.closeModal?.();
   window.closeMooseModal?.();
   window.closeTurtleModal?.();
+  window.closeNestModal?.();
   window.closeHabitatModal?.();
   // Help panel and metadata form
   window.closeInstructions?.();
@@ -194,9 +198,10 @@ function _returnToHome() {
 
 // ─── Observation count for the active survey ──────────────────────────────
 function _currentObsCount() {
-  const primary = activeSurvey === 'BBS'   ? speciesMarkers.length
-                : activeSurvey === 'MOOSE' ? mooseObservations.length
-                :                            turtleObservations.length;
+  const primary = activeSurvey === 'BBS'    ? speciesMarkers.length
+                : activeSurvey === 'MOOSE'  ? mooseObservations.length
+                : activeSurvey === 'NEST'   ? nestObservations.length
+                :                             turtleObservations.length;
   return primary + habitatObservations.length;
 }
 
@@ -295,6 +300,7 @@ window.submitAndShowExport = async function () {
     speciesMarkers:      speciesMarkers.map(_strip),
     mooseObservations:   mooseObservations.map(_strip),
     turtleObservations:  turtleObservations.map(_strip),
+    nestObservations:    nestObservations.map(_strip),
     habitatObservations: habitatObservations.map(_strip),
   };
   try {
@@ -462,6 +468,7 @@ function _showExportDialog(type, snap, onDone) {
     (snap.speciesMarkers     || []).forEach(r => speciesMarkers.push(r));
     (snap.mooseObservations  || []).forEach(r => mooseObservations.push(r));
     (snap.turtleObservations || []).forEach(r => turtleObservations.push(r));
+    (snap.nestObservations   || []).forEach(r => nestObservations.push(r));
     (snap.habitatObservations|| []).forEach(r => habitatObservations.push(r));
     fn();
     clearInMemoryArrays();
@@ -477,6 +484,7 @@ function _showExportDialog(type, snap, onDone) {
     (snap.speciesMarkers     || []).forEach(r => speciesMarkers.push(r));
     (snap.mooseObservations  || []).forEach(r => mooseObservations.push(r));
     (snap.turtleObservations || []).forEach(r => turtleObservations.push(r));
+    (snap.nestObservations   || []).forEach(r => nestObservations.push(r));
     (snap.habitatObservations|| []).forEach(r => habitatObservations.push(r));
     uploadToFelt(type, () => { clearInMemoryArrays(); onDone(); });
   });
@@ -493,6 +501,10 @@ function _runExport(fmt, type = activeSurvey) {
     if (fmt === 'csv')     { exportMooseCSV();    exportHabitatCSV();     }
     if (fmt === 'geojson') { exportMooseGeoJSON(); exportHabitatGeoJSON(); }
     if (fmt === 'kml')     { exportMooseKML();    exportHabitatKML();     }
+  } else if (type === 'NEST') {
+    if (fmt === 'csv')     { exportNestCSV();    exportHabitatCSV();     }
+    if (fmt === 'geojson') { exportNestGeoJSON(); exportHabitatGeoJSON(); }
+    if (fmt === 'kml')     { exportNestKML();    exportHabitatKML();     }
   } else {
     if (fmt === 'csv')     { exportTurtleCSV();   exportHabitatCSV();     }
     if (fmt === 'geojson') { exportTurtleGeoJSON();exportHabitatGeoJSON(); }
@@ -501,7 +513,7 @@ function _runExport(fmt, type = activeSurvey) {
 }
 
 // ─── Home screen session lists ────────────────────────────────────────────
-const SURVEY_EMOJI = { BBS: '🐦', MOOSE: '🦌', TURTLE: '🐢' };
+const SURVEY_EMOJI = { BBS: '🐦', MOOSE: '🦌', TURTLE: '🐢', NEST: '🪹' };
 
 async function _renderSessionLists() {
   const sessions = await loadSessions();
@@ -616,6 +628,7 @@ function _showReExportDialog(session) {
     (snap.speciesMarkers     || []).forEach(r => speciesMarkers.push(r));
     (snap.mooseObservations  || []).forEach(r => mooseObservations.push(r));
     (snap.turtleObservations || []).forEach(r => turtleObservations.push(r));
+    (snap.nestObservations   || []).forEach(r => nestObservations.push(r));
     (snap.habitatObservations|| []).forEach(r => habitatObservations.push(r));
     _runExport(fmt, session.type);
     clearInMemoryArrays();
@@ -629,6 +642,7 @@ function _showReExportDialog(session) {
     (snap.speciesMarkers     || []).forEach(r => speciesMarkers.push(r));
     (snap.mooseObservations  || []).forEach(r => mooseObservations.push(r));
     (snap.turtleObservations || []).forEach(r => turtleObservations.push(r));
+    (snap.nestObservations   || []).forEach(r => nestObservations.push(r));
     (snap.habitatObservations|| []).forEach(r => habitatObservations.push(r));
     overlay.remove();
     uploadToFelt(session.type, () => { clearInMemoryArrays(); });
