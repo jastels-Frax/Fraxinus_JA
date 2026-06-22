@@ -121,9 +121,11 @@ export async function exportNestPDF() {
     mapImgSrc = await _buildMapImage(url, obs, habObs, bboxW, bboxS, bboxE, bboxN, mapW, mapH);
   }
 
+  const detailMaps = lats.length > 0 ? await _buildDetailMaps(obs, habObs) : [];
+
   const w = window.open('', '_blank', 'width=980,height=800,scrollbars=yes');
   if (!w) { alert('Pop-up blocked — please allow pop-ups for this app, then try again.'); return; }
-  w.document.write(_buildHTML(meta, obs, habObs, stats, mapImgSrc));
+  w.document.write(_buildHTML(meta, obs, habObs, stats, mapImgSrc, detailMaps));
   w.document.close();
 }
 
@@ -139,17 +141,24 @@ async function _buildMapImage(arcgisURL, obs, habObs, west, south, east, north, 
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
         const lngSpan = east - west, latSpan = north - south;
-        const plot = (ll, colour, r, dash) => {
+        const plot = (ll, colour, r, dash, label) => {
           if (!Number.isFinite(ll?.lat)) return;
           const x = ((ll.lng - west) / lngSpan) * mapW;
           const y = (1 - (ll.lat - south) / latSpan) * mapH;
           ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
-          ctx.fillStyle = colour; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5;
+          ctx.fillStyle = colour; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
           if (dash) ctx.setLineDash([4, 3]);
           ctx.fill(); ctx.stroke(); ctx.setLineDash([]);
+          if (label != null) {
+            ctx.fillStyle = '#fff';
+            ctx.font = `bold ${Math.round(r * 0.85)}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(String(label), x, y);
+          }
         };
-        habObs.forEach(o => plot(o.latlng, '#0f7abf', 7, true));
-        obs.forEach(o   => plot(o.latlng, STATUS_COLOUR[o.status] || '#888', 9, false));
+        habObs.forEach(o => plot(o.latlng, '#0f7abf', 7, true, null));
+        obs.forEach((o, i) => plot(o.latlng, STATUS_COLOUR[o.status] || '#888', 11, false, o._origIdx ?? i + 1));
         resolve(canvas.toDataURL('image/png'));
       } catch { resolve(null); }
     };
@@ -158,8 +167,57 @@ async function _buildMapImage(arcgisURL, obs, habObs, west, south, east, north, 
   });
 }
 
+// ─── Cluster observations within ~150 m of each other ─────────────────────────
+function _clusterObs(obs, threshDeg) {
+  const geo = obs.map((o, i) => ({ o, i })).filter(({ o }) => Number.isFinite(o.latlng?.lat));
+  const used = new Set();
+  const clusters = [];
+  for (const { o: seed, i: si } of geo) {
+    if (used.has(si)) continue;
+    const cluster = [{ ...seed, _origIdx: si + 1 }];
+    used.add(si);
+    for (const { o: other, i: oi } of geo) {
+      if (used.has(oi)) continue;
+      if (Math.abs(seed.latlng.lat - other.latlng.lat) < threshDeg &&
+          Math.abs(seed.latlng.lng - other.latlng.lng) < threshDeg) {
+        cluster.push({ ...other, _origIdx: oi + 1 });
+        used.add(oi);
+      }
+    }
+    clusters.push(cluster);
+  }
+  return clusters;
+}
+
+// ─── Build tight detail map per cluster ───────────────────────────────────────
+async function _buildDetailMaps(obs, habObs) {
+  const clusters = _clusterObs(obs, 0.0014); // ~150 m threshold
+  const results = [];
+  for (const cluster of clusters) {
+    const lats = cluster.map(o => o.latlng.lat);
+    const lngs = cluster.map(o => o.latlng.lng);
+    const midLat = (Math.min(...lats) + Math.max(...lats)) / 2;
+    const midLng = (Math.min(...lngs) + Math.max(...lngs)) / 2;
+    const pad = 0.0003;                   // ~33 m edge padding
+    const halfLat = Math.max((Math.max(...lats) - Math.min(...lats)) / 2 + pad, 0.0006); // min ~67 m half-span
+    const halfLng = Math.max((Math.max(...lngs) - Math.min(...lngs)) / 2 + pad, 0.0010); // min ~70 m half-span at 50°N
+    const bboxS = midLat - halfLat, bboxN = midLat + halfLat;
+    const bboxW = midLng - halfLng, bboxE = midLng + halfLng;
+    const mapW = 760, mapH = 400;
+    const nearHab = habObs.filter(h =>
+      Number.isFinite(h.latlng?.lat) &&
+      h.latlng.lat >= bboxS && h.latlng.lat <= bboxN &&
+      h.latlng.lng >= bboxW && h.latlng.lng <= bboxE
+    );
+    const url = `https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox=${bboxW},${bboxS},${bboxE},${bboxN}&bboxSR=4326&size=${mapW},${mapH}&f=image`;
+    const imgSrc = await _buildMapImage(url, cluster, nearHab, bboxW, bboxS, bboxE, bboxN, mapW, mapH);
+    results.push({ imgSrc, indices: cluster.map(o => o._origIdx) });
+  }
+  return results;
+}
+
 // ─── Build full HTML for the editor/report window ─────────────────────────────
-function _buildHTML(meta, obs, habObs, stats, mapImgSrc) {
+function _buildHTML(meta, obs, habObs, stats, mapImgSrc, detailMaps) {
   const today   = new Date().toLocaleDateString('en-CA');
   const colorLogoSrc = new URL('img/LOGO w TEXT white and green.jpg', window.location.href).href;
   const bwLogoSrc    = new URL('img/LOGO w TEXT black.jpg', window.location.href).href;
@@ -238,9 +296,19 @@ function _buildHTML(meta, obs, habObs, stats, mapImgSrc) {
 
   const findingsAuto = `A total of <strong>${stats.total}</strong> nest${stats.total !== 1 ? 's were' : ' was'} recorded during the survey${stats.total > 0 ? ': <strong>${stats.active}</strong> active, <strong>${stats.inactive}</strong> inactive, and <strong>${stats.unknown}</strong> of unknown status' : ''}. ${stats.requiresAction > 0 ? `<strong>${stats.requiresAction}</strong> observation${stats.requiresAction !== 1 ? 's require' : ' requires'} a work delay, buffer zone, or regulatory consultation.` : 'No work restrictions are required based on the survey findings.'} Species detected during the survey included: ${speciesHtml}.`;
 
-  const mapSection = mapImgSrc
-    ? `<img src="${mapImgSrc}" style="width:100%;max-width:760px;border:1px solid #ccc;border-radius:4px;" alt="Observation locations" />`
-    : `<p style="color:#888;font-style:italic;font-size:0.85rem;">Map unavailable — no GPS data or device is offline.</p>`;
+  const _mapImg = (src, alt) => src
+    ? `<img src="${src}" style="width:100%;max-width:760px;border:1px solid #ccc;border-radius:4px;" alt="${alt}" />`
+    : `<p style="color:#888;font-style:italic;font-size:0.85rem;">Map unavailable — no GPS data or satellite imagery could not be loaded.</p>`;
+
+  const detailSection = detailMaps.length ? detailMaps.map(dm => {
+    const label = dm.indices.length === 1
+      ? `Observation #${dm.indices[0]}`
+      : `Observations #${dm.indices.join(', #')}`;
+    return `<div style="margin-bottom:18px;">
+      <div style="font-size:0.76rem;font-weight:600;color:var(--ca);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;">${label}</div>
+      ${_mapImg(dm.imgSrc, label)}
+    </div>`;
+  }).join('') : '';
 
   // Helper to build a preset toolbar
   const toolbar = (group, targetId) => `
@@ -451,13 +519,18 @@ function _buildHTML(meta, obs, habObs, stats, mapImgSrc) {
 
   <!-- 6. Observation Locations -->
   <h2 contenteditable="true">6. Observation Locations</h2>
-  ${mapSection}
+
+  <div style="font-size:0.76rem;font-weight:600;color:var(--ca);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:5px;">Overview</div>
+  ${_mapImg(mapImgSrc, 'Observation locations overview')}
   <div class="map-legend">
     <div class="ld"><span class="dot" style="background:#CC0000;"></span> Active</div>
     <div class="ld"><span class="dot" style="background:#888;"></span> Inactive</div>
     <div class="ld"><span class="dot" style="background:#E69138;"></span> Unknown</div>
     ${habObs.length ? '<div class="ld"><span class="dot" style="background:#0f7abf;"></span> Habitat Feature</div>' : ''}
   </div>
+
+  ${detailSection ? `<div style="font-size:0.76rem;font-weight:600;color:var(--ca);text-transform:uppercase;letter-spacing:0.07em;margin-top:18px;margin-bottom:10px;padding-top:12px;border-top:1px solid var(--cb);">Detail Views</div>
+  ${detailSection}` : ''}
 
   ${habSection}
 
