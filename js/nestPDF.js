@@ -161,7 +161,7 @@ async function _buildMapImage(arcgisURL, obs, habObs, west, south, east, north, 
 // ─── Build full HTML for the editor/report window ─────────────────────────────
 function _buildHTML(meta, obs, habObs, stats, mapImgSrc) {
   const today   = new Date().toLocaleDateString('en-CA');
-  const logoSrc = new URL('img/fraxinus-logo-mark.jpg', window.location.href).href;
+  const logoSrc = new URL('img/LOGO w TEXT black.jpg', window.location.href).href;
 
   // Auto-select best-fit recommendation
   const autoRec = PRESETS.recommendations[_autoRecKey(obs, stats)] || '';
@@ -281,10 +281,8 @@ function _buildHTML(meta, obs, habObs, stats, mapImgSrc) {
     .page{max-width:780px;margin:72px auto 40px;padding:28px 32px 36px;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,0.12);}
 
     /* Branding header */
-    .hdr{display:flex;align-items:center;gap:16px;padding-bottom:14px;border-bottom:3px solid #2d6b2d;margin-bottom:22px;}
-    .hdr img{height:54px;width:auto;border-radius:4px;}
-    .hdr-wm{font-size:1.35rem;font-weight:700;letter-spacing:0.12em;color:#2d6b2d;text-transform:uppercase;}
-    .hdr-tg{font-size:0.72rem;font-weight:300;color:#666;letter-spacing:0.06em;margin-bottom:4px;}
+    .hdr{display:flex;align-items:center;gap:20px;padding-bottom:14px;border-bottom:3px solid #2d6b2d;margin-bottom:22px;}
+    .hdr img{height:72px;width:auto;}
     .hdr-rt{font-size:1.2rem;font-weight:600;color:#111;letter-spacing:0.03em;}
     .hdr-rd{font-size:0.74rem;color:#888;font-weight:300;margin-top:2px;}
 
@@ -361,10 +359,8 @@ function _buildHTML(meta, obs, habObs, stats, mapImgSrc) {
 
   <!-- Header -->
   <div class="hdr">
-    <img src="${logoSrc}" alt="Fraxinus logo" onerror="this.style.display='none'" />
+    <img src="${logoSrc}" alt="Fraxinus Environmental &amp; Geomatics" onerror="this.style.display='none'" />
     <div>
-      <div class="hdr-wm">Fraxinus</div>
-      <div class="hdr-tg">Environmental &amp; Geomatics</div>
       <div class="hdr-rt">Pre-Disturbance Nest Survey Report</div>
       <div class="hdr-rd">Generated: ${today}</div>
     </div>
