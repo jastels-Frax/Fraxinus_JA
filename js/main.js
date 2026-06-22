@@ -27,6 +27,9 @@ import {
 import { uploadToFelt } from './felt.js';
 import { showToast } from './toast.js';
 import { exportNestPDF } from './nestPDF.js';
+import { exportMoosePDF } from './moosePDF.js';
+import { exportTurtlePDF } from './turtlePDF.js';
+import { exportBBSPDF } from './bbsPDF.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   // ── Expose globals needed by any inline onclick= handlers ─────────────
@@ -457,7 +460,7 @@ function _showExportDialog(type, snap, onDone) {
         <button id="expCsv">Download CSV</button>
         <button id="expGeoJson">Download GeoJSON</button>
         <button id="expKml">Download KML</button>
-        ${type === 'NEST' ? '<button id="expPdf">Download PDF Report</button>' : ''}
+        <button id="expPdf">Download PDF Report</button>
         <button id="expFelt" class="export-felt-btn">↑ Upload to Felt</button>
         <button id="expStore" class="export-store-local">💾 Store Locally — No Download</button>
         <button id="expSkip" class="export-skip">Done</button>
@@ -483,9 +486,15 @@ function _showExportDialog(type, snap, onDone) {
   document.getElementById('expCsv').addEventListener('click',     () => { withSnap(() => _runExport('csv',     type)); close(); });
   document.getElementById('expGeoJson').addEventListener('click', () => { withSnap(() => _runExport('geojson', type)); close(); });
   document.getElementById('expKml').addEventListener('click',     () => { withSnap(() => _runExport('kml',     type)); close(); });
-  if (type === 'NEST') {
-    document.getElementById('expPdf')?.addEventListener('click', () => { withSnap(() => exportNestPDF()); close(); });
-  }
+  document.getElementById('expPdf')?.addEventListener('click', () => {
+    withSnap(() => {
+      if (type === 'NEST') exportNestPDF();
+      else if (type === 'MOOSE') exportMoosePDF();
+      else if (type === 'TURTLE') exportTurtlePDF();
+      else if (type === 'BBS') exportBBSPDF();
+    });
+    close();
+  });
   document.getElementById('expFelt').addEventListener('click',    () => {
     overlay.remove();
     // Restore snapshot so uploadToFelt can read observations (arrays were cleared by submitSession)
@@ -621,7 +630,7 @@ function _showReExportDialog(session) {
         <button id="reexpCsv">Download CSV</button>
         <button id="reexpGeoJson">Download GeoJSON</button>
         <button id="reexpKml">Download KML</button>
-        ${session.type === 'NEST' ? '<button id="reexpPdf">Download PDF Report</button>' : ''}
+        <button id="reexpPdf">Download PDF Report</button>
         <button id="reexpFelt" class="export-felt-btn">↑ Upload to Felt</button>
         <button id="reexpClose" class="export-skip">Close</button>
       </div>
@@ -661,16 +670,20 @@ function _showReExportDialog(session) {
   overlay.querySelector('#reexpCsv').addEventListener('click',     () => doExport('csv'));
   overlay.querySelector('#reexpGeoJson').addEventListener('click', () => doExport('geojson'));
   overlay.querySelector('#reexpKml').addEventListener('click',     () => doExport('kml'));
-  if (session.type === 'NEST') {
-    overlay.querySelector('#reexpPdf')?.addEventListener('click', () => {
-      clearInMemoryArrays();
-      (snap.nestObservations    || []).forEach(r => nestObservations.push(r));
-      (snap.habitatObservations || []).forEach(r => habitatObservations.push(r));
-      exportNestPDF();
-      clearInMemoryArrays();
-      close();
-    });
-  }
+  overlay.querySelector('#reexpPdf')?.addEventListener('click', () => {
+    clearInMemoryArrays();
+    (snap.speciesMarkers      || []).forEach(r => speciesMarkers.push(r));
+    (snap.mooseObservations   || []).forEach(r => mooseObservations.push(r));
+    (snap.turtleObservations  || []).forEach(r => turtleObservations.push(r));
+    (snap.nestObservations    || []).forEach(r => nestObservations.push(r));
+    (snap.habitatObservations || []).forEach(r => habitatObservations.push(r));
+    if (session.type === 'NEST') exportNestPDF();
+    else if (session.type === 'MOOSE') exportMoosePDF();
+    else if (session.type === 'TURTLE') exportTurtlePDF();
+    else if (session.type === 'BBS') exportBBSPDF();
+    clearInMemoryArrays();
+    close();
+  });
   overlay.querySelector('#reexpFelt').addEventListener('click',    doFeltUpload);
   overlay.querySelector('#reexpClose').addEventListener('click', close);
 }

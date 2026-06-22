@@ -9,6 +9,9 @@ import {
 } from './export.js';
 import { uploadToFelt } from './felt.js';
 import { exportNestPDF } from './nestPDF.js';
+import { exportMoosePDF } from './moosePDF.js';
+import { exportTurtlePDF } from './turtlePDF.js';
+import { exportBBSPDF } from './bbsPDF.js';
 import { showUndoToast } from './toast.js';
 import { setActiveModal, clearActiveModal } from './modal.js';
 import { map, lockMap, unlockMap } from './map.js';
@@ -509,6 +512,7 @@ function _renderBBSTable(drawer) {
           <button onclick="exportSpeciesCSV()">CSV</button>
           <button onclick="exportSpeciesGeoJSON()">GeoJSON</button>
           <button onclick="exportSpeciesKML()">KML</button>
+          <button onclick="exportBBSPDF()">PDF</button>
           <button class="felt-export-btn" onclick="uploadToFelt('BBS')">↑ Felt</button>
           <button id="bbs-col-toggle" onclick="const t=document.getElementById('obsTableBody')?.closest('table');if(t){t.classList.toggle('show-all-cols');this.textContent=t.classList.contains('show-all-cols')?'▲ Less':'▼ More';}">▼ More</button>
         </div>
@@ -569,6 +573,7 @@ function _renderMooseTable(drawer) {
           <button onclick="exportMooseCSV()">CSV</button>
           <button onclick="exportMooseGeoJSON()">GeoJSON</button>
           <button onclick="exportMooseKML()">KML</button>
+          <button onclick="exportMoosePDF()">PDF</button>
           <button class="felt-export-btn" onclick="uploadToFelt('MOOSE')">↑ Felt</button>
           <button id="moose-col-toggle" onclick="const t=document.getElementById('obsTableBody')?.closest('table');if(t){t.classList.toggle('show-all-cols');this.textContent=t.classList.contains('show-all-cols')?'▲ Less':'▼ More';}">▼ More</button>
         </div>
@@ -620,6 +625,7 @@ function _renderTurtleTable(drawer) {
           <button onclick="exportTurtleCSV()">CSV</button>
           <button onclick="exportTurtleGeoJSON()">GeoJSON</button>
           <button onclick="exportTurtleKML()">KML</button>
+          <button onclick="exportTurtlePDF()">PDF</button>
           <button class="felt-export-btn" onclick="uploadToFelt('TURTLE')">↑ Felt</button>
           <button id="turtle-col-toggle" onclick="const t=document.getElementById('obsTableBody')?.closest('table');if(t){t.classList.toggle('show-all-cols');this.textContent=t.classList.contains('show-all-cols')?'▲ Less':'▼ More';}">▼ More</button>
         </div>
@@ -1046,5 +1052,8 @@ window.exportNestCSV         = exportNestCSV;
 window.exportNestGeoJSON     = exportNestGeoJSON;
 window.exportNestKML         = exportNestKML;
 window.exportNestPDF         = exportNestPDF;
+window.exportMoosePDF        = exportMoosePDF;
+window.exportTurtlePDF       = exportTurtlePDF;
+window.exportBBSPDF          = exportBBSPDF;
 window.zoomToNestMarker      = zoomToNestMarker;
 window.uploadToFelt          = uploadToFelt;
