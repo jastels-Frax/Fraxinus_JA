@@ -1,6 +1,6 @@
 // js/moosePDF.js — General Wildlife Survey PDF report: interactive editor before print
 
-import { mooseObservations } from './storageData.js';
+import { mooseObservations, habitatObservations } from './storageData.js';
 import {
   mooseProjectID, mooseObserver, mooseTransectID, mooseSurveyDate,
   mooseStartTime, mooseEndTime, mooseVisibility, mooseSnowCover,
@@ -65,8 +65,9 @@ function _autoRecKey(obs) {
 
 // ─── Main export entry point ──────────────────────────────────────────────────
 export async function exportMoosePDF() {
-  const obs = [...mooseObservations];
-  if (!obs.length) {
+  const obs    = [...mooseObservations];
+  const habObs = [...habitatObservations].filter(o => o.surveyType === 'MOOSE');
+  if (!obs.length && !habObs.length) {
     alert('No wildlife observations to export.');
     return;
   }
@@ -86,8 +87,9 @@ export async function exportMoosePDF() {
   const speciesSet = [...new Set(obs.map(o => o.species).filter(Boolean))];
   const stats = { total, sightings, tracks, speciesSet };
 
-  const lats = obs.map(o => o.latlng?.lat).filter(Number.isFinite);
-  const lngs = obs.map(o => o.latlng?.lng).filter(Number.isFinite);
+  const allPts = [...obs, ...habObs];
+  const lats = allPts.map(o => o.latlng?.lat).filter(Number.isFinite);
+  const lngs = allPts.map(o => o.latlng?.lng).filter(Number.isFinite);
 
   let mapImgSrc = null;
   if (lats.length > 0) {
@@ -100,19 +102,19 @@ export async function exportMoosePDF() {
     const bboxE = Math.max(Math.max(...lngs) + pad, midLng + minD / 2);
     const mapW = 760, mapH = 380;
     const url = `https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox=${bboxW},${bboxS},${bboxE},${bboxN}&bboxSR=4326&size=${mapW},${mapH}&f=image`;
-    mapImgSrc = await _buildMapImage(url, obs, bboxW, bboxS, bboxE, bboxN, mapW, mapH);
+    mapImgSrc = await _buildMapImage(url, obs, habObs, bboxW, bboxS, bboxE, bboxN, mapW, mapH);
   }
 
-  const detailMaps = lats.length > 0 ? await _buildDetailMaps(obs) : [];
+  const detailMaps = lats.length > 0 ? await _buildDetailMaps(obs, habObs) : [];
 
   const w = window.open('', '_blank', 'width=980,height=800,scrollbars=yes');
   if (!w) { alert('Pop-up blocked — please allow pop-ups for this app, then try again.'); return; }
-  w.document.write(_buildHTML(meta, obs, stats, mapImgSrc, detailMaps));
+  w.document.write(_buildHTML(meta, obs, habObs, stats, mapImgSrc, detailMaps));
   w.document.close();
 }
 
 // ─── Satellite basemap + plotted points ───────────────────────────────────────
-async function _buildMapImage(arcgisURL, obs, west, south, east, north, mapW, mapH) {
+async function _buildMapImage(arcgisURL, obs, habObs, west, south, east, north, mapW, mapH) {
   return new Promise(resolve => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -139,6 +141,7 @@ async function _buildMapImage(arcgisURL, obs, west, south, east, north, mapW, ma
             ctx.fillText(String(label), x, y);
           }
         };
+        habObs.forEach(o => plot(o.latlng, '#0f7abf', 7, true, null));
         obs.forEach((o, i) => plot(o.latlng, OBS_COLOUR[o.obsType] || '#888', 11, false, o._origIdx ?? i + 1));
         resolve(canvas.toDataURL('image/png'));
       } catch { resolve(null); }
@@ -171,7 +174,7 @@ function _clusterObs(obs, threshDeg) {
 }
 
 // ─── Build tight detail map per cluster ───────────────────────────────────────
-async function _buildDetailMaps(obs) {
+async function _buildDetailMaps(obs, habObs) {
   const clusters = _clusterObs(obs, 0.0014);
   const results = [];
   for (const cluster of clusters) {
@@ -184,22 +187,41 @@ async function _buildDetailMaps(obs) {
     const halfLng = Math.max((Math.max(...lngs) - Math.min(...lngs)) / 2 + pad, 0.0010);
     const bboxS = midLat - halfLat, bboxN = midLat + halfLat;
     const bboxW = midLng - halfLng, bboxE = midLng + halfLng;
+    const nearHab = habObs.filter(h =>
+      Number.isFinite(h.latlng?.lat) &&
+      h.latlng.lat >= bboxS && h.latlng.lat <= bboxN &&
+      h.latlng.lng >= bboxW && h.latlng.lng <= bboxE
+    );
     const mapW = 760, mapH = 400;
     const url = `https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox=${bboxW},${bboxS},${bboxE},${bboxN}&bboxSR=4326&size=${mapW},${mapH}&f=image`;
-    const imgSrc = await _buildMapImage(url, cluster, bboxW, bboxS, bboxE, bboxN, mapW, mapH);
+    const imgSrc = await _buildMapImage(url, cluster, nearHab, bboxW, bboxS, bboxE, bboxN, mapW, mapH);
     results.push({ imgSrc, indices: cluster.map(o => o._origIdx) });
   }
   return results;
 }
 
 // ─── Build full HTML for the editor/report window ─────────────────────────────
-function _buildHTML(meta, obs, stats, mapImgSrc, detailMaps) {
+function _buildHTML(meta, obs, habObs, stats, mapImgSrc, detailMaps) {
   const today        = new Date().toLocaleDateString('en-CA');
   const colorLogoSrc = new URL('img/LOGO w TEXT white and green.jpg', window.location.href).href;
   const bwLogoSrc    = new URL('img/LOGO w TEXT black bg.jpg', window.location.href).href;
   const logoSrc      = colorLogoSrc;
 
   const presetsJSON = JSON.stringify(PRESETS);
+
+  // Habitat observation table rows
+  const habRows = habObs.map((h, i) => {
+    const coords = Number.isFinite(h.latlng?.lat)
+      ? `${h.latlng.lat.toFixed(5)}, ${h.latlng.lng.toFixed(5)}` : '';
+    return `<tr>
+      <td>${i + 1}</td>
+      <td contenteditable="true">${_esc(h.featureType || '')}</td>
+      <td contenteditable="true">${_esc((h.criteria || []).join(', '))}</td>
+      <td contenteditable="true">${_esc(h.condition || '')}</td>
+      <td contenteditable="true">${_esc(h.note || '')}</td>
+      <td contenteditable="true" style="font-size:0.7rem;color:#555;">${coords}</td>
+    </tr>`;
+  }).join('');
 
   // Observation table rows
   const tableRows = obs.map((o, i) => {
@@ -466,6 +488,7 @@ function _buildHTML(meta, obs, stats, mapImgSrc, detailMaps) {
     <div class="ld"><span class="dot" style="background:#E69138;"></span> Track</div>
     <div class="ld"><span class="dot" style="background:#0f7abf;"></span> Heard</div>
     <div class="ld"><span class="dot" style="background:#9b59b6;"></span> Sign</div>
+    ${habObs.length ? '<div class="ld"><span style="width:11px;height:11px;border-radius:50%;border:2px dashed #0f7abf;background:rgba(15,122,191,0.15);display:inline-block;flex-shrink:0;"></span> Habitat Feature</div>' : ''}
   </div>
 
   ${detailSection ? `<div style="font-size:0.76rem;font-weight:600;color:var(--ca);text-transform:uppercase;letter-spacing:0.07em;margin-top:18px;margin-bottom:10px;padding-top:12px;border-top:1px solid var(--cb);">Detail Views</div>
@@ -474,6 +497,14 @@ function _buildHTML(meta, obs, stats, mapImgSrc, detailMaps) {
   <h2 contenteditable="true">7. Recommendations</h2>
   ${toolbar('recommendations', 'ed-recs')}
   <div id="ed-recs" class="editable" contenteditable="true"></div>
+
+  ${habObs.length ? `<h2 contenteditable="true">8. Habitat Features</h2>
+  <table>
+    <thead><tr>
+      <th>#</th><th>Feature Type</th><th>Criteria / Attributes</th><th>Condition</th><th>Notes</th><th>Coordinates</th>
+    </tr></thead>
+    <tbody>${habRows}</tbody>
+  </table>` : ''}
 
   <div class="ft">
     <span contenteditable="true">Fraxinus Environmental &amp; Geomatics</span>
