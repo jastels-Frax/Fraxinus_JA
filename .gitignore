@@ -1,0 +1,7 @@
+# Claude Code internal directories (worktrees, plans, settings)
+.claude/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
