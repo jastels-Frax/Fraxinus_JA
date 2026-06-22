@@ -336,12 +336,12 @@ function _buildHTML(meta, obs, habObs, stats, mapImgSrc, detailMaps) {
     :root{--ca:#2d6b2d;--cal:#4caf50;--ct:#f8faf8;--cb:#cde8cd;}
     *{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:'Oswald','Segoe UI',sans-serif;color:#1a1a1a;background:#f4f4f4;font-size:10.5pt;line-height:1.55;}
-    @page{margin:12mm 14mm;size:A4;}
+    @page{margin:8mm 12mm;size:A4;}
     @media print{
       *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
       .no-print{display:none!important;}
       body{background:#fff;font-size:9.5pt;}
-      .page{box-shadow:none;margin:0;padding:0;max-width:100%;}
+      .page{box-shadow:none!important;margin:0!important;padding:0!important;max-width:100%!important;}
       .editable{border:none!important;background:transparent!important;padding:0!important;}
       [contenteditable]{outline:none!important;background:transparent!important;}
     }
