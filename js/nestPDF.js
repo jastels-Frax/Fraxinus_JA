@@ -336,11 +336,11 @@ function _buildHTML(meta, obs, habObs, stats, mapImgSrc, detailMaps) {
     :root{--ca:#2d6b2d;--cal:#4caf50;--ct:#f8faf8;--cb:#cde8cd;}
     *{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:'Oswald','Segoe UI',sans-serif;color:#1a1a1a;background:#f4f4f4;font-size:10.5pt;line-height:1.55;}
-    @page{margin:14mm 14mm 14mm 14mm;size:A4;}
+    @page{margin:0;size:A4;}
     @media print{
       .no-print{display:none!important;}
       body{background:#fff;font-size:9.5pt;}
-      .page{box-shadow:none;margin-top:0;}
+      .page{box-shadow:none;margin:0;padding:14mm 16mm;max-width:100%;}
       .editable{border:none!important;background:transparent!important;padding:0!important;}
       [contenteditable]{outline:none!important;background:transparent!important;}
     }
@@ -445,7 +445,7 @@ function _buildHTML(meta, obs, habObs, stats, mapImgSrc, detailMaps) {
   <div class="topbar-inner">
     <div class="topbar-text">
       <strong>Nest Sweep Report</strong>${meta.siteName ? ' — ' + _esc(meta.siteName) : ''}
-      <span class="topbar-hint">Edit any text section directly · Use Preset dropdowns to insert standard language · Click Print when ready</span>
+      <span class="topbar-hint">Edit any text section directly · Use Preset dropdowns to insert standard language · In the print dialog, uncheck "Headers and footers" if they appear</span>
     </div>
     <div class="topbar-controls">
       <span class="ctrl-lbl">Logo</span>
