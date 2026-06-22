@@ -283,7 +283,9 @@ function _buildHTML(meta, obs, habObs, stats, mapImgSrc) {
     /* Branding header */
     .hdr{display:flex;align-items:center;gap:20px;padding-bottom:14px;border-bottom:3px solid #2d6b2d;margin-bottom:22px;}
     .hdr img{height:72px;width:auto;}
-    .hdr-rt{font-size:1.2rem;font-weight:600;color:#111;letter-spacing:0.03em;}
+    .hdr-rt{font-size:1.2rem;font-weight:600;color:#111;letter-spacing:0.03em;border-bottom:1px dashed transparent;border-radius:2px;outline:none;transition:border-color 0.15s,background 0.15s;}
+    .hdr-rt:hover{border-bottom-color:#cde8cd;}
+    .hdr-rt:focus{border-bottom-color:#2d6b2d;background:#fafffe;}
     .hdr-rd{font-size:0.74rem;color:#888;font-weight:300;margin-top:2px;}
 
     /* Meta grid */
@@ -361,7 +363,7 @@ function _buildHTML(meta, obs, habObs, stats, mapImgSrc) {
   <div class="hdr">
     <img src="${logoSrc}" alt="Fraxinus Environmental &amp; Geomatics" onerror="this.style.display='none'" />
     <div>
-      <div class="hdr-rt">Pre-Disturbance Nest Survey Report</div>
+      <div class="hdr-rt" contenteditable="true" title="Click to edit report title">Pre-Disturbance Nest Survey Report</div>
       <div class="hdr-rd">Generated: ${today}</div>
     </div>
   </div>
