@@ -223,7 +223,7 @@ async function _buildDetailMaps(obs, habObs, surveyLatF, surveyLngF) {
 function _buildHTML(meta, obs, habObs, stats, mapImgSrc, detailMaps) {
   const today        = new Date().toLocaleDateString('en-CA');
   const colorLogoSrc = new URL('img/LOGO w TEXT white and green.jpg', window.location.href).href;
-  const bwLogoSrc    = new URL('img/LOGO w TEXT black bg.jpg', window.location.href).href;
+  const bwLogoSrc    = new URL('img/LOGO w TEXT black.jpg', window.location.href).href;
   const logoSrc      = colorLogoSrc;
 
   const presetsJSON = JSON.stringify(PRESETS);
