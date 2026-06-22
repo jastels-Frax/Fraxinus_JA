@@ -364,7 +364,7 @@ function _buildHTML(meta, obs, habObs, stats, mapImgSrc) {
     <img src="${logoSrc}" alt="Fraxinus Environmental &amp; Geomatics" onerror="this.style.display='none'" />
     <div>
       <div class="hdr-rt" contenteditable="true" title="Click to edit report title">Pre-Disturbance Nest Survey Report</div>
-      <div class="hdr-rd">Generated: ${today}</div>
+      <div class="hdr-rd">Created: ${today}</div>
     </div>
   </div>
 
