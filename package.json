@@ -1,0 +1,10 @@
+{
+  "name": "fraxinus-wildlife",
+  "private": true,
+  "type": "module",
+  "description": "Fraxinus field survey module (BBS, general wildlife, wood turtle, nest sweep)",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "serve": "npx http-server -c-1 -p 8080 ."
+  }
+}

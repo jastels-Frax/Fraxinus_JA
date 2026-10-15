@@ -22,7 +22,7 @@
 //       Upload NL ACCDC dataset to correct this.
 //   SARA: Schedule 1 Public Registry (2024-2025)
 
-const SPECIES_BY_PROVINCE = {
+export const SPECIES_BY_PROVINCE = {
   NS: [
     { code: "ALFL", name: "Alder Flycatcher", scientific: "Empidonax alnorum", soci: false, rarity: "regular", srank: "S5B", sara: "" },
     { code: "AMBI", name: "American Bittern", scientific: "Botaurus lentiginosus", soci: true, rarity: "rare", srank: "S3B,S4M", sara: "" },
@@ -1024,16 +1024,4 @@ const SPECIES_BY_PROVINCE = {
   ],
 };
 
-const _defaultProvince = localStorage.getItem('selectedProvince') || 'NS';
-const speciesList = SPECIES_BY_PROVINCE[_defaultProvince]
-    || SPECIES_BY_PROVINCE['NS'];
-
-window.SPECIES_BY_PROVINCE = SPECIES_BY_PROVINCE;
-window.speciesList = speciesList;
-
-window.setSpeciesProvince = function(province) {
-  const list = SPECIES_BY_PROVINCE[province] || SPECIES_BY_PROVINCE['NS'];
-  window.speciesList = list;
-  localStorage.setItem('selectedProvince', province);
-  return list;
-};
+export default SPECIES_BY_PROVINCE;

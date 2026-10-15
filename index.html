@@ -3,195 +3,35 @@
 <head>
   <meta charset="UTF-8" />
   <title>NTB Wildlife App</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <link rel="manifest" href="manifest.json" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#2d6b2d" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Wildlife App" />
+  <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="img/icon-192.png" />
-  <!-- Google Fonts: Oswald -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <!-- Leaflet CSS -->
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <!-- Leaflet is only used by the standalone map adapter (js/map/leaflet.js) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-
-  <!-- ═══════════════════════════════════════════════════════════════════════
-       SURVEY SELECTION SCREEN (shown on first load; hidden after selection)
-  ════════════════════════════════════════════════════════════════════════ -->
-  <div id="surveySelection">
-    <button id="btn-settings" title="Settings"><i class="fas fa-gear"></i></button>
-    <button id="btn-refresh-sessions" title="Refresh session list" onclick="window._refreshSessionLists?.()"><i class="fas fa-rotate-right"></i></button>
-    <div class="selection-content">
-
-      <!-- Fraxinus branding header -->
-      <div class="frax-brand">
-        <img src="img/LOGO w TEXT black bg.jpg" class="frax-logo-full" alt="Fraxinus Environmental &amp; Geomatics" />
-      </div>
-
-      <h1 class="selection-title">NTB Wildlife App</h1>
-      <p class="selection-subtitle">Select a survey type to begin</p>
-
-      <div class="survey-cards">
-        <!-- General Wildlife Survey -->
-        <button class="survey-choice-btn" data-survey="MOOSE">
-          <i class="fas fa-paw survey-card-icon"></i>
-          <span class="survey-card-title">General Wildlife Survey</span>
-          <span class="survey-card-desc">
-            Use for Winter Tracking, PGI surveys, or general wildlife observations.
-          </span>
-        </button>
-
-        <!-- Wood Turtle Survey -->
-        <button class="survey-choice-btn" data-survey="TURTLE">
-          <i class="fas fa-water survey-card-icon"></i>
-          <span class="survey-card-title">Wood Turtle Survey</span>
-          <span class="survey-card-desc">
-            Individual turtle capture data, habitat observations, and
-            riparian reach metadata for stream surveys.
-          </span>
-        </button>
-
-        <!-- Breeding Bird Survey -->
-        <button class="survey-choice-btn" data-survey="BBS">
-          <i class="fas fa-binoculars survey-card-icon"></i>
-          <span class="survey-card-title">Breeding Bird Survey</span>
-          <span class="survey-card-desc">
-            Point-count methodology with species search, breeding codes,
-            distance/bearing overlay and countdown timer.
-          </span>
-        </button>
-
-        <!-- Nest Sweep Survey -->
-        <button class="survey-choice-btn" data-survey="NEST">
-          <i class="fas fa-egg survey-card-icon"></i>
-          <span class="survey-card-title">Nest Sweep</span>
-          <span class="survey-card-desc">
-            Pre-disturbance nest survey (MBCA / MBR 2022).
-            Locate, assess, and document active nests before
-            vegetation clearing or demolition activities.
-          </span>
-        </button>
-      </div>
-
-      <!-- Session lists (populated by main.js) -->
-      <div id="draftsSection" style="display:none;" class="session-section">
-        <h3 class="session-section-title"><i class="fas fa-pen-to-square"></i> Drafts</h3>
-        <div id="draftsList"></div>
-      </div>
-
-      <div id="recentSection" class="session-section">
-        <h3 class="session-section-title"><i class="fas fa-box-archive"></i> Survey Archive</h3>
-        <div id="recentList"></div>
-      </div>
-
-      <p class="frax-footer-credit">Fraxinus Environmental &amp; Geomatics</p>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════════════════════════════════════
-       MAP APP (hidden until survey selected)
-  ════════════════════════════════════════════════════════════════════════ -->
-
-  <!-- 1) Map container -->
-  <div id="map" style="height:100vh; display:none;"></div>
-
-  <!-- 2) Modal backdrop (shared) -->
-  <div id="modalBackdrop" class="modal-backdrop" style="display:none;"></div>
-
-  <!-- 3) Survey Metadata modal (content injected by ui.js per survey type) -->
-  <div id="surveyModal" class="modal" style="display:none;"></div>
-
-  <!-- 4) BBS Species Observation modal -->
-  <div id="speciesModal" class="modal" style="display:none;">
-    <div class="modal-content">
-      <h2>Add Species Observation</h2>
-      <input type="text" id="speciesSearch" autocomplete="off" placeholder="Search for Species" />
-      <ul id="speciesList" class="autocomplete-list"></ul>
-      <label>Count:</label>
-      <div class="count-controls">
-        <button id="countMinus">−</button>
-        <span id="speciesCountDisplay">1</span>
-        <button id="countPlus">+</button>
-      </div>
-      <label for="breedingInput">Breeding Evidence:</label>
-      <select id="breedingInput">
-        <option value="">None</option>
-        <option value="X">Observed (X)</option>
-        <option value="H">Possible – Singing (H)</option>
-        <option value="S">Possible – Territorial (S)</option>
-        <option value="P">Probable – Pair (P)</option>
-        <option value="T">Probable – Agitated (T)</option>
-        <option value="C">Confirmed – Nest (C)</option>
-      </select>
-      <!-- BUG FIX #1: IDs changed from passHt/flightDir → passHtInput/flightDirInput -->
-      <input type="text" id="passHtInput"    name="passHtInput"    placeholder="Flyover Pass Height" />
-      <input type="text" id="flightDirInput" name="flightDirInput" placeholder="Flyover Direction" />
-      <textarea id="noteInput" rows="2" placeholder="Optional notes..."></textarea>
-      <div style="margin-top:10px;">
-        <button id="speciesSaveButton">Save Observation</button>
-        <button onclick="closeModal()">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 5) Data Drawer (bottom sheet) -->
-  <div id="dataDrawer" class="drawer" style="display:none;"></div>
-
-  <!-- 6) Master buttons (top-left) -->
-  <div id="masterButton" style="display:none;"></div>
-
-  <!-- 7) Countdown HUD placeholder -->
-  <div id="countdownHUD"></div>
-
-  <!-- 8) BBS Timer Strip (hidden by default; shown for BBS only) -->
-  <div id="survey-timer-strip" style="display:none;">
-    <i class="fas fa-clock fa-2x" title="Survey Length (min)"></i>
-    <input id="surveyLength" type="number" value="10" min="1" />
-    <div id="timerDisplay">10:00</div>
-    <button id="startTimerBtn" title="Start"><i class="fas fa-play"></i></button>
-    <button id="pauseTimerBtn" title="Pause"><i class="fas fa-pause"></i></button>
-    <button id="resetTimerBtn" title="Reset"><i class="fas fa-redo-alt"></i></button>
-  </div>
-
-  <!-- 9) Instructions Modal — content injected dynamically by modal.js -->
-  <div id="instructionsModal"></div>
-
-  <!-- Felt upload modal (pre-created so it is in the DOM at page load) -->
-  <div id="feltModal" class="felt-overlay" style="display:none;"></div>
-
-  <!-- Toast container -->
-  <div id="toast-container"></div>
-
-  <!-- Emergency back button — hidden by default; shown by ensureBackButton() if #btnBack goes missing -->
-  <button id="emergencyBack"
-    onclick="goBackToSelection()"
-    style="display:none; position:fixed; bottom:80px; right:16px; z-index:9999;
-      background:#333; color:white; border:2px solid #d6d6d6; border-radius:8px;
-      padding:10px 16px; font-size:1rem; cursor:pointer;">
-    ← Back to Home
-  </button>
-
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <!-- Global species list (BBS) -->
-  <script src="data/species_list.js"></script>
-  <!-- App entry point -->
-  <script type="module" src="js/main.js"></script>
-
-  <!-- PWA service worker registration -->
-  <script>
+  <div id="app"></div>
+  <noscript>This app needs JavaScript enabled.</noscript>
+  <script type="module">
+    import { mount } from './js/app.js';
+    mount(document.getElementById('app')).catch(err => {
+      console.error(err);
+      document.getElementById('app').innerHTML =
+        '<p style="color:#fff;padding:24px;font-family:sans-serif">The app failed to start: ' +
+        String(err.message || err).replace(/</g, '&lt;') + '</p>';
+    });
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js')
-        .catch(err => console.warn('SW registration failed:', err));
+      navigator.serviceWorker.register('./sw.js').catch(err => console.warn('SW registration failed:', err));
     }
   </script>
-
 </body>
 </html>

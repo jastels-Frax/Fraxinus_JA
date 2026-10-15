@@ -1,7 +1,7 @@
 {
   "name": "NTB Wildlife App",
   "short_name": "Wildlife App",
-  "description": "Fraxinus field survey tool for BBS, Wildlife, and Turtle surveys",
+  "description": "Fraxinus field survey tool: breeding birds, general wildlife, wood turtle and nest sweep surveys",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#111111",
